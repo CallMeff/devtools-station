@@ -66,8 +66,5 @@ test-data.xlsx
 /guide.html
 /profile.html
 /tool.html
-/package.json
-/package-lock.json
-/package-windows.ps1
 /server.log
 /server_err.log
