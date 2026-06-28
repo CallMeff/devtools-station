@@ -1,0 +1,2 @@
+[   45384ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ http://localhost:8088/api/tools/network/batch-http:0
+[   61851ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ http://localhost:8088/api/tools/network/batch-http:0

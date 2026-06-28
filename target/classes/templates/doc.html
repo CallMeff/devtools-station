@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 文档 - DevTools Station</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="app-password-min-length" th:content="${passwordMinLength}">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/themes.css">
+    <script src="/js/auth.js" defer></script>
+</head>
+<body>
+    <script>(function(){var t=localStorage.getItem('devtools-theme')||'dark';document.body.className='theme-'+t;})()</script>
+    <header class="navbar">
+        <div class="nav-inner">
+            <a href="/" class="logo">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect width="28" height="28" rx="6" fill="url(#logo-grad)"/>
+                    <path d="M7 9h3l4 10-4-10h3l4 10-4-10h3l4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+                </svg>
+                <span class="logo-text">DevTools</span>
+                <span class="logo-badge">STATION</span>
+            </a>
+            <div class="nav-actions">
+                <div class="theme-switcher"></div>
+                <div class="lang-switcher"></div>
+                <a href="/" class="btn-ghost">🏠 首页</a>
+            </div>
+        </div>
+    </header>
+
+    <main style="max-width:900px;margin:0 auto;padding:40px 20px;">
+        <h1 style="font-size:2rem;margin-bottom:8px;">📚 API 文档</h1>
+        <p style="color:#9ca3af;margin-bottom:40px;">DevTools Station 提供 RESTful API，可用于集成开发或自动化工作流</p>
+
+        <!-- 认证 -->
+        <section class="api-section">
+            <h2>🔐 认证接口</h2>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/auth/register</div>
+                <p class="api-desc">用户注册：{ "username": "...", "password": "...", "email": "..." }</p>
+            </div>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/auth/login</div>
+                <p class="api-desc">用户登录：{ "username": "...", "password": "..." }，返回 Token</p>
+            </div>
+            <div class="api-card">
+                <div class="api-method get">GET</div>
+                <div class="api-path">/api/auth/me</div>
+                <p class="api-desc">获取当前用户信息（需 Header: X-Auth-Token）</p>
+            </div>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/auth/change-password</div>
+                <p class="api-desc">修改密码：{ "oldPassword": "...", "newPassword": "..." }</p>
+            </div>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/auth/reset-password</div>
+                <p class="api-desc">重置密码：{ "email": "...", "verifyCode": "...", "newPassword": "..." }</p>
+            </div>
+        </section>
+
+        <!-- 加密解密 -->
+        <section class="api-section">
+            <h2>🔐 加密解密</h2>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/tools/crypto/hash</div>
+                <p class="api-desc">哈希计算：input=文本 & algorithm=md5|sha1|sha256|sha512</p>
+            </div>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/tools/crypto/aes</div>
+                <p class="api-desc">AES 加解密：input=文本 & key=密钥 & mode=encrypt|decrypt</p>
+            </div>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/tools/crypto/bcrypt</div>
+                <p class="api-desc">Bcrypt 操作：input=密码 & mode=hash|verify & hash=已存hash</p>
+            </div>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/tools/crypto/hmac</div>
+                <p class="api-desc">HMAC 签名：input=消息 & key=密钥 & algorithm=HmacSHA256|...</p>
+            </div>
+        </section>
+
+        <!-- 格式化 -->
+        <section class="api-section">
+            <h2>📝 格式化工具</h2>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/tools/format/json</div>
+                <p class="api-desc">JSON 格式化：input=JSON文本 & mode=format|minify|validate</p>
+            </div>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/tools/format/sql</div>
+                <p class="api-desc">SQL 格式化：input=SQL语句 & mode=format|minify</p>
+            </div>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/tools/format/xml</div>
+                <p class="api-desc">XML 格式化：input=XML文本 & mode=format|minify</p>
+            </div>
+        </section>
+
+        <!-- 转换 -->
+        <section class="api-section">
+            <h2>🔄 转换工具</h2>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/tools/convert/timestamp</div>
+                <p class="api-desc">时间戳转换：input=时间戳或日期字符串 & mode=auto</p>
+            </div>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/tools/convert/excel2json</div>
+                <p class="api-desc">Excel转JSON：multipart/form-data, file=Excel文件 & mode=array|objects</p>
+            </div>
+        </section>
+
+        <!-- 开发工具 -->
+        <section class="api-section">
+            <h2>💻 开发工具</h2>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/tools/dev/jwt</div>
+                <p class="api-desc">JWT 解析：input=JWT Token 字符串（不验证签名）</p>
+            </div>
+            <div class="api-card">
+                <div class="api-method post">POST</div>
+                <div class="api-path">/api/tools/dev/cron</div>
+                <p class="api-desc">Cron 表达式：expression=Cron表达式字符串</p>
+            </div>
+        </section>
+
+        <section class="api-section">
+            <h2>📋 统一响应格式</h2>
+            <div class="api-card" style="border-left:3px solid #6366f1;">
+                <pre style="margin:0;font-size:13px;line-height:1.6;">{
+  "code": 200,
+  "message": "success",
+  "data": { ... }
+}</pre>
+            </div>
+            <p style="margin-top:12px;color:#9ca3af;font-size:14px;">
+                code=200 成功 | code=400 参数错误 | code=401 未登录 | code=500 服务器错误
+            </p>
+        </section>
+    </main>
+
+    <footer class="footer" style="margin-top:60px;">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="footer-logo">⚡ DevTools Station</span>
+                <p>为开发者打造的一站式在线工具箱</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 DevTools Station. Built with ❤️ for developers.</p>
+        </div>
+    </footer>
+
+    <script src="/js/theme.js"></script>
+    <style>
+        .api-section { margin-bottom: 40px; }
+        .api-section h2 { font-size: 1.3rem; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .api-card { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap; }
+        .api-method { padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 700; min-width: 48px; text-align: center; }
+        .api-method.get { background: rgba(74,222,128,0.2); color: #4ade80; }
+        .api-method.post { background: rgba(99,102,241,0.2); color: #818cf8; }
+        .api-method.put { background: rgba(251,191,36,0.2); color: #fbbf24; }
+        .api-path { font-family: 'SF Mono','Fira Code',monospace; font-size: 14px; color: #e5e7eb; min-width: 200px; }
+        .api-desc { color: #9ca3af; font-size: 13px; margin: 0; flex: 1; min-width: 200px; }
+        @media (max-width: 640px) {
+            .api-card { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</body>
+</html>

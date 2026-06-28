@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="about.page_title">关于我们 - DevTools Station</title>
+    <!-- 防闪烁：在 CSS 加载前立即应用保存的主题 -->
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/themes.css">
+    <script src="/js/i18n.js" defer></script>
+    <script src="/js/auth.js" defer></script>
+    <style>
+        .page-container { max-width:800px; margin:0 auto; padding:60px 24px; }
+        .page-container h1 { font-size:32px; font-weight:700; color:var(--text-primary); margin-bottom:12px; }
+        .page-container .subtitle { color:var(--text-secondary); font-size:16px; margin-bottom:40px; }
+        .section { margin-bottom:40px; }
+        .section h2 { font-size:22px; color:var(--text-primary); margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid var(--border-color); }
+        .section p, .section li { color:var(--text-secondary); font-size:15px; line-height:1.8; }
+        .section ul { padding-left:20px; }
+        .feature-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:16px; }
+        .feature-card { background:var(--surface-bg); border:1px solid var(--surface-border); border-radius:12px; padding:20px; text-align:center; }
+        .feature-card .icon { font-size:36px; margin-bottom:12px; }
+        .feature-card h3 { font-size:15px; color:var(--text-primary); margin-bottom:6px; }
+        .feature-card p { font-size:13px; color:var(--text-secondary); }
+    </style>
+</head>
+<body class="theme-dark">
+    <header class="navbar">
+        <div class="nav-inner">
+            <a href="/" class="logo">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect width="28" height="28" rx="6" fill="url(#logo-grad)"/>
+                    <path d="M7 9h3l4 10-4-10h3l4 10-4-10h3l4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+                </svg>
+                <span class="logo-text">DevTools</span>
+                <span class="logo-badge">STATION</span>
+            </a>
+            <div class="nav-actions">
+                <div class="theme-switcher"></div>
+                <div class="lang-switcher"></div>
+                <a href="/" class="btn-ghost" data-i18n="nav.home">🏠 首页</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <h1 data-i18n="about.title">关于 DevTools Station</h1>
+        <p class="subtitle" data-i18n="about.subtitle">为开发者打造的一站式在线工具箱，无需安装，打开即用。</p>
+
+        <div class="section">
+            <h2 data-i18n="about.mission_title">🚀 我们的使命</h2>
+            <p data-i18n="about.mission_p1">在日常开发中，我们经常需要使用各种小工具——加密一段文本、格式化 JSON、生成 UUID、转换时间戳……这些需求看似简单，但每次都要去搜索、找在线工具，既浪费时间又担心数据安全。</p>
+            <p data-i18n="about.mission_p2">DevTools Station 就是为了解决这个问题而生的。我们提供 <strong>36 个</strong> 常用开发工具，涵盖 8 大分类，所有操作都在本地浏览器内完成，无需安装任何软件。</p>
+        </div>
+
+        <div class="section">
+            <h2 data-i18n="about.features_title">✨ 核心特性</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="icon">🔒</div>
+                    <h3 data-i18n="about.feature_security">数据安全</h3>
+                    <p data-i18n="about.feature_security_desc">所有数据处理在本地/服务端完成，不上传第三方</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">⚡</div>
+                    <h3 data-i18n="about.feature_speed">快速高效</h3>
+                    <p data-i18n="about.feature_speed_desc">纯后端计算，响应速度极快</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🎨</div>
+                    <h3 data-i18n="about.feature_design">简洁美观</h3>
+                    <p data-i18n="about.feature_design_desc">现代化 UI 设计，支持暗色主题</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">📱</div>
+                    <h3 data-i18n="about.feature_responsive">响应式布局</h3>
+                    <p data-i18n="about.feature_responsive_desc">支持桌面和移动端访问</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🔍</div>
+                    <h3 data-i18n="about.feature_search">智能搜索</h3>
+                    <p data-i18n="about.feature_search_desc">支持拼音、英文快捷搜索工具</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">📖</div>
+                    <h3 data-i18n="about.feature_api">API 文档</h3>
+                    <p data-i18n="about.feature_api_desc">提供 RESTful API，方便集成调用</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 data-i18n="about.tech_title">🛠️ 技术栈</h2>
+            <ul>
+                <li data-i18n="about.tech_backend_val"><strong data-i18n="about.tech_backend">后端框架:</strong> Spring Boot 3.2 + Java 17</li>
+                <li data-i18n="about.tech_template_val"><strong data-i18n="about.tech_template">模板引擎:</strong> Thymeleaf</li>
+                <li data-i18n="about.tech_database_val"><strong data-i18n="about.tech_database">数据库:</strong> H2 (开发) / MySQL (生产)</li>
+                <li data-i18n="about.tech_orm_val"><strong data-i18n="about.tech_orm">ORM:</strong> MyBatis Plus 3.5</li>
+                <li data-i18n="about.tech_utils_val"><strong data-i18n="about.tech_utils">工具库:</strong> Hutool 5.8</li>
+                <li data-i18n="about.tech_apidoc_val"><strong data-i18n="about.tech_apidoc">API 文档:</strong> Knife4j (Swagger)</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 data-i18n="about.contact_title">📬 联系我们</h2>
+            <p data-i18n="about.contact_desc">如有任何问题、建议或反馈，欢迎通过 <a href="/feedback" style="color:var(--accent-color);">反馈建议</a> 页面提交，或提交 GitHub Issue。</p>
+        </div>
+    </main>
+
+    <footer class="footer" style="margin-top:60px;">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="footer-logo" data-i18n="footer.brand">⚡ DevTools Station</span>
+                <p data-i18n="footer.desc">为开发者打造的一站式在线工具箱</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p data-i18n="footer.copyright">© 2024 DevTools Station. Built with ❤️ for developers.</p>
+        </div>
+    </footer>
+
+    <script src="/js/theme.js"></script>
+</body>
+</html>

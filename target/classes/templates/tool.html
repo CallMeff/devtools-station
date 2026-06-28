@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">工具 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="app-password-min-length" th:content="${passwordMinLength}">
+    <!-- 防闪烁：在 CSS 加载前立即应用保存的主题 -->
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/themes.css">
+    <link rel="stylesheet" href="/css/tool.css">
+    <script src="/js/i18n.js" defer></script>
+    <script src="/js/auth.js" defer></script>
+</head>
+<body>
+    <script>(function(){var t=localStorage.getItem('devtools-theme')||'dark';document.body.className='theme-'+t;})()</script>
+    <!-- 顶部导航 -->
+    <header class="navbar">
+        <div class="nav-inner">
+            <a href="/" class="logo">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect width="28" height="28" rx="6" fill="url(#logo-grad)"/>
+                    <path d="M7 9h3l4 10-4-10h3l4 10-4-10h3l4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+                </svg>
+                <span class="logo-text">DevTools</span>
+                <span class="logo-badge">STATION</span>
+            </a>
+            <div class="nav-actions">
+                <div class="theme-switcher"></div>
+                <div class="lang-switcher"></div>
+                <a href="/" class="btn-ghost" data-i18n="nav.home">🏠 首页</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb-bar">
+        <div class="breadcrumb-inner">
+            <a href="/" data-i18n="tool.breadcrumb_home">首页</a>
+            <span class="breadcrumb-sep">/</span>
+            <a th:href="'/' + '#tools'" th:text="${category?.name}" th:attr="data-cat-name-i18n=${category?.id}">分类</a>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-current" th:text="${tool.name}">工具</span>
+        </div>
+    </div>
+
+    <!-- 工具主体区域 -->
+    <main class="tool-layout">
+        <div class="tool-main">
+            <!-- 工具标题 -->
+            <div class="tool-page-header">
+                <span class="tool-page-icon" th:text="${tool.icon}">🔧</span>
+                <div>
+                    <h1 class="tool-page-title" th:text="${tool.name}">工具名称</h1>
+                    <p class="tool-page-desc" th:text="${tool.description}">工具描述</p>
+                    <span th:if="${tool.isNew == 1}" class="tag-new" style="display:inline-block;margin-top:4px;">NEW</span>
+                    <span th:if="${tool.isHot == 1}" class="tag-hot" style="display:inline-block;margin-top:4px;margin-left:4px;background:#f59e0b;color:#000;padding:2px 8px;border-radius:4px;font-size:12px;" data-i18n="tool.tag_hot">🔥 热门</span>
+                </div>
+            </div>
+
+            <!-- 动态输入区域 -->
+            <div id="toolInputSection" class="tool-input-section">
+                <div class="loading-placeholder" data-i18n="tool.loading">加载中...</div>
+            </div>
+
+            <!-- 输出区域 -->
+            <div id="toolOutputSection" class="tool-output-section" style="display:none;">
+                <div class="output-header">
+                    <h3 data-i18n="tool.result">结果</h3>
+                    <button class="btn-sm" onclick="copyResult()" data-i18n="tool.copy">📋 复制</button>
+                    <button class="btn-sm" onclick="clearResult()" data-i18n="tool.clear">🗑 清除</button>
+                </div>
+                <div id="toolOutput" class="tool-output"></div>
+            </div>
+            <div id="toolError" class="tool-error" style="display:none;"></div>
+        </div>
+
+        <!-- 侧边栏：同类工具 -->
+        <aside class="tool-sidebar">
+            <div class="sidebar-card">
+                <h3 class="sidebar-title" data-i18n="tool.similar">同类工具</h3>
+                <ul class="sidebar-list">
+                    <li th:each="t : ${relatedTools}" th:classappend="${t.id == tool.id} ? 'active'">
+                        <a th:href="@{${t.route}}">
+                            <span th:text="${t.icon}">🔧</span>
+                            <span th:text="${t.name}" th:attr="data-i18n-toolname=${t.route}">工具名</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="sidebar-card">
+                <h3 class="sidebar-title" data-i18n="tool.category_nav">分类导航</h3>
+                <ul class="sidebar-list">
+                    <li th:each="cat : ${categories}">
+                        <a th:href="'/#tools'">
+                            <span th:text="${cat.icon}">📂</span>
+                            <span th:text="${cat.name}" th:attr="data-cat-name-i18n=${cat.id}">分类</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+    </main>
+
+    <!-- 底部 -->
+    <footer class="footer" style="margin-top:60px;">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="footer-logo" data-i18n="footer.brand">⚡ DevTools Station</span>
+                <p data-i18n="footer.desc">为开发者打造的一站式在线工具箱</p>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h4 data-i18n="footer.product">产品</h4>
+                    <a href="/#tools" data-i18n="footer.all_tools">全部工具</a>
+                    <a href="/api" data-i18n="footer.api_docs">API 文档</a>
+                </div>
+                <div class="footer-col">
+                    <h4 data-i18n="footer.resources">资源</h4>
+                    <a href="/guide" data-i18n="footer.guide">使用指南</a>
+                    <a href="/changelog" data-i18n="footer.changelog">更新日志</a>
+                </div>
+                <div class="footer-col">
+                    <h4 data-i18n="footer.about">关于</h4>
+                    <a href="/about" data-i18n="footer.about_us">关于我们</a>
+                    <a href="/feedback" data-i18n="footer.feedback">反馈建议</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p data-i18n="footer.copyright">© 2024 DevTools Station. Built with ❤️ for developers.</p>
+        </div>
+    </footer>
+
+    <!-- 工具数据注入 -->
+    <script th:inline="javascript">
+        window.__TOOL__ = {
+            id: /*[[${tool.id}]]*/ 0,
+            name: /*[[${tool.name}]]*/ '',
+            route: /*[[${tool.route}]]*/ '',
+            apiPath: /*[[${tool.apiPath}]]*/ '',
+            description: /*[[${tool.description}]]*/ '',
+            icon: /*[[${tool.icon}]]*/ '🔧',
+            categoryId: /*[[${tool.categoryId}]]*/ 0,
+            i18nKey: /*[[${tool.route}]]*/ ''
+        };
+    </script>
+    <script src="/js/theme.js?v=2"></script>
+    <script src="/js/tool-engine.js?v=2"></script>
+</body>
+</html>

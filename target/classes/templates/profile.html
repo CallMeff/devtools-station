@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="profile.page_title">个人中心 - DevTools Station</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <!-- 防闪烁：在 CSS 加载前立即应用保存的主题 -->
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/themes.css">
+    <script src="/js/i18n.js" defer></script>
+    <script src="/js/auth.js" defer></script>
+    <style>
+        .profile-container { max-width:880px; margin:80px auto 60px; padding:0 24px; }
+        .profile-header { display:flex; align-items:center; gap:24px; margin-bottom:40px; padding-bottom:28px; border-bottom:1px solid var(--border-color); }
+        .profile-avatar-section { position:relative; flex-shrink:0; }
+        .profile-avatar-big { width:90px; height:90px; border-radius:50%; background:linear-gradient(135deg, #6366f1, #8b5cf6); color:#fff; display:flex; align-items:center; justify-content:center; font-size:36px; font-weight:700; box-shadow:0 4px 20px rgba(99,102,241,0.35); }
+        .profile-avatar-img { width:90px; height:90px; border-radius:50%; object-fit:cover; }
+        .profile-info { flex:1; }
+        .profile-nickname { font-size:26px; font-weight:700; color:var(--text-primary); margin-bottom:6px; }
+        .profile-username { font-size:14px; color:var(--text-muted); margin-bottom:8px; }
+        .profile-meta { display:flex; gap:16px; flex-wrap:wrap; }
+        .profile-meta-item { font-size:13px; color:var(--text-secondary); display:flex; align-items:center; gap:5px; }
+        .profile-meta-item svg { color:var(--text-muted); }
+
+        .profile-section { background:var(--card-bg); border:1px solid var(--border-color); border-radius:14px; padding:28px; margin-bottom:24px; }
+        .profile-section h3 { font-size:18px; font-weight:600; color:var(--text-primary); margin-bottom:20px; display:flex; align-items:center; gap:8px; }
+        .profile-form { display:flex; flex-direction:column; gap:18px; }
+        .profile-field label { display:block; font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:6px; }
+        .profile-field input { width:100%; max-width:400px; height:42px; padding:0 14px; border:1px solid var(--border-color); border-radius:10px; background:var(--input-bg); color:var(--text-primary); font-size:14px; outline:none; transition:all 0.2s; }
+        .profile-field input:focus { border-color:var(--accent-color); box-shadow:0 0 0 3px var(--accent-shadow); }
+        .profile-field input:disabled { opacity:0.5; cursor:not-allowed; }
+        .profile-field-row { display:flex; gap:12px; align-items:flex-end; }
+        .profile-field-row .profile-field { flex:1; }
+        .profile-btn { display:inline-flex; align-items:center; gap:6px; padding:10px 22px; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+        .profile-btn-primary { background:linear-gradient(135deg, #6366f1, #8b5cf6); color:#fff; box-shadow:0 4px 14px rgba(99,102,241,0.3); }
+        .profile-btn-primary:hover { box-shadow:0 6px 20px rgba(99,102,241,0.45); transform:translateY(-1px); }
+        .profile-btn-primary:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+        .profile-btn-ghost { background:transparent; color:var(--text-secondary); border:1px solid var(--border-color); }
+        .profile-btn-ghost:hover { background:var(--hover-bg); color:var(--text-primary); }
+        .profile-btn-sm { padding:6px 14px; font-size:12px; height:42px; flex-shrink:0; }
+        .profile-msg { font-size:13px; margin-top:4px; min-height:20px; }
+        .profile-msg.success { color:#4ade80; }
+        .profile-msg.error { color:#f87171; }
+
+        .profile-stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:16px; }
+        .profile-stat { background:var(--surface-bg); border:1px solid var(--surface-border); border-radius:12px; padding:18px; text-align:center; }
+        .profile-stat-value { font-size:28px; font-weight:700; color:var(--accent-color); margin-bottom:4px; }
+        .profile-stat-label { font-size:12px; color:var(--text-muted); }
+
+        .profile-not-logged { text-align:center; padding:80px 20px; }
+        .profile-not-logged h2 { font-size:22px; color:var(--text-primary); margin-bottom:12px; }
+        .profile-not-logged p { color:var(--text-muted); margin-bottom:24px; }
+    </style>
+</head>
+<body class="theme-dark">
+    <header class="navbar">
+        <div class="nav-inner">
+            <a href="/" class="logo">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect width="28" height="28" rx="6" fill="url(#logo-grad)"/>
+                    <path d="M7 9h3l4 10-4-10h3l4 10-4-10h3l4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+                </svg>
+                <span class="logo-text">DevTools</span>
+                <span class="logo-badge">STATION</span>
+            </a>
+            <div class="nav-actions">
+                <div class="theme-switcher"></div>
+                <div class="lang-switcher"></div>
+                <a href="/" class="btn-ghost" data-i18n="nav.home">🏠 首页</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="profile-container">
+        <!-- 未登录 -->
+        <div class="profile-not-logged" id="profileNotLogged">
+            <h2 data-i18n="profile.not_logged">请先登录</h2>
+            <p data-i18n="profile.not_logged_desc">登录后可查看和编辑个人资料</p>
+            <button class="profile-btn profile-btn-primary" onclick="DevAuth.showLogin()" data-i18n="profile.btn_login">前往登录</button>
+        </div>
+
+        <!-- 已登录 -->
+        <div id="profileContent" style="display:none;">
+            <!-- 用户头像信息 -->
+            <div class="profile-header">
+                <div class="profile-avatar-section">
+                    <div class="profile-avatar-big" id="profileAvatar">?</div>
+                </div>
+                <div class="profile-info">
+                    <div class="profile-nickname" id="profileNickname">--</div>
+                    <div class="profile-username" id="profileUsername">@--</div>
+                    <div class="profile-meta">
+                        <span class="profile-meta-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.6 6.5a2 2 0 0 1-2.8 0L2 7"/></svg>
+                            <span id="profileEmail">--</span>
+                        </span>
+                        <span class="profile-meta-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <span id="profileLastLogin">--</span>
+                        </span>
+                        <span class="profile-meta-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            <span id="profileJoined">--</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="profile-stats" id="profileStats"></div>
+
+            <!-- 修改昵称 -->
+            <div class="profile-section">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span data-i18n="profile.change_nickname">修改昵称</span>
+                </h3>
+                <div class="profile-form">
+                    <div class="profile-field">
+                        <label data-i18n="profile.nickname">昵称</label>
+                        <div class="profile-field-row">
+                            <input type="text" id="editNickname" data-i18n-placeholder="profile.nickname_placeholder" placeholder="输入新昵称（1-30字符）" maxlength="30">
+                            <button class="profile-btn profile-btn-primary profile-btn-sm" id="saveNicknameBtn" data-i18n="profile.save">保存</button>
+                        </div>
+                    </div>
+                    <div class="profile-msg" id="nicknameMsg"></div>
+                </div>
+            </div>
+
+            <!-- 修改邮箱 -->
+            <div class="profile-section">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.6 6.5a2 2 0 0 1-2.8 0L2 7"/></svg>
+                    <span data-i18n="profile.change_email">修改邮箱</span>
+                </h3>
+                <div class="profile-form">
+                    <div class="profile-field">
+                        <label data-i18n="profile.new_email">新邮箱</label>
+                        <div class="profile-field-row">
+                            <input type="email" id="editEmail" data-i18n-placeholder="profile.email_placeholder" placeholder="输入新邮箱地址">
+                            <button class="profile-btn profile-btn-ghost profile-btn-sm" id="sendEmailCodeBtn" data-i18n="profile.send_code">发送验证码</button>
+                        </div>
+                    </div>
+                    <div class="profile-field">
+                        <label data-i18n="profile.verification_code">验证码</label>
+                        <div class="profile-field-row">
+                            <input type="text" id="editEmailCode" data-i18n-placeholder="profile.code_placeholder" placeholder="6位验证码" maxlength="6">
+                            <button class="profile-btn profile-btn-primary profile-btn-sm" id="saveEmailBtn" data-i18n="profile.confirm_change">确认修改</button>
+                        </div>
+                    </div>
+                    <div class="profile-msg" id="emailMsg"></div>
+                </div>
+            </div>
+
+            <!-- 修改密码 -->
+            <div class="profile-section">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <span data-i18n="profile.change_password">修改密码</span>
+                </h3>
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;" data-i18n="profile.pwd_hint">修改密码需要验证当前密码，修改后所有设备将重新登录</p>
+                <div class="profile-form">
+                    <div class="profile-field">
+                        <label data-i18n="profile.old_pwd">当前密码</label>
+                        <input type="password" id="editOldPwd" data-i18n-placeholder="profile.old_pwd_placeholder" placeholder="输入当前密码" autocomplete="current-password">
+                    </div>
+                    <div class="profile-field">
+                        <label data-i18n="profile.new_pwd">新密码</label>
+                        <input type="password" id="editNewPwd" data-i18n-placeholder="profile.new_pwd_placeholder" placeholder="新密码（至少6位）" autocomplete="new-password">
+                    </div>
+                    <div class="profile-field">
+                        <label data-i18n="profile.confirm_pwd">确认新密码</label>
+                        <input type="password" id="editNewPwd2" data-i18n-placeholder="profile.confirm_pwd_placeholder" placeholder="再次输入新密码" autocomplete="new-password">
+                    </div>
+                    <div>
+                        <button class="profile-btn profile-btn-primary" id="savePwdBtn" data-i18n="profile.btn_change_pwd">修改密码</button>
+                    </div>
+                    <div class="profile-msg" id="pwdMsg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer" style="margin-top:60px;">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="footer-logo" data-i18n="footer.brand">⚡ DevTools Station</span>
+                <p data-i18n="footer.desc">为开发者打造的一站式在线工具箱</p>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h4 data-i18n="footer.product">产品</h4>
+                    <a href="/#tools" data-i18n="footer.all_tools">全部工具</a>
+                    <a href="/doc.html" data-i18n="footer.api_docs">API 文档</a>
+                </div>
+                <div class="footer-col">
+                    <h4 data-i18n="footer.resources">资源</h4>
+                    <a href="/guide" data-i18n="footer.guide">使用指南</a>
+                    <a href="/changelog" data-i18n="footer.changelog">更新日志</a>
+                </div>
+                <div class="footer-col">
+                    <h4 data-i18n="footer.about">关于</h4>
+                    <a href="/about" data-i18n="footer.about_us">关于我们</a>
+                    <a href="/feedback" data-i18n="footer.feedback">反馈建议</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p data-i18n="footer.copyright">© 2024 DevTools Station. Built with ❤️ for developers.</p>
+        </div>
+    </footer>
+
+    <script src="/js/theme.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        var currentProfile = null;
+        var emailCodeTimer = null;
+
+        function __(key, params) {
+            if (window.__I18N__ && typeof window.__I18N__.t === 'function') {
+                return window.__I18N__.t(key, params);
+            }
+            return key;
+        }
+
+        function api(method, path, body) {
+            var headers = { 'Content-Type': 'application/json' };
+            var token = localStorage.getItem('devtools-auth-token');
+            if (token) headers['X-Auth-Token'] = token;
+            var opts = { method: method, headers: headers };
+            if (body) opts.body = JSON.stringify(body);
+            return fetch(path, opts).then(function(r) { return r.json(); });
+        }
+
+        function loadProfile() {
+            api('GET', '/api/user/profile').then(function(res) {
+                if (res.code === 200 && res.data) {
+                    currentProfile = res.data;
+                    renderProfile(currentProfile);
+                    document.getElementById('profileNotLogged').style.display = 'none';
+                    document.getElementById('profileContent').style.display = '';
+                } else {
+                    document.getElementById('profileNotLogged').style.display = '';
+                    document.getElementById('profileContent').style.display = 'none';
+                }
+            });
+        }
+
+        function renderProfile(p) {
+            var initial = (p.nickname || p.username || '?').charAt(0).toUpperCase();
+            var avatarEl = document.getElementById('profileAvatar');
+            if (p.avatar) {
+                avatarEl.innerHTML = '<img class="profile-avatar-img" src="' + p.avatar + '" alt="avatar">';
+            } else {
+                avatarEl.textContent = initial;
+            }
+            document.getElementById('profileNickname').textContent = p.nickname || p.username;
+            document.getElementById('profileUsername').textContent = '@' + p.username;
+            document.getElementById('profileEmail').textContent = p.email || '--';
+            document.getElementById('profileLastLogin').textContent = p.lastLoginAt || '--';
+            document.getElementById('profileJoined').textContent = p.createdAt || '--';
+
+            // 预填昵称
+            document.getElementById('editNickname').value = p.nickname || '';
+
+            // 统计
+            document.getElementById('profileStats').innerHTML =
+                '<div class="profile-stat"><div class="profile-stat-value">' + (p.activeSessions || 0) + '</div><div class="profile-stat-label" data-i18n="profile.active_sessions">活跃会话</div></div>' +
+                '<div class="profile-stat"><div class="profile-stat-value">' + (p.activityCount || 0) + '</div><div class="profile-stat-label" data-i18n="profile.activity_count">操作记录</div></div>';
+        }
+
+        // 保存昵称
+        document.getElementById('saveNicknameBtn').addEventListener('click', function() {
+            var nickname = document.getElementById('editNickname').value.trim();
+            var msgEl = document.getElementById('nicknameMsg');
+            if (!nickname) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.nickname_required'); return; }
+            if (nickname.length > 30) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.nickname_max'); return; }
+
+            var btn = document.getElementById('saveNicknameBtn');
+            btn.disabled = true; btn.textContent = __('toast.saving');
+            api('PUT', '/api/user/profile', { nickname: nickname }).then(function(res) {
+                btn.disabled = false; btn.textContent = __('profile.save');
+                if (res.code === 200) {
+                    msgEl.className = 'profile-msg success'; msgEl.textContent = __('toast.nickname_updated');
+                    if (res.data) {
+                        document.getElementById('profileNickname').textContent = res.data.nickname;
+                        document.getElementById('profileAvatar').textContent = res.data.nickname.charAt(0).toUpperCase();
+                        // 同步到 localStorage
+                        var stored = JSON.parse(localStorage.getItem('devtools-user-info') || '{}');
+                        stored.nickname = res.data.nickname;
+                        localStorage.setItem('devtools-user-info', JSON.stringify(stored));
+                        // 刷新导航栏
+                        if (window.DevAuth && typeof window.DevAuth.refreshUI === 'function') {
+                            window.DevAuth.refreshUI();
+                        } else {
+                            location.reload();
+                        }
+                    }
+                } else {
+                    msgEl.className = 'profile-msg error'; msgEl.textContent = res.message || __('toast.save_failed');
+                }
+            });
+        });
+
+        // 发送邮箱验证码
+        document.getElementById('sendEmailCodeBtn').addEventListener('click', function() {
+            var email = document.getElementById('editEmail').value.trim();
+            var msgEl = document.getElementById('emailMsg');
+            msgEl.className = 'profile-msg'; msgEl.textContent = '';
+            if (!email) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.email_new_required'); return; }
+            if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) {
+                msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.email_format'); return;
+            }
+
+            var btn = document.getElementById('sendEmailCodeBtn');
+            btn.disabled = true;
+            api('POST', '/api/user/send-email-code', { email: email }).then(function(res) {
+                if (res.code === 200) {
+                    msgEl.className = 'profile-msg success'; msgEl.textContent = res.message || __('toast.code_sent');
+                    var sec = 60;
+                    btn.textContent = __('toast.retry_after', [sec]);
+                    emailCodeTimer = setInterval(function() {
+                        sec--;
+                        if (sec <= 0) {
+                            clearInterval(emailCodeTimer);
+                            btn.disabled = false; btn.textContent = __('profile.send_code');
+                        } else {
+                            btn.textContent = __('toast.retry_after', [sec]);
+                        }
+                    }, 1000);
+                } else {
+                    msgEl.className = 'profile-msg error'; msgEl.textContent = res.message || __('toast.code_send_failed');
+                    btn.disabled = false;
+                }
+            });
+        });
+
+        // 修改邮箱
+        document.getElementById('saveEmailBtn').addEventListener('click', function() {
+            var email = document.getElementById('editEmail').value.trim();
+            var code = document.getElementById('editEmailCode').value.trim();
+            var msgEl = document.getElementById('emailMsg');
+            msgEl.className = 'profile-msg'; msgEl.textContent = '';
+            if (!email) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.email_new_required'); return; }
+            if (!code) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.code_required'); return; }
+
+            var btn = document.getElementById('saveEmailBtn');
+            btn.disabled = true; btn.textContent = __('toast.changing');
+            api('POST', '/api/user/change-email', { email: email, verifyCode: code }).then(function(res) {
+                btn.disabled = false; btn.textContent = __('profile.confirm_change');
+                if (res.code === 200) {
+                    msgEl.className = 'profile-msg success'; msgEl.textContent = __('toast.email_saved');
+                    document.getElementById('profileEmail').textContent = res.data.email;
+                } else {
+                    msgEl.className = 'profile-msg error'; msgEl.textContent = res.message || __('validate.change_failed');
+                }
+            });
+        });
+
+        // 修改密码
+        document.getElementById('savePwdBtn').addEventListener('click', function() {
+            var oldPwd = document.getElementById('editOldPwd').value;
+            var newPwd = document.getElementById('editNewPwd').value;
+            var newPwd2 = document.getElementById('editNewPwd2').value;
+            var msgEl = document.getElementById('pwdMsg');
+            msgEl.className = 'profile-msg'; msgEl.textContent = '';
+
+            if (!oldPwd) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.old_pwd_required'); return; }
+            if (!newPwd || newPwd.length < 6) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.password_min'); return; }
+            if (newPwd !== newPwd2) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.password_mismatch'); return; }
+
+            var btn = document.getElementById('savePwdBtn');
+            btn.disabled = true; btn.textContent = __('toast.changing');
+            var headers = { 'Content-Type': 'application/json' };
+            var token = localStorage.getItem('devtools-auth-token');
+            if (token) headers['X-Auth-Token'] = token;
+            fetch('/api/auth/change-password', {
+                method: 'POST', headers: headers,
+                body: JSON.stringify({ oldPassword: oldPwd, newPassword: newPwd })
+            }).then(function(r) { return r.json(); }).then(function(res) {
+                btn.disabled = false; btn.textContent = __('profile.btn_change_pwd');
+                if (res.code === 200) {
+                    msgEl.className = 'profile-msg success'; msgEl.textContent = __('toast.pwd_saved');
+                    localStorage.removeItem('devtools-auth-token');
+                    localStorage.removeItem('devtools-user-info');
+                    setTimeout(function() { window.location.href = '/'; }, 2000);
+                } else {
+                    msgEl.className = 'profile-msg error'; msgEl.textContent = res.message || __('validate.change_failed');
+                }
+            });
+        });
+
+        // 初始化
+        loadProfile();
+    })();
+    </script>
+</body>
+</html>
