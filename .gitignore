@@ -53,3 +53,21 @@ dist/
 
 # ====== CodeBuddy ======
 .codebuddy/
+
+# ====== Test Artifacts ======
+.playwright-cli/
+/*.png
+/*.yml
+/*.yaml
+test-data.xlsx
+/about.html
+/changelog.html
+/feedback.html
+/guide.html
+/profile.html
+/tool.html
+/package.json
+/package-lock.json
+/package-windows.ps1
+/server.log
+/server_err.log
