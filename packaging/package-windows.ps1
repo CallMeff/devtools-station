@@ -48,7 +48,8 @@ if (-not (Test-Path $jpkg)) {
     pause; exit 1
 }
 
-$projectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$projectDir = Split-Path -Parent $scriptDir
 Set-Location $projectDir
 
 # ======================== 1. 编译项目 ========================
