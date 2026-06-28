@@ -77,6 +77,20 @@ public class PageController {
         return "changelog";
     }
 
+    @GetMapping("/doc.html")
+    public String doc(Model model) {
+        model.addAttribute("categories", toolService.getCategoriesWithTools());
+        return "doc";
+    }
+
+    /**
+     * 修复 favicon.ico 返回 500 错误：重定向到 SVG favicon
+     */
+    @GetMapping("/favicon.ico")
+    public String favicon() {
+        return "redirect:/favicon.svg";
+    }
+
     /**
      * 工具页面 - 支持多级路由如 /tools/crypto/md5
      */

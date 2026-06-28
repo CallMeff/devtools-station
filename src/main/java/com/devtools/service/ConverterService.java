@@ -3,14 +3,16 @@ package com.devtools.service;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
-import java.util.LinkedHashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 转换器服务
@@ -223,6 +225,346 @@ public class ConverterService {
             }
         } catch (Exception e) {
             result.put("error", "Unicode 转换失败: " + e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * Excel 转 JSON
+     * @param file  上传的 Excel 文件 (.xlsx / .xls)
+     * @param mode  "array" - 所有行转为一个 JSON 数组; "objects" - 每行转为一个 JSON 对象
+     */
+    public Map<String, Object> excelToJson(MultipartFile file, String mode) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("mode", mode);
+
+        if (file == null || file.isEmpty()) {
+            result.put("error", "请选择要上传的 Excel 文件");
+            result.put("errorCode", "EMPTY_FILE");
+            return result;
+        }
+
+        String filename = file.getOriginalFilename();
+        result.put("fileName", filename);
+
+        if (filename != null) {
+            String lower = filename.toLowerCase();
+            if (!lower.endsWith(".xlsx") && !lower.endsWith(".xls")) {
+                result.put("error", "不支持的文件格式，请上传 .xlsx 或 .xls 文件");
+                result.put("errorCode", "INVALID_FORMAT");
+                return result;
+            }
+        }
+
+        try (InputStream is = file.getInputStream();
+             Workbook workbook = WorkbookFactory.create(is)) {
+
+            int sheetCount = workbook.getNumberOfSheets();
+            result.put("sheetCount", sheetCount);
+            result.put("sheetName", workbook.getSheetName(0));
+
+            Sheet sheet = workbook.getSheetAt(0);
+            if (sheet == null || sheet.getLastRowNum() < 1) {
+                result.put("error", "Excel 文件为空或没有数据行");
+                result.put("errorCode", "EMPTY_SHEET");
+                return result;
+            }
+
+            // 读取表头（第一行）
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) {
+                result.put("error", "Excel 文件第一行为空，无法获取表头");
+                result.put("errorCode", "NO_HEADER");
+                return result;
+            }
+
+            List<String> headers = new ArrayList<>();
+            List<String> emptyHeaderCols = new ArrayList<>();
+            for (int i = 0; i < headerRow.getLastCellNum(); i++) {
+                Cell cell = headerRow.getCell(i);
+                String header = getCellStringValue(cell);
+                if (header.isEmpty()) {
+                    // 用 Excel 列字母作为默认列名
+                    header = getColumnLetter(i);
+                    emptyHeaderCols.add(header);
+                }
+                headers.add(header);
+            }
+
+            // 如果有空表头，记录警告
+            if (!emptyHeaderCols.isEmpty()) {
+                result.put("warning", "检测到第 1 行的 " + emptyHeaderCols.size()
+                        + " 个空表头（" + String.join(", ", emptyHeaderCols) + "），已自动命名为列字母");
+            }
+
+            int rowCount = 0;
+            int skippedRows = 0;
+            List<String> warnings = new ArrayList<>();
+
+            if ("array".equals(mode)) {
+                // 模式一：所有行转为一个 JSON 数组
+                List<Map<String, Object>> list = new ArrayList<>();
+                for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+                    Row row = sheet.getRow(r);
+                    if (row == null || isRowEmpty(row)) {
+                        skippedRows++;
+                        continue;
+                    }
+                    Map<String, Object> obj = new LinkedHashMap<>();
+                    try {
+                        for (int c = 0; c < headers.size(); c++) {
+                            Cell cell = row.getCell(c);
+                            try {
+                                obj.put(headers.get(c), getCellValue(cell));
+                            } catch (Exception cellEx) {
+                                String colLetter = getColumnLetter(c);
+                                warnings.add("第 " + (r + 1) + " 行 " + colLetter + " 列（" + headers.get(c)
+                                        + "）解析异常: " + cellEx.getMessage());
+                                obj.put(headers.get(c), "[解析错误]");
+                            }
+                        }
+                    } catch (Exception rowEx) {
+                        warnings.add("第 " + (r + 1) + " 行整体解析异常: " + rowEx.getMessage());
+                        continue;
+                    }
+                    list.add(obj);
+                    rowCount++;
+                }
+                result.put("output", list);
+            } else {
+                // 模式二：每行转为一个 JSON 对象（key 为行号）
+                Map<String, Map<String, Object>> objects = new LinkedHashMap<>();
+                for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+                    Row row = sheet.getRow(r);
+                    if (row == null || isRowEmpty(row)) {
+                        skippedRows++;
+                        continue;
+                    }
+                    Map<String, Object> obj = new LinkedHashMap<>();
+                    String rowKey = "row_" + (r + 1);
+                    try {
+                        for (int c = 0; c < headers.size(); c++) {
+                            Cell cell = row.getCell(c);
+                            try {
+                                obj.put(headers.get(c), getCellValue(cell));
+                            } catch (Exception cellEx) {
+                                String colLetter = getColumnLetter(c);
+                                warnings.add("第 " + (r + 1) + " 行 " + colLetter + " 列（" + headers.get(c)
+                                        + "）解析异常: " + cellEx.getMessage());
+                                obj.put(headers.get(c), "[解析错误]");
+                            }
+                        }
+                    } catch (Exception rowEx) {
+                        warnings.add("第 " + (r + 1) + " 行整体解析异常: " + rowEx.getMessage());
+                        continue;
+                    }
+                    objects.put(rowKey, obj);
+                    rowCount++;
+                }
+                result.put("output", objects);
+            }
+
+            result.put("rowCount", rowCount);
+            result.put("columnCount", headers.size());
+            result.put("headers", headers);
+            result.put("skippedRows", skippedRows);
+            if (!warnings.isEmpty()) {
+                result.put("warnings", warnings);
+            }
+
+        } catch (Exception e) {
+            String msg = e.getMessage();
+            if ((msg != null && msg.contains("OLE2")) || (msg != null && msg.contains("NotOLE2FileException"))) {
+                result.put("error", "文件格式错误：请确保上传的是真正的 Excel 文件（.xlsx / .xls），而非其他格式的文件");
+            } else if (msg != null && msg.contains("EmptyFileException")) {
+                result.put("error", "文件为空，请上传包含数据的 Excel 文件");
+            } else if (msg != null && msg.contains("IOException") && msg.contains("ZIP")) {
+                result.put("error", "Excel 文件已损坏或格式不正确，请重新导出后再上传");
+            } else {
+                result.put("error", "Excel 解析失败: " + (msg != null ? msg : "未知错误"));
+            }
+            result.put("errorCode", "PARSE_ERROR");
+        }
+
+        return result;
+    }
+
+    /**
+     * 生成 Excel 转 JSON 的模板文件
+     */
+    public byte[] generateTemplate() {
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("示例数据");
+            sheet.setColumnWidth(0, 3500);
+            sheet.setColumnWidth(1, 2500);
+            sheet.setColumnWidth(2, 4500);
+            sheet.setColumnWidth(3, 5000);
+
+            // 样式：表头加粗
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+
+            // 表头行
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"姓名", "年龄", "城市", "邮箱"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            // 数据行
+            Object[][] data = {
+                    {"张三", 28, "北京", "zhangsan@example.com"},
+                    {"李四", 35, "上海", "lisi@example.com"},
+                    {"王五", 22, "深圳", "wangwu@example.com"}
+            };
+
+            for (int r = 0; r < data.length; r++) {
+                Row row = sheet.createRow(r + 1);
+                for (int c = 0; c < data[r].length; c++) {
+                    Cell cell = row.createCell(c);
+                    if (data[r][c] instanceof Number) {
+                        cell.setCellValue(((Number) data[r][c]).doubleValue());
+                    } else {
+                        cell.setCellValue((String) data[r][c]);
+                    }
+                }
+            }
+
+            java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+            workbook.write(bos);
+            return bos.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("生成模板文件失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 将列索引转换为 Excel 列字母（0 → A, 1 → B, ...）
+     */
+    private String getColumnLetter(int index) {
+        StringBuilder sb = new StringBuilder();
+        int n = index;
+        while (n >= 0) {
+            sb.insert(0, (char) ('A' + (n % 26)));
+            n = n / 26 - 1;
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 读取单元格的原始值（保留数字/布尔类型，不强制转字符串）
+     */
+    private Object getCellValue(Cell cell) {
+        if (cell == null) return "";
+        return switch (cell.getCellType()) {
+            case STRING  -> cell.getStringCellValue();
+            case NUMERIC -> {
+                if (org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(cell)) {
+                    yield cell.getLocalDateTimeCellValue().toString().replace("T", " ");
+                }
+                double val = cell.getNumericCellValue();
+                if (val == Math.floor(val) && !Double.isInfinite(val)) {
+                    yield (long) val;
+                }
+                yield val;
+            }
+            case BOOLEAN -> cell.getBooleanCellValue();
+            case FORMULA -> {
+                try {
+                    yield cell.getStringCellValue();
+                } catch (Exception e) {
+                    yield cell.getNumericCellValue();
+                }
+            }
+            default -> "";
+        };
+    }
+
+    /**
+     * 读取单元格的字符串值（用于表头）
+     */
+    private String getCellStringValue(Cell cell) {
+        if (cell == null) return "";
+        return switch (cell.getCellType()) {
+            case STRING  -> cell.getStringCellValue().trim();
+            case NUMERIC -> {
+                double val = cell.getNumericCellValue();
+                if (val == Math.floor(val) && !Double.isInfinite(val)) {
+                    yield String.valueOf((long) val);
+                }
+                yield String.valueOf(val);
+            }
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            default -> "";
+        };
+    }
+
+    /**
+     * 判断行是否为空
+     */
+    private boolean isRowEmpty(Row row) {
+        for (int i = 0; i < row.getLastCellNum(); i++) {
+            Cell cell = row.getCell(i);
+            if (cell != null && cell.getCellType() != CellType.BLANK) {
+                String val = getCellStringValue(cell);
+                if (!val.isEmpty()) return false;
+            }
+        }
+        return true;
+    }
+
+    // ==================== JSON ↔ YAML 转换 ====================
+
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+    private final org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml();
+
+    /**
+     * JSON → YAML 转换
+     */
+    public Map<String, Object> jsonToYaml(String input) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        try {
+            // 解析 JSON
+            Object jsonObj = objectMapper.readValue(input, Object.class);
+            // 转为 YAML
+            String yamlOutput = yaml.dumpAsMap(jsonObj instanceof Map ? (Map<?, ?>) jsonObj : jsonObj);
+            result.put("output", yamlOutput);
+            result.put("type", "yaml");
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            result.put("error", "JSON 解析失败: " + e.getOriginalMessage());
+            result.put("errorType", "json");
+        } catch (Exception e) {
+            result.put("error", "转换失败: " + e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * YAML → JSON 转换
+     */
+    public Map<String, Object> yamlToJson(String input) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        try {
+            // 解析 YAML
+            Object yamlObj = yaml.load(input);
+            if (yamlObj == null) {
+                result.put("error", "YAML 内容为空或格式不正确");
+                result.put("errorType", "yaml");
+                return result;
+            }
+            // 转为 JSON
+            String jsonOutput = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(yamlObj);
+            result.put("output", jsonOutput);
+            result.put("type", "json");
+        } catch (org.yaml.snakeyaml.error.YAMLException e) {
+            result.put("error", "YAML 解析失败: " + e.getMessage());
+            result.put("errorType", "yaml");
+        } catch (Exception e) {
+            result.put("error", "转换失败: " + e.getMessage());
         }
         return result;
     }

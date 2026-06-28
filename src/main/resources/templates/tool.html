@@ -6,6 +6,7 @@
     <title th:text="${tool.name} + ' - DevTools Station'">工具 - DevTools Station</title>
     <meta name="description" th:content="${tool.description}">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="app-password-min-length" th:content="${passwordMinLength}">
     <!-- 防闪烁：在 CSS 加载前立即应用保存的主题 -->
     <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
     <link rel="stylesheet" href="/css/style.css">
@@ -14,7 +15,8 @@
     <script src="/js/i18n.js" defer></script>
     <script src="/js/auth.js" defer></script>
 </head>
-<body class="theme-dark">
+<body>
+    <script>(function(){var t=localStorage.getItem('devtools-theme')||'dark';document.body.className='theme-'+t;})()</script>
     <!-- 顶部导航 -->
     <header class="navbar">
         <div class="nav-inner">
@@ -144,10 +146,10 @@
             description: /*[[${tool.description}]]*/ '',
             icon: /*[[${tool.icon}]]*/ '🔧',
             categoryId: /*[[${tool.categoryId}]]*/ 0,
-            i18nKey: /*[[${#strings.arraySplit(tool.route, '/')[#arrays.length(#strings.arraySplit(tool.route, '/')) - 1]}]]*/ ''
+            i18nKey: /*[[${tool.route}]]*/ ''
         };
     </script>
-    <script src="/js/theme.js"></script>
-    <script src="/js/tool-engine.js"></script>
+    <script src="/js/theme.js?v=2"></script>
+    <script src="/js/tool-engine.js?v=2"></script>
 </body>
 </html>

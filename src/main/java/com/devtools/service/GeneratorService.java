@@ -117,7 +117,7 @@ public class GeneratorService {
 
         Map<String, Object> result = new LinkedHashMap<>();
         StringBuilder text = new StringBuilder();
-        Random rnd = new Random();
+        java.util.concurrent.ThreadLocalRandom rnd = java.util.concurrent.ThreadLocalRandom.current();
 
         for (int p = 0; p < paragraphs; p++) {
             if (p > 0) text.append("\n\n");

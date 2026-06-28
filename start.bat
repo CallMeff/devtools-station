@@ -1,15 +1,19 @@
 @echo off
-set JAVA_HOME=D:\software\jdk-21.0.11
-set MAVEN_HOME=D:\software\apache-maven-3.9.16
-set PATH=D:\software\jdk-21.0.11\bin;D:\software\apache-maven-3.9.16\bin;%PATH%
-echo JAVA_HOME=%JAVA_HOME%
-echo Testing Java...
-java -version
+title DevTools Station - 便携版
+cd /d "%~dp0"
 echo.
-echo Testing Maven...
-mvn --version
+echo ╔══════════════════════════════════════════════════╗
+echo ║       DevTools Station - 便携版                   ║
+echo ║       数据存储在: data\devtools.mv.db             ║
+echo ╚══════════════════════════════════════════════════╝
 echo.
-echo Starting Spring Boot...
-cd /d D:\workspace\devtools-station
-mvn spring-boot:run
+echo 正在启动服务...
+echo 访问地址: http://localhost:8088
+echo API文档:  http://localhost:8088/doc.html
+echo.
+start "" javaw -Xmx512m -Xms256m -Dfile.encoding=UTF-8 -jar "%~dp0target\devtools-station-1.0.0.jar" --spring.profiles.active=portable
+echo.
+echo 服务已在后台启动！
+echo 浏览器访问 http://localhost:8088 即可使用。
+echo.
 pause

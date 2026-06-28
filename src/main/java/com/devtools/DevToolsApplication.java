@@ -2,12 +2,14 @@ package com.devtools;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * DevTools Station - 开发者在线工具箱
  * 参考 it-tools / MikuTools / cursor.com 设计风格
  */
 @SpringBootApplication
+@EnableScheduling
 public class DevToolsApplication {
 
     public static void main(String[] args) {

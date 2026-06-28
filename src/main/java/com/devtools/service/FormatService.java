@@ -18,6 +18,15 @@ public class FormatService {
     public Map<String, Object> jsonFormat(String input, String mode) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("mode", mode);
+
+        // 空输入校验
+        if (input == null || input.trim().isEmpty()) {
+            result.put("valid", false);
+            result.put("error", "请输入 JSON 文本");
+            result.put("errorCode", "EMPTY_INPUT");
+            return result;
+        }
+
         try {
             Object parsed = JSONUtil.parse(input);
             if ("format".equals(mode)) {
@@ -32,7 +41,21 @@ public class FormatService {
             }
         } catch (Exception e) {
             result.put("valid", false);
-            result.put("error", "JSON 格式错误: " + e.getMessage());
+            String errMsg = e.getMessage();
+            // 提取更友好的错误信息
+            if (errMsg != null) {
+                if (errMsg.contains("Unexpected token")) {
+                    result.put("error", "JSON 格式错误：存在非法的字符或标记");
+                } else if (errMsg.contains("EOF") || errMsg.contains("end of input") || errMsg.contains("Unexpected end")) {
+                    result.put("error", "JSON 格式错误：输入不完整，缺少结束标记");
+                } else if (errMsg.contains("not match")) {
+                    result.put("error", "JSON 格式错误：括号、引号等符号不匹配");
+                } else {
+                    result.put("error", "JSON 格式错误：" + errMsg);
+                }
+            } else {
+                result.put("error", "JSON 格式错误：无法解析输入内容");
+            }
         }
         return result;
     }
@@ -166,7 +189,7 @@ public class FormatService {
         result.put("mode", mode != null ? mode : "format");
         try {
             if ("minify".equals(mode)) {
-                result.put("output", minifyHtml(input));
+                result.put("output", minifyXml(input));
             } else {
                 result.put("output", formatXml(input));
             }
@@ -206,5 +229,12 @@ public class FormatService {
             }
         }
         return out.toString().replaceAll("\\n\\s*\\n", "\n").trim();
+    }
+
+    private String minifyXml(String xml) {
+        return xml.replaceAll("<!--[\\s\\S]*?-->", "")
+                .replaceAll("\\s+", " ")
+                .replaceAll(">\\s+<", "><")
+                .trim();
     }
 }

@@ -126,10 +126,16 @@
             ],
             exampleInput: '{"name":"DevTools","version":"1.0","features":["crypto","format","convert"]}',
             formatOutput: function(data) {
-                if (data.valid !== undefined && !data.error) {
-                    return data.output || '✅ JSON OK';
+                if (data.error) {
+                    // 后端返回的错误信息（带 errorCode 的客户端预校验不会走到这里）
+                    return data.error;
                 }
-                return data.error || data.output || '';
+                if (data.mode === 'validate') {
+                    // 校验模式：返回校验结果消息
+                    return data.valid ? (data.message || '✅ JSON OK') : (data.error || '❌ JSON Invalid');
+                }
+                // format / minify 模式：返回格式化后的输出
+                return data.output || '';
             }
         },
         '/tools/format/sql': {
@@ -179,6 +185,12 @@
             method: 'POST',
             inputs: [
                 { name: 'input', i18n: 'tool_label.xml_text', type: 'textarea', required: true, rows: 10, ph_i18n: 'tool_ph.xml' }
+            ],
+            options: [
+                { name: 'mode', i18n: 'tool_opt.mode', type: 'select', options: [
+                    { value: 'format', i18n: 'tool_optval.format' },
+                    { value: 'minify', i18n: 'tool_optval.minify' }
+                ], default: 'format' }
             ],
             formatOutput: function(data) { return data.output || data.error || ''; }
         },
@@ -319,6 +331,151 @@
                 ], default: 'decode' }
             ],
             formatOutput: function(data) { return data.output || data.error || ''; }
+        },
+        '/tools/converter/excel2json': {
+            type: 'file-upload',
+            endpoint: '/api/tools/convert/excel2json',
+            method: 'POST',
+            fileField: 'file',
+            accept: '.xlsx,.xls',
+            templateUrl: '/api/tools/convert/excel2json/template',
+            showGuide: true,
+            inputs: [
+                { name: 'file', i18n: 'tool_label.excel_file', type: 'file', required: true, ph_i18n: 'tool_ph.excel2json' }
+            ],
+            options: [
+                { name: 'mode', i18n: 'tool_opt.convert_mode', type: 'select', options: [
+                    { value: 'array', i18n: 'tool_optval.excel_array' },
+                    { value: 'objects', i18n: 'tool_optval.excel_objects' }
+                ], default: 'array' }
+            ],
+            outputAsHtml: true,
+            formatOutput: function(data) {
+                if (data.error) {
+                    return '<div class="excel-error">'
+                        + '<div class="excel-error-icon">❌</div>'
+                        + '<div class="excel-error-msg"><strong>' + __('engine.error_title') + '</strong><br>' + escapeHtml(data.error) + '</div>'
+                        + '</div>';
+                }
+
+                var html = '';
+
+                // 文件信息摘要卡片
+                html += '<div class="excel-result-summary">';
+                html += '<div class="excel-summary-item"><span class="excel-summary-label">' + __('excel2json.file') + '</span><span class="excel-summary-value">' + escapeHtml(data.fileName || '-') + '</span></div>';
+                html += '<div class="excel-summary-item"><span class="excel-summary-label">' + __('excel2json.sheet') + '</span><span class="excel-summary-value">' + escapeHtml(data.sheetName || 'Sheet1') + '</span></div>';
+                html += '<div class="excel-summary-item"><span class="excel-summary-label">' + __('excel2json.rows') + '</span><span class="excel-summary-value">' + (data.rowCount || 0) + '</span></div>';
+                html += '<div class="excel-summary-item"><span class="excel-summary-label">' + __('excel2json.columns') + '</span><span class="excel-summary-value">' + (data.columnCount || 0) + '</span></div>';
+                html += '<div class="excel-summary-item"><span class="excel-summary-label">' + __('excel2json.mode') + '</span><span class="excel-summary-value">' + (data.mode === 'array' ? __('tool_optval.excel_array') : __('tool_optval.excel_objects')) + '</span></div>';
+                if (data.skippedRows > 0) {
+                    html += '<div class="excel-summary-item excel-summary-warn"><span class="excel-summary-label">' + __('excel2json.skipped') + '</span><span class="excel-summary-value">' + data.skippedRows + ' ' + __('excel2json.empty_rows') + '</span></div>';
+                }
+                html += '</div>';
+
+                // 警告信息
+                if (data.warning) {
+                    html += '<div class="excel-warning">⚠️ ' + escapeHtml(data.warning) + '</div>';
+                }
+                if (data.warnings && data.warnings.length > 0) {
+                    html += '<div class="excel-warnings-box">';
+                    html += '<div class="excel-warnings-title">⚠️ ' + __('excel2json.parsing_warnings') + '</div>';
+                    html += '<ul class="excel-warnings-list">';
+                    data.warnings.forEach(function(w) {
+                        html += '<li>' + escapeHtml(w) + '</li>';
+                    });
+                    html += '</ul></div>';
+                }
+
+                // Objects 模式：每行一个 JSON 对象，用数据网格表格展示
+                if (data.mode === 'objects' && data.output && typeof data.output === 'object') {
+                    // 后端返回 Map，转为数组便于操作
+                    var rowsArr = Array.isArray(data.output) ? data.output : Object.values(data.output);
+                    var rowKeys = Array.isArray(data.output) ? null : Object.keys(data.output);
+                    var headers = data.headers || [];
+                    var totalCols = headers.length;
+
+                    window.__excelRowsData = rowsArr.slice();
+                    window.__excelRowsFormatted = {};
+                    window.__excelGridHeaders = headers;
+
+                    html += '<div class="excel-grid-block">';
+                    // 工具栏
+                    html += '<div class="excel-grid-toolbar">';
+                    html += '<span class="excel-grid-title">' + (data.rowCount || rowsArr.length) + ' ' + __('excel2json.rows') + ' / ' + totalCols + ' ' + __('excel2json.columns') + '</span>';
+                    html += '<button class="excel-copy-btn" onclick="excelCopyAllJson()">📋 ' + __('excel2json.copy_all') + '</button>';
+                    html += '</div>';
+
+                    // 数据网格表格
+                    html += '<div class="excel-grid-wrapper">';
+                    html += '<table class="excel-grid-table">';
+                    // 表头
+                    html += '<thead><tr>';
+                    html += '<th class="excel-grid-num">#</th>';
+                    for (var hi = 0; hi < headers.length; hi++) {
+                        html += '<th>' + escapeHtml(String(headers[hi])) + '</th>';
+                    }
+                    html += '<th class="excel-grid-actions-th">' + __('excel2json.actions') + '</th>';
+                    html += '</tr></thead>';
+                    // 数据行
+                    html += '<tbody>';
+                    for (var ri = 0; ri < rowsArr.length; ri++) {
+                        var rowObj = rowsArr[ri];
+                        var rowNum = ri + 1;
+                        var rowIdx = ri;
+                        html += '<tr class="excel-grid-row" data-row-idx="' + rowIdx + '" id="excelGridRow' + rowIdx + '">';
+                        html += '<td class="excel-grid-num">' + rowNum + '</td>';
+                        for (var ci = 0; ci < headers.length; ci++) {
+                            var cellVal = rowObj[headers[ci]];
+                            var displayVal = (cellVal === null || cellVal === undefined) ? '' : String(cellVal);
+                            html += '<td>' + escapeHtml(displayVal) + '</td>';
+                        }
+                        html += '<td class="excel-grid-actions-cell">';
+                        html += '<button class="excel-grid-btn" onclick="excelToggleGridRow(\'' + rowIdx + '\')" title="' + __('excel2json.format') + '">📐</button>';
+                        html += '<button class="excel-grid-btn" onclick="excelCopyGridRow(\'' + rowIdx + '\')" title="' + __('tool.copy') + '">📋</button>';
+                        html += '</td>';
+                        html += '</tr>';
+                    }
+                    html += '</tbody></table>';
+                    html += '</div>';
+                    html += '</div>';
+
+                    window.__excelAllJson = JSON.stringify(rowsArr);
+
+                } else {
+                    // Array 模式：整体 JSON 展示
+                    var jsonStr = JSON.stringify(data.output, null, 2);
+                    html += '<div class="excel-json-output">';
+                    html += '<div class="excel-json-toolbar">';
+                    html += '<span class="excel-json-label">JSON</span>';
+                    html += '<button class="excel-copy-btn" onclick="excelCopyJson()" data-i18n="tool.copy">📋 ' + __('tool.copy') + '</button>';
+                    html += '</div>';
+                    html += '<pre class="excel-json-pre" id="excelJsonContent">' + escapeHtml(jsonStr) + '</pre>';
+                    html += '</div>';
+                    window.__excelJsonStr = jsonStr;
+                }
+
+                return html;
+            }
+        },
+
+        '/tools/converter/json-yaml': {
+            type: 'text-transform',
+            endpoint: '/api/tools/convert/json-yaml',
+            method: 'POST',
+            inputs: [
+                { name: 'input', i18n: 'tool_label.input_text', type: 'textarea', required: true, rows: 10, ph_i18n: 'tool_ph.json_yaml' }
+            ],
+            options: [
+                { name: 'mode', i18n: 'tool_opt.convert_direction', type: 'select', options: [
+                    { value: 'json2yaml', i18n: 'tool_optval.json_to_yaml' },
+                    { value: 'yaml2json', i18n: 'tool_optval.yaml_to_json' }
+                ], default: 'json2yaml' }
+            ],
+            exampleInput: '{"name":"DevTools","version":"1.0","features":["crypto","format","convert"]}',
+            formatOutput: function(data) {
+                if (data.error) return data.error;
+                return data.output || '';
+            }
         },
 
         // ── 生成器 ──
@@ -566,6 +723,123 @@
             ],
             formatOutput: function(data) { return data.output || data.error || ''; }
         },
+        '/tools/network/batch-http': {
+            type: 'file-upload',
+            endpoint: '/api/tools/network/batch-http',
+            method: 'POST',
+            fileField: 'file',
+            accept: '.xlsx,.xls',
+            templateUrl: '/api/tools/network/batch-http/template',
+            showGuide: true,
+            guideGroup: 'batch_http',
+            inputs: [
+                { name: 'file', i18n: 'tool_label.excel_file', type: 'file', required: true, ph_i18n: 'tool_ph.batch_http' }
+            ],
+            extraInputs: [
+                { name: 'url', i18n: 'batch_http.url', type: 'text', required: true, ph_i18n: 'batch_http.url_ph', default: 'http://localhost:8088/api/tools/network/batch-http/test' },
+                { name: 'headers', i18n: 'batch_http.headers', type: 'textarea', rows: 3, ph_i18n: 'batch_http.headers_ph' }
+            ],
+            options: [
+                { name: 'method', i18n: 'batch_http.method', type: 'select', options: [
+                    { value: 'GET', i18n: 'batch_http.method_get' },
+                    { value: 'POST', i18n: 'batch_http.method_post' },
+                    { value: 'PUT', i18n: 'batch_http.method_put' },
+                    { value: 'PATCH', i18n: 'batch_http.method_patch' },
+                    { value: 'DELETE', i18n: 'batch_http.method_delete' }
+                ], default: 'POST' },
+                { name: 'sendMode', i18n: 'batch_http.send_mode', type: 'select', options: [
+                    { value: 'one_per_row', i18n: 'batch_http.one_per_row' },
+                    { value: 'all_at_once', i18n: 'batch_http.all_at_once' }
+                ], default: 'one_per_row' }
+            ],
+            outputAsHtml: true,
+            formatOutput: function(data) {
+                if (data.error) {
+                    return '<div class="excel-error">'
+                        + '<div class="excel-error-icon">❌</div>'
+                        + '<div class="excel-error-msg"><strong>' + __('engine.error_title') + '</strong><br>' + escapeHtml(data.error) + '</div>'
+                        + '</div>';
+                }
+
+                var html = '';
+
+                // 请求摘要
+                html += '<div class="excel-result-summary">';
+                html += '<div class="excel-summary-item"><span class="excel-summary-label">🔗 URL</span><span class="excel-summary-value" style="font-family:monospace;font-size:12px;">' + escapeHtml(data.url || '') + '</span></div>';
+                html += '<div class="excel-summary-item"><span class="excel-summary-label">' + __('batch_http.method') + '</span><span class="excel-summary-value" style="font-weight:700;color:#6366f1;">' + escapeHtml(data.method || '') + '</span></div>';
+                html += '<div class="excel-summary-item"><span class="excel-summary-label">' + __('batch_http.send_mode') + '</span><span class="excel-summary-value">' + (data.sendMode === 'all_at_once' ? __('batch_http.all_at_once') : __('batch_http.one_per_row')) + '</span></div>';
+                html += '<div class="excel-summary-item"><span class="excel-summary-label">' + __('excel2json.rows') + '</span><span class="excel-summary-value">' + (data.rowCount || 0) + '</span></div>';
+                html += '<div class="excel-summary-item"><span class="excel-summary-label">⏱ ' + __('batch_http.total_time') + '</span><span class="excel-summary-value">' + (data.totalTime || 0) + 'ms</span></div>';
+                html += '</div>';
+
+                // 统计条
+                var successCount = data.successCount || 0;
+                var failCount = data.failCount || 0;
+                var totalCount = data.totalCount || 0;
+                html += '<div class="batch-http-stats">';
+                html += '<span class="batch-stat batch-stat-ok">✅ ' + successCount + ' ' + __('batch_http.success') + '</span>';
+                html += '<span class="batch-stat batch-stat-fail">❌ ' + failCount + ' ' + __('batch_http.failed') + '</span>';
+                html += '<span class="batch-stat batch-stat-total">📊 ' + totalCount + ' ' + __('batch_http.total') + '</span>';
+                html += '</div>';
+
+                // 结果列表
+                if (data.results && data.results.length > 0) {
+                    html += '<div class="batch-http-results">';
+                    var results = data.results;
+                    for (var i = 0; i < results.length; i++) {
+                        var r = results[i];
+                        var isOk = r.status >= 200 && r.status < 300;
+                        var statusClass = isOk ? 'batch-status-ok' : 'batch-status-fail';
+                        var statusText = r.status === 0 ? 'ERROR' : String(r.status);
+                        var rowIdx = r.rowIndex;
+                        var rowLabel = rowIdx > 0 ? '#' + rowIdx : '📦';
+
+                        html += '<div class="batch-http-item ' + statusClass + '">';
+                        html += '<div class="batch-item-header">';
+                        html += '<span class="batch-item-num">' + rowLabel + '</span>';
+                        html += '<span class="batch-item-status">' + statusText + '</span>';
+                        html += '<span class="batch-item-time">' + (r.time || 0) + 'ms</span>';
+                        html += '<div class="batch-item-actions">';
+                        html += '<button class="batch-copy-btn" onclick="batchHttpCopyRow(' + i + ')" title="' + __('tool.copy') + '">📋</button>';
+                        html += '</div>';
+                        html += '</div>';
+
+                        // 如果有错误
+                        if (r.error) {
+                            html += '<div class="batch-item-error">⚠️ ' + escapeHtml(r.error) + '</div>';
+                        }
+
+                        // 响应体（折叠）
+                        if (r.body) {
+                            var bodyId = 'batchHttpBody' + i;
+                            var shortBody = r.body.length > 300 ? escapeHtml(r.body.substring(0, 300)) + '...' : escapeHtml(r.body);
+                            html += '<div class="batch-item-body-wrapper">';
+                            html += '<pre class="batch-item-body" id="' + bodyId + '">' + shortBody + '</pre>';
+                            if (r.body && r.body.length > 300) {
+                                html += '<button class="batch-expand-btn" onclick="batchHttpToggleBody(\'' + bodyId + '\')" data-full="">' + __('batch_http.expand') + '</button>';
+                            }
+                            html += '</div>';
+                        }
+
+                        // 请求数据（只有 one_per_row 模式显示）
+                        if (r.rowData) {
+                            var dataId = 'batchHttpData' + i;
+                            html += '<div class="batch-item-data-wrapper" style="display:none;" id="' + dataId + '_wrapper">';
+                            html += '<pre class="batch-item-data" id="' + dataId + '">' + escapeHtml(JSON.stringify(r.rowData, null, 2)) + '</pre>';
+                            html += '</div>';
+                        }
+
+                        html += '</div>';
+                    }
+                    html += '</div>';
+
+                    // 存储数据供复制
+                    window.__batchHttpResults = results;
+                }
+
+                return html;
+            }
+        },
 
         // ── 开发者工具 ──
         '/tools/devtools/cron': {
@@ -621,6 +895,58 @@
                     html += '<tr><td>' + e[0] + '</td><td>' + e[1] + '</td></tr>';
                 });
                 html += '</tbody></table>';
+                return html;
+            },
+            outputAsHtml: true
+        },
+        '/tools/devtools/jwt': {
+            type: 'text-transform',
+            endpoint: '/api/tools/dev/jwt',
+            method: 'POST',
+            inputs: [
+                { name: 'input', i18n: 'tool_label.jwt_token', type: 'textarea', required: true, rows: 6, ph_i18n: 'tool_ph.jwt' }
+            ],
+            exampleInput: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+            formatOutput: function(data) {
+                if (data.error) return '<div class="ts-error">❌ ' + escapeHtml(data.error) + '</div>';
+                if (data.payload_error) return '<div class="ts-error">⚠️ ' + escapeHtml(data.payload_error) + '</div>';
+
+                var html = '';
+
+                // 状态横幅
+                var isExpired = data.is_expired;
+                var statusColor = data.status.indexOf('过期') > -1 ? '#ef4444' : (data.status.indexOf('有效') > -1 ? '#4ade80' : '#f59e0b');
+                html += '<div class="jwt-status-banner" style="padding:8px 16px;border-radius:8px;margin-bottom:16px;background:' + (isExpired ? 'rgba(239,68,68,0.15)' : 'rgba(74,222,128,0.15)') + ';border:1px solid ' + statusColor + ';">';
+                html += '<span style="color:' + statusColor + ';font-weight:600;">' + (isExpired ? '⏰ ' : '✅ ') + escapeHtml(data.status) + '</span>';
+                if (data.algorithm) {
+                    html += '<span style="margin-left:16px;color:#9ca3af;">' + escapeHtml(data.algorithm) + '</span>';
+                }
+                html += '</div>';
+
+                // Header
+                html += '<div class="jwt-section"><h4 style="color:#a5b4fc;margin:0 0 8px;">📋 Header</h4>';
+                html += '<pre style="margin:0;background:rgba(0,0,0,0.2);padding:10px;border-radius:6px;font-size:13px;white-space:pre-wrap;">' + escapeHtml(data.header_raw || '{}') + '</pre></div>';
+
+                // Payload
+                html += '<div class="jwt-section"><h4 style="color:#6ee7b7;margin:16px 0 8px;">📦 Payload</h4>';
+                html += '<pre style="margin:0;background:rgba(0,0,0,0.2);padding:10px;border-radius:6px;font-size:13px;white-space:pre-wrap;">' + escapeHtml(data.payload_raw || '{}') + '</pre></div>';
+
+                // 时间字段
+                if (data.time_fields && data.time_fields.length > 0) {
+                    html += '<div class="jwt-section"><h4 style="color:#fbbf24;margin:16px 0 8px;">⏱️ 时间字段</h4>';
+                    html += '<table class="output-table"><thead><tr><th>字段</th><th>日期时间</th><th>Unix 秒</th></tr></thead><tbody>';
+                    data.time_fields.forEach(function(f) {
+                        html += '<tr><td>' + escapeHtml(f.name) + '</td><td>' + escapeHtml(f.value) + '</td><td><code>' + escapeHtml(f.epoch_seconds) + '</code></td></tr>';
+                    });
+                    html += '</tbody></table></div>';
+                }
+
+                // 签名
+                if (data.signature_present) {
+                    html += '<div class="jwt-section"><h4 style="color:#f472b6;margin:16px 0 8px;">🔏 签名</h4>';
+                    html += '<code style="word-break:break-all;color:#9ca3af;font-size:12px;">' + escapeHtml(data.signature_short || data.signature) + '</code></div>';
+                }
+
                 return html;
             },
             outputAsHtml: true
@@ -692,6 +1018,60 @@
         // 生成输入表单
         if (config.type === 'readonly') {
             html += '<div style="text-align:center;padding:20px;color:#9ca3af;" data-i18n="engine.loading_data">' + __('engine.loading_data') + '</div>';
+        } else if (config.type === 'file-upload') {
+            // 功能引导说明
+            if (config.showGuide) {
+                var guideG = config.guideGroup || 'excel2json';
+                html += '<div class="excel-guide-panel">';
+                html += '<div class="excel-guide-title">📖 ' + __(guideG + '.guide_title') + '</div>';
+                html += '<div class="excel-guide-steps">';
+                html += '<div class="excel-guide-step">';
+                html += '<span class="excel-step-num">1</span>';
+                html += '<span class="excel-step-text">' + __(guideG + '.guide_step1') + '</span>';
+                html += '</div>';
+                html += '<div class="excel-guide-step">';
+                html += '<span class="excel-step-num">2</span>';
+                html += '<span class="excel-step-text">' + __(guideG + '.guide_step2') + '</span>';
+                html += '</div>';
+                html += '<div class="excel-guide-step">';
+                html += '<span class="excel-step-num">3</span>';
+                html += '<span class="excel-step-text">' + __(guideG + '.guide_step3') + '</span>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+
+            // 模板下载按钮（支持按 guideGroup 区分不同工具的模板提示文字）
+            if (config.templateUrl) {
+                var tplPrefix = config.guideGroup || 'excel2json';
+                var templateTip = __(tplPrefix + '.template_tip') !== (tplPrefix + '.template_tip') ? __(tplPrefix + '.template_tip') : __('excel2json.template_tip');
+                var downloadLabel = __(tplPrefix + '.download_template') !== (tplPrefix + '.download_template') ? __(tplPrefix + '.download_template') : __('excel2json.download_template');
+                html += '<div class="excel-template-bar">';
+                html += '<span class="excel-template-tip">💡 ' + templateTip + '</span>';
+                html += '<a href="' + config.templateUrl + '" class="excel-template-btn">📥 ' + downloadLabel + '</a>';
+                html += '</div>';
+            }
+
+            // 文件上传类型
+            config.inputs.forEach(function(inp) {
+                html += '<div class="input-group">';
+                html += '<label data-i18n="' + inp.i18n + '">' + __(inp.i18n) + '</label>';
+                html += '<div class="file-upload-area" id="fileUploadArea">';
+                html += '<input type="file" name="' + inp.name + '" id="fileInput"';
+                if (config.accept) html += ' accept="' + config.accept + '"';
+                html += ' style="display:none;" onchange="onFileSelected(this)">';
+                html += '<div class="file-upload-label" onclick="document.getElementById(\'fileInput\').click()">';
+                html += '<span class="file-upload-icon">📁</span>';
+                html += '<span class="file-upload-text" data-i18n="excel2json.select_file">' + __('excel2json.select_file') + '</span>';
+                html += '<span class="file-upload-hint" data-i18n="excel2json.supported_formats">' + __('excel2json.supported_formats') + '</span>';
+                html += '</div>';
+                html += '<div class="file-selected-info" id="fileSelectedInfo" style="display:none;">';
+                html += '<span class="file-name" id="selectedFileName"></span>';
+                html += '<button type="button" class="file-clear-btn" onclick="clearFileSelection()">✕</button>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            });
         } else if (config.type === 'dual-input') {
             html += '<div class="input-row">';
             config.inputs.forEach(function(inp, i) {
@@ -785,9 +1165,18 @@
             config.extraInputs.forEach(function(inp) {
                 html += '<div class="input-group">';
                 html += '<label data-i18n="' + inp.i18n + '">' + __(inp.i18n) + '</label>';
-                html += '<input type="' + (inp.type || 'text') + '" name="' + inp.name + '" data-i18n-placeholder="' + (inp.ph_i18n || '') + '" placeholder="' + __(inp.ph_i18n || inp.placeholder || '') + '"';
-                if (inp.required) html += ' required';
-                html += '>';
+                if (inp.type === 'textarea') {
+                    html += '<textarea name="' + inp.name + '" rows="' + (inp.rows || 3) + '" data-i18n-placeholder="' + (inp.ph_i18n || '') + '" placeholder="' + __(inp.ph_i18n || inp.placeholder || '') + '"';
+                    if (inp.required) html += ' required';
+                    html += '>';
+                    if (inp.default !== undefined) html += inp.default;
+                    html += '</textarea>';
+                } else {
+                    html += '<input type="' + (inp.type || 'text') + '" name="' + inp.name + '" data-i18n-placeholder="' + (inp.ph_i18n || '') + '" placeholder="' + __(inp.ph_i18n || inp.placeholder || '') + '"';
+                    if (inp.default !== undefined) html += ' value="' + inp.default + '"';
+                    if (inp.required) html += ' required';
+                    html += '>';
+                }
                 html += '</div>';
             });
         }
@@ -840,13 +1229,121 @@
         errorDiv.style.display = 'none';
         outputSection.style.display = 'none';
 
+        // JSON 工具：客户端预校验，即时反馈
+        if (TOOL.route === '/tools/format/json') {
+            var jsonInputEl = document.querySelector('[name="input"]');
+            var jsonInput = jsonInputEl ? jsonInputEl.value : '';
+            if (!jsonInput || !jsonInput.trim()) {
+                if (btn) { btn.disabled = false; btn.innerHTML = __('engine.execute'); }
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '⚠ ' + __('validate.json_empty');
+                return;
+            }
+            try {
+                JSON.parse(jsonInput);
+            } catch (e) {
+                if (btn) { btn.disabled = false; btn.innerHTML = __('engine.execute'); }
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '⚠ ' + __('validate.json_invalid') + ': ' + e.message;
+                return;
+            }
+        }
+
+        // 文件上传类型：使用 FormData + multipart/form-data
+        if (config.type === 'file-upload') {
+            var fileInput = document.getElementById('fileInput');
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                if (btn) { btn.disabled = false; btn.innerHTML = __('engine.execute'); }
+                // 清空上次结果
+                outputDiv.innerHTML = '';
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '⚠ ' + __('excel2json.no_file');
+                return;
+            }
+
+            var file = fileInput.files[0];
+            var fileName = file.name || '';
+
+            // 前端预校验：文件格式
+            if (config.accept) {
+                var acceptList = Array.isArray(config.accept) ? config.accept : config.accept.split(',');
+                var extOk = false;
+                var lowerName = fileName.toLowerCase();
+                for (var ei = 0; ei < acceptList.length; ei++) {
+                    if (lowerName.endsWith(acceptList[ei].trim().toLowerCase())) {
+                        extOk = true;
+                        break;
+                    }
+                }
+                if (!extOk) {
+                    if (btn) { btn.disabled = false; btn.innerHTML = __('engine.execute'); }
+                    outputDiv.innerHTML = '';
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = '⚠ ' + __('excel2json.invalid_format');
+                    return;
+                }
+            }
+
+            // 前端预校验：空文件
+            if (file.size === 0) {
+                if (btn) { btn.disabled = false; btn.innerHTML = __('engine.execute'); }
+                outputDiv.innerHTML = '';
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '⚠ ' + __('excel2json.empty_file');
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append(config.fileField || 'file', file);
+
+            // 收集所有非文件字段：text/textarea/select
+            inputSection.querySelectorAll('input[name], textarea[name], select[name]').forEach(function(el) {
+                if (el.type === 'file') return;
+                formData.append(el.name, el.value);
+            });
+
+            var url = config.endpoint;
+            var options = { method: 'POST', body: formData };
+
+            fetch(url, options)
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (btn) { btn.disabled = false; btn.innerHTML = __('engine.execute'); }
+                    outputSection.style.display = 'block';
+                    if (res.code === 200) {
+                        var output = config.formatOutput(res.data);
+                        if (config.outputAsHtml) {
+                            outputDiv.className = 'tool-output tool-output-html';
+                            outputDiv.innerHTML = output;
+                        } else {
+                            outputDiv.className = 'tool-output';
+                            outputDiv.innerHTML = '<pre style="margin:0;white-space:pre-wrap;word-break:break-all;font-family:inherit;">' + escapeHtml(output) + '</pre>';
+                        }
+                    } else {
+                        // 清空上次成功的结果
+                        outputDiv.innerHTML = '';
+                        errorDiv.style.display = 'block';
+                        errorDiv.textContent = '❌ ' + (res.message || __('engine.unknown_error'));
+                    }
+                })
+                .catch(function(err) {
+                    if (btn) { btn.disabled = false; btn.innerHTML = __('engine.execute'); }
+                    // 清空上次成功的结果
+                    outputDiv.innerHTML = '';
+                    errorDiv.style.display = 'block';
+                    outputSection.style.display = 'block';
+                    errorDiv.textContent = __('engine.network_error') + err.message;
+                });
+            return;
+        }
+
         var params = {};
 
         // 收集所有输入
         inputSection.querySelectorAll('[name]').forEach(function(el) {
             if (el.type === 'checkbox') {
                 params[el.name] = el.checked;
-            } else {
+            } else if (el.type !== 'file') {
                 params[el.name] = el.value;
             }
         });
@@ -888,8 +1385,10 @@
                 if (res.code === 200) {
                     var output = config.formatOutput(res.data);
                     if (config.outputAsHtml) {
+                        outputDiv.className = 'tool-output tool-output-html';
                         outputDiv.innerHTML = output;
                     } else {
+                        outputDiv.className = 'tool-output';
                         outputDiv.innerHTML = '<pre style="margin:0;white-space:pre-wrap;word-break:break-all;font-family:inherit;">' + escapeHtml(output) + '</pre>';
                     }
                 } else {
@@ -1061,12 +1560,147 @@
         outputSection.style.display = 'none';
         errorDiv.style.display = 'none';
         outputDiv.innerHTML = '';
+        outputDiv.className = 'tool-output';
+    };
+
+    window.excelCopyJson = function() {
+        var text = window.__excelJsonStr || outputDiv.textContent || outputDiv.innerText;
+        navigator.clipboard.writeText(text).then(function() {
+            showToast('✅ ' + (__('toast.copied') || 'Copied to clipboard'));
+        }).catch(function() {
+            showToast('⚠️ ' + (__('toast.copy_failed_manual') || 'Copy failed, please select manually'));
+        });
+    };
+
+    // Excel 数据网格：切换某行为格式化 JSON 视图
+    window.excelToggleGridRow = function(rowIdx) {
+        var row = document.getElementById('excelGridRow' + rowIdx);
+        if (!row || !window.__excelRowsData) return;
+        var rowData = window.__excelRowsData[rowIdx];
+        if (!rowData) return;
+
+        var headers = window.__excelGridHeaders || [];
+        var totalCols = headers.length + 2; // # + 数据列 + 操作列
+        var isJsonMode = row.classList.contains('excel-grid-json-mode');
+
+        if (isJsonMode) {
+            // 恢复为网格视图
+            if (window.__excelGridRowBackup && window.__excelGridRowBackup[rowIdx]) {
+                row.outerHTML = window.__excelGridRowBackup[rowIdx];
+                window.__excelGridRowBackup[rowIdx] = null;
+            }
+            window.__excelRowsFormatted[rowIdx] = false;
+        } else {
+            // 保存原行 HTML
+            if (!window.__excelGridRowBackup) window.__excelGridRowBackup = {};
+            window.__excelGridRowBackup[rowIdx] = row.outerHTML;
+
+            // 替换为 JSON 视图
+            var rowNum = parseInt(rowIdx) + 1;
+            var pretty = JSON.stringify(rowData, null, 2);
+            row.outerHTML = '<tr class="excel-grid-row excel-grid-json-mode" id="excelGridRow' + rowIdx + '" data-row-idx="' + rowIdx + '">'
+                + '<td class="excel-grid-num">' + rowNum + '</td>'
+                + '<td colspan="' + (totalCols - 2) + '" class="excel-grid-json-cell">'
+                + '<pre class="excel-grid-json-pre">' + escapeHtml(pretty) + '</pre>'
+                + '</td>'
+                + '<td class="excel-grid-actions-cell">'
+                + '<button class="excel-grid-btn" onclick="excelToggleGridRow(\'' + rowIdx + '\')" title="' + (__('excel2json.format') || 'Format') + '">📊</button>'
+                + '<button class="excel-grid-btn" onclick="excelCopyGridRow(\'' + rowIdx + '\')" title="' + (__('tool.copy') || 'Copy') + '">📋</button>'
+                + '</td>'
+                + '</tr>';
+            window.__excelRowsFormatted[rowIdx] = true;
+        }
+    };
+
+    // Excel 数据网格：复制单行 JSON
+    window.excelCopyGridRow = function(rowIdx) {
+        if (!window.__excelRowsData) return;
+        var rowData = window.__excelRowsData[rowIdx];
+        if (!rowData) return;
+        var text = JSON.stringify(rowData, null, 2);
+        navigator.clipboard.writeText(text).then(function() {
+            showToast('✅ ' + (__('toast.copied') || 'Copied to clipboard'));
+        }).catch(function() {
+            showToast('⚠️ ' + (__('toast.copy_failed_manual') || 'Copy failed, please select manually'));
+        });
+    };
+
+    // Excel 数据网格：复制全部行 JSON
+    window.excelCopyAllJson = function() {
+        var text;
+        if (window.__excelAllJson) {
+            try {
+                text = JSON.stringify(JSON.parse(window.__excelAllJson), null, 2);
+            } catch(e) {
+                text = window.__excelAllJson;
+            }
+        } else {
+            text = outputDiv.textContent || outputDiv.innerText;
+        }
+        navigator.clipboard.writeText(text).then(function() {
+            showToast('✅ ' + (__('toast.copied') || 'Copied to clipboard'));
+        }).catch(function() {
+            showToast('⚠️ ' + (__('toast.copy_failed_manual') || 'Copy failed, please select manually'));
+        });
+    };
+
+    // 批量HTTP：展开/折叠响应体
+    window.batchHttpToggleBody = function(bodyId) {
+        var pre = document.getElementById(bodyId);
+        if (!pre || !window.__batchHttpResults) return;
+        var idx = parseInt(bodyId.replace('batchHttpBody', ''));
+        var r = window.__batchHttpResults[idx];
+        if (!r || !r.body) return;
+
+        var isExpanded = pre.classList.contains('batch-expanded');
+        if (isExpanded) {
+            // 折叠
+            pre.textContent = r.body.length > 300 ? escapeHtml(r.body.substring(0, 300)) + '...' : escapeHtml(r.body);
+            pre.classList.remove('batch-expanded');
+            // 更新按钮文字
+            var wrapper = pre.parentElement;
+            if (wrapper) {
+                var btn = wrapper.querySelector('.batch-expand-btn');
+                if (btn) btn.textContent = __('batch_http.expand');
+            }
+        } else {
+            // 展开
+            pre.textContent = r.body;
+            pre.classList.add('batch-expanded');
+            var wrapper2 = pre.parentElement;
+            if (wrapper2) {
+                var btn2 = wrapper2.querySelector('.batch-expand-btn');
+                if (btn2) btn2.textContent = __('batch_http.collapse');
+            }
+        }
+    };
+
+    // 批量HTTP：复制单次请求的响应体
+    window.batchHttpCopyRow = function(idx) {
+        if (!window.__batchHttpResults) return;
+        var r = window.__batchHttpResults[idx];
+        if (!r) return;
+        var text = r.body || (r.error || '');
+        navigator.clipboard.writeText(text).then(function() {
+            showToast('✅ ' + (__('toast.copied') || 'Copied to clipboard'));
+        }).catch(function() {
+            showToast('⚠️ ' + (__('toast.copy_failed_manual') || 'Copy failed, please select manually'));
+        });
     };
 
     window.clearAll = function() {
         inputSection.querySelectorAll('textarea, input[type="text"], input[type="number"]').forEach(function(el) {
             el.value = '';
         });
+        // 清除文件选择
+        var fileInput = document.getElementById('fileInput');
+        if (fileInput) {
+            fileInput.value = '';
+            var info = document.getElementById('fileSelectedInfo');
+            var label = document.querySelector('.file-upload-label');
+            if (info) info.style.display = 'none';
+            if (label) label.style.display = 'flex';
+        }
         clearResult();
     };
 
@@ -1123,6 +1757,31 @@
         inputSection.innerHTML = '<div style="text-align:center;padding:20px;color:#9ca3af;" data-i18n="engine.loading_data">' + __('engine.loading_data') + '</div>';
     }
 })();
+
+// ============ 文件上传辅助函数 ============
+
+// 文件选中回调
+window.onFileSelected = function(input) {
+    var info = document.getElementById('fileSelectedInfo');
+    var nameEl = document.getElementById('selectedFileName');
+    var label = document.querySelector('.file-upload-label');
+    if (input.files && input.files.length > 0) {
+        var file = input.files[0];
+        if (nameEl) nameEl.textContent = file.name;
+        if (info) info.style.display = 'flex';
+        if (label) label.style.display = 'none';
+    }
+};
+
+// 清除文件选择
+window.clearFileSelection = function() {
+    var fileInput = document.getElementById('fileInput');
+    var info = document.getElementById('fileSelectedInfo');
+    var label = document.querySelector('.file-upload-label');
+    if (fileInput) fileInput.value = '';
+    if (info) info.style.display = 'none';
+    if (label) label.style.display = 'flex';
+};
 
 // ============ 时间戳工具专用函数 ============
 

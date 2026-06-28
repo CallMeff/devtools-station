@@ -1,10 +1,19 @@
 package com.devtools.service;
 
 import cn.hutool.core.util.StrUtil;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.io.ByteArrayOutputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 /**
  * 网络工具服务
@@ -85,6 +94,466 @@ public class NetworkService {
             }
         }
         return false;
+    }
+
+    /**
+     * 批量发送 HTTP 请求（Excel 每行作为请求体）
+     *
+     * @param file     Excel 文件
+     * @param url      目标 URL
+     * @param method   HTTP 方法 (GET/POST/PUT/PATCH/DELETE)
+     * @param headers  请求头（每行 key:value）
+     * @param sendMode 发送模式：one_per_row / all_at_once
+     */
+    public Map<String, Object> batchHttpRequest(MultipartFile file, String url, String method,
+                                                 String headers, String sendMode) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("url", url);
+        result.put("method", method.toUpperCase());
+        result.put("sendMode", sendMode);
+
+        // 1. 解析 Excel
+        List<String> parsedHeaders;
+        List<Map<String, Object>> rows;
+        try {
+            Map<String, Object> parsed = parseExcel(file);
+            if (parsed.containsKey("error")) {
+                result.put("error", parsed.get("error"));
+                return result;
+            }
+            @SuppressWarnings("unchecked")
+            List<String> h = (List<String>) parsed.get("headers");
+            parsedHeaders = h;
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> r = (List<Map<String, Object>>) parsed.get("rows");
+            rows = r;
+            result.put("rowCount", rows.size());
+            result.put("columnCount", parsedHeaders.size());
+            result.put("headers", parsedHeaders);
+            result.put("fileName", file.getOriginalFilename());
+        } catch (Exception e) {
+            result.put("error", "Excel 解析失败: " + e.getMessage());
+            return result;
+        }
+
+        if (rows.isEmpty()) {
+            result.put("error", "Excel 文件中没有数据行");
+            return result;
+        }
+
+        // 2. 解析请求头
+        Map<String, String> headerMap = parseHeaders(headers);
+
+        // 3. 构建 HttpClient
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(15))
+                .build();
+
+        // 4. 发送请求
+        List<Map<String, Object>> requestResults = new ArrayList<>();
+        long totalStart = System.currentTimeMillis();
+        int successCount = 0;
+        int failCount = 0;
+
+        if ("all_at_once".equals(sendMode)) {
+            // 一次性发送所有数据
+            String jsonBody = toJsonArray(rows);
+            Map<String, Object> singleResult = sendSingleRequest(client, url, method.toUpperCase(), headerMap, jsonBody);
+            singleResult.put("rowIndex", -1);
+            singleResult.put("dataCount", rows.size());
+            requestResults.add(singleResult);
+            if ((int) singleResult.get("status") >= 200 && (int) singleResult.get("status") < 300) {
+                successCount = 1;
+            } else {
+                failCount = 1;
+            }
+        } else {
+            // 逐行发送
+            for (int i = 0; i < rows.size(); i++) {
+                Map<String, Object> rowData = rows.get(i);
+                String jsonBody = toJson(rowData);
+                Map<String, Object> rowResult = sendSingleRequest(client, url, method.toUpperCase(), headerMap, jsonBody);
+                rowResult.put("rowIndex", i + 1);
+                rowResult.put("dataCount", 1);
+                rowResult.put("rowData", rowData);
+                requestResults.add(rowResult);
+                if ((int) rowResult.get("status") >= 200 && (int) rowResult.get("status") < 300) {
+                    successCount++;
+                } else {
+                    failCount++;
+                }
+            }
+        }
+
+        long totalEnd = System.currentTimeMillis();
+        result.put("totalTime", totalEnd - totalStart);
+        result.put("successCount", successCount);
+        result.put("failCount", failCount);
+        result.put("totalCount", requestResults.size());
+        result.put("results", requestResults);
+
+        return result;
+    }
+
+    /**
+     * 发送单次 HTTP 请求
+     */
+    private Map<String, Object> sendSingleRequest(HttpClient client, String url, String method,
+                                                   Map<String, String> headers, String jsonBody) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        long start = System.currentTimeMillis();
+
+        try {
+            HttpRequest.Builder builder = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofSeconds(30));
+
+            // 设置请求头
+            builder.header("Content-Type", "application/json");
+            for (Map.Entry<String, String> e : headers.entrySet()) {
+                builder.header(e.getKey(), e.getValue());
+            }
+
+            // 设置方法和请求体
+            String upperMethod = method.toUpperCase();
+            HttpRequest.BodyPublisher bodyPublisher;
+            if ("GET".equals(upperMethod) || "HEAD".equals(upperMethod) || "DELETE".equals(upperMethod)) {
+                // GET/HEAD/DELETE 通常不带 body，但支持的话也可以
+                bodyPublisher = HttpRequest.BodyPublishers.noBody();
+            } else {
+                bodyPublisher = HttpRequest.BodyPublishers.ofString(jsonBody, java.nio.charset.StandardCharsets.UTF_8);
+            }
+
+            builder.method(upperMethod, bodyPublisher);
+            HttpRequest request = builder.build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            long elapsed = System.currentTimeMillis() - start;
+
+            result.put("status", response.statusCode());
+            result.put("time", elapsed);
+            result.put("body", truncateBody(response.body(), 5000));
+            result.put("error", null);
+        } catch (Exception e) {
+            long elapsed = System.currentTimeMillis() - start;
+            result.put("status", 0);
+            result.put("time", elapsed);
+            result.put("body", null);
+            result.put("error", e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * 解析 Excel 文件，返回 headers 和 rows
+     */
+    private Map<String, Object> parseExcel(MultipartFile file) throws Exception {
+        Map<String, Object> result = new LinkedHashMap<>();
+        try (java.io.InputStream is = file.getInputStream();
+             Workbook workbook = WorkbookFactory.create(is)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+            if (sheet == null || sheet.getLastRowNum() < 1) {
+                result.put("error", "Excel 文件为空或没有数据行");
+                return result;
+            }
+
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) {
+                result.put("error", "Excel 文件第一行为空，无法获取表头");
+                return result;
+            }
+
+            List<String> headers = new ArrayList<>();
+            for (int i = 0; i < headerRow.getLastCellNum(); i++) {
+                Cell cell = headerRow.getCell(i);
+                String header = getCellStringValue(cell);
+                if (header.isEmpty()) {
+                    header = getColumnLetter(i);
+                }
+                headers.add(header);
+            }
+
+            List<Map<String, Object>> rows = new ArrayList<>();
+            for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+                Row row = sheet.getRow(r);
+                if (row == null || isRowEmpty(row)) continue;
+                Map<String, Object> obj = new LinkedHashMap<>();
+                for (int c = 0; c < headers.size(); c++) {
+                    Cell cell = row.getCell(c);
+                    obj.put(headers.get(c), getCellValue(cell));
+                }
+                rows.add(obj);
+            }
+
+            result.put("headers", headers);
+            result.put("rows", rows);
+        }
+        return result;
+    }
+
+    private String getCellStringValue(Cell cell) {
+        if (cell == null) return "";
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue().trim();
+            case NUMERIC -> {
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    yield cell.getLocalDateTimeCellValue().toString();
+                }
+                double v = cell.getNumericCellValue();
+                if (v == Math.floor(v) && !Double.isInfinite(v)) {
+                    yield String.valueOf((long) v);
+                }
+                yield String.valueOf(v);
+            }
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            case FORMULA -> {
+                try {
+                    yield cell.getStringCellValue().trim();
+                } catch (Exception e) {
+                    yield String.valueOf(cell.getNumericCellValue());
+                }
+            }
+            default -> "";
+        };
+    }
+
+    private Object getCellValue(Cell cell) {
+        if (cell == null) return null;
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue();
+            case NUMERIC -> {
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    yield cell.getLocalDateTimeCellValue().toString();
+                }
+                double v = cell.getNumericCellValue();
+                if (v == Math.floor(v) && !Double.isInfinite(v)) {
+                    yield (long) v;
+                }
+                yield v;
+            }
+            case BOOLEAN -> cell.getBooleanCellValue();
+            case FORMULA -> {
+                try {
+                    yield cell.getStringCellValue();
+                } catch (Exception e) {
+                    yield cell.getNumericCellValue();
+                }
+            }
+            default -> null;
+        };
+    }
+
+    private boolean isRowEmpty(Row row) {
+        for (int i = 0; i < row.getLastCellNum(); i++) {
+            Cell cell = row.getCell(i);
+            if (cell != null && cell.getCellType() != CellType.BLANK
+                    && !getCellStringValue(cell).isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String getColumnLetter(int index) {
+        StringBuilder sb = new StringBuilder();
+        int n = index;
+        while (n >= 0) {
+            sb.insert(0, (char) ('A' + (n % 26)));
+            n = n / 26 - 1;
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 解析请求头字符串（每行 key:value）
+     */
+    private Map<String, String> parseHeaders(String headers) {
+        Map<String, String> map = new LinkedHashMap<>();
+        if (headers == null || headers.trim().isEmpty()) return map;
+        for (String line : headers.split("\\n")) {
+            line = line.trim();
+            if (line.isEmpty()) continue;
+            int idx = line.indexOf(':');
+            if (idx > 0) {
+                String key = line.substring(0, idx).trim();
+                String value = line.substring(idx + 1).trim();
+                if (!key.isEmpty()) {
+                    map.put(key, value);
+                }
+            }
+        }
+        return map;
+    }
+
+    private String toJson(Map<String, Object> map) {
+        StringBuilder sb = new StringBuilder("{");
+        boolean first = true;
+        for (Map.Entry<String, Object> e : map.entrySet()) {
+            if (!first) sb.append(",");
+            first = false;
+            sb.append("\"").append(escapeJson(e.getKey())).append("\":");
+            appendJsonValue(sb, e.getValue());
+        }
+        sb.append("}");
+        return sb.toString();
+    }
+
+    private String toJsonArray(List<Map<String, Object>> rows) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < rows.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(toJson(rows.get(i)));
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void appendJsonValue(StringBuilder sb, Object val) {
+        if (val == null) {
+            sb.append("null");
+        } else if (val instanceof String s) {
+            sb.append("\"").append(escapeJson(s)).append("\"");
+        } else if (val instanceof Number || val instanceof Boolean) {
+            sb.append(val);
+        } else if (val instanceof Map) {
+            sb.append(toJson((Map<String, Object>) val));
+        } else if (val instanceof List list) {
+            sb.append("[");
+            for (int i = 0; i < list.size(); i++) {
+                if (i > 0) sb.append(",");
+                appendJsonValue(sb, list.get(i));
+            }
+            sb.append("]");
+        } else {
+            sb.append("\"").append(escapeJson(val.toString())).append("\"");
+        }
+    }
+
+    private String escapeJson(String s) {
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+    }
+
+    private String truncateBody(String body, int maxLen) {
+        if (body == null) return null;
+        if (body.length() <= maxLen) return body;
+        return body.substring(0, maxLen) + "\n... (截断，共 " + body.length() + " 字符)";
+    }
+
+    /**
+     * 测试回显接口 —— 用于批量 HTTP 工具本地试功能
+     * 返回接收到的请求体 + 元信息
+     */
+    public Map<String, Object> echoTestRequest(Map<String, Object> body) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("message", "✅ 批量HTTP测试接口 - 请求已收到!");
+        result.put("receivedAt", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+
+        if (body != null && !body.isEmpty()) {
+            // 判断是单条数据还是数组
+            result.put("dataType", "single");
+            result.put("fieldCount", body.size());
+            result.put("fields", new ArrayList<>(body.keySet()));
+            result.put("received", body);
+        } else {
+            result.put("dataType", "empty");
+            result.put("tip", "未收到请求体数据，请确认 Excel 文件包含数据行");
+        }
+
+        return result;
+    }
+
+    /**
+     * 批量HTTP测试接口 —— 接收 JSON 数组的回显
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> echoTestRequestArray(Object body) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("message", "✅ 批量HTTP测试接口 - 请求已收到! (一次性模式)");
+        result.put("receivedAt", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+
+        if (body instanceof List list) {
+            result.put("dataType", "array");
+            result.put("rowCount", list.size());
+            result.put("received", body);
+            // 每行字段名汇总
+            if (!list.isEmpty() && list.get(0) instanceof Map m) {
+                result.put("fields", new ArrayList<>(m.keySet()));
+                result.put("fieldCount", m.size());
+            }
+        } else if (body instanceof Map map) {
+            // 兼容包装的情况
+            result.put("dataType", "single");
+            result.put("fieldCount", map.size());
+            result.put("fields", new ArrayList<>(map.keySet()));
+            result.put("received", map);
+        } else {
+            result.put("dataType", "unknown");
+            result.put("tip", "未收到有效请求体数据");
+        }
+
+        return result;
+    }
+
+    /**
+     * 生成批量 HTTP 请求的 Excel 模板文件
+     */
+    public byte[] generateBatchHttpTemplate() {
+        try (Workbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("批量请求数据");
+
+            // 列宽
+            sheet.setColumnWidth(0, 4000);
+            sheet.setColumnWidth(1, 2500);
+            sheet.setColumnWidth(2, 4500);
+            sheet.setColumnWidth(3, 5500);
+
+            // 表头样式
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+
+            // 表头行
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"姓名", "年龄", "城市", "邮箱"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            // 示例数据行
+            Object[][] data = {
+                    {"张三", 28, "北京", "zhangsan@example.com"},
+                    {"李四", 35, "上海", "lisi@example.com"},
+                    {"王五", 22, "深圳", "wangwu@example.com"}
+            };
+
+            for (int r = 0; r < data.length; r++) {
+                Row row = sheet.createRow(r + 1);
+                for (int c = 0; c < data[r].length; c++) {
+                    Cell cell = row.createCell(c);
+                    if (data[r][c] instanceof Number) {
+                        cell.setCellValue(((Number) data[r][c]).doubleValue());
+                    } else {
+                        cell.setCellValue((String) data[r][c]);
+                    }
+                }
+            }
+
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            workbook.write(bos);
+            return bos.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("生成模板文件失败: " + e.getMessage(), e);
+        }
     }
 
     /**

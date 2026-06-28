@@ -276,6 +276,19 @@
     max-height: 500px;
     overflow-y: auto;
 }
+/* HTML 输出模式：重置文本样式，让内部 HTML 自由布局 */
+.tool-output.tool-output-html {
+    padding: 0;
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: inherit;
+    white-space: normal;
+    word-break: normal;
+    max-height: none;
+    overflow-y: visible;
+    border-radius: 0;
+}
 
 /* 错误提示 */
 .tool-error {
@@ -881,4 +894,741 @@
     font-size: 13px;
     color: var(--text-secondary);
     line-height: 1.5;
+}
+
+/* 文件上传区域 */
+.file-upload-area {
+    position: relative;
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--card-list-bg);
+}
+.file-upload-area:hover {
+    border-color: var(--accent);
+    background: rgba(99, 102, 241, 0.05);
+}
+.file-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+.file-upload-icon {
+    font-size: 40px;
+    line-height: 1;
+}
+.file-upload-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.file-upload-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.file-selected-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+}
+.file-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent-light);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.file-clear-btn {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.file-clear-btn:hover {
+    background: rgba(239, 68, 68, 0.4);
+}
+
+/* ════════════════════════════════════════════
+   Excel 转 JSON — 专属样式
+   ════════════════════════════════════════════ */
+
+/* 引导面板 */
+.excel-guide-panel {
+    background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.06));
+    border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+}
+.excel-guide-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent-light);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.excel-guide-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.excel-guide-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.excel-step-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.excel-step-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* 模板下载栏 */
+.excel-template-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--card-list-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+.excel-template-tip {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+.excel-template-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.excel-template-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+    color: #fff;
+}
+
+/* 结果摘要卡片 */
+.excel-result-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    background: var(--surface-bg);
+    border: 1px solid var(--surface-border);
+    border-radius: 10px;
+}
+.excel-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.excel-summary-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.excel-summary-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 500;
+    word-break: break-all;
+}
+.excel-summary-warn .excel-summary-value {
+    color: #f59e0b;
+}
+
+/* 错误展示 */
+.excel-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 8px;
+}
+.excel-error-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+.excel-error-msg {
+    font-size: 14px;
+    color: #fca5a5;
+    line-height: 1.6;
+}
+.excel-error-msg strong {
+    color: #f87171;
+}
+
+/* 警告信息 */
+.excel-warning {
+    padding: 10px 14px;
+    background: rgba(251,191,36,0.08);
+    border: 1px solid rgba(251,191,36,0.2);
+    border-radius: 6px;
+    color: #fbbf24;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+.excel-warnings-box {
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    background: rgba(251,191,36,0.06);
+    border: 1px solid rgba(251,191,36,0.15);
+    border-radius: 8px;
+}
+.excel-warnings-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fbbf24;
+    margin-bottom: 8px;
+}
+.excel-warnings-list {
+    margin: 0;
+    padding-left: 20px;
+    list-style: disc;
+}
+.excel-warnings-list li {
+    font-size: 13px;
+    color: #fcd34d;
+    margin-bottom: 4px;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    line-height: 1.5;
+}
+
+/* JSON 输出区域 */
+.excel-json-output {
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--input-bg);
+}
+.excel-json-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface-bg);
+    border-bottom: 1px solid var(--surface-border);
+}
+.excel-json-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+.excel-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    background: rgba(99,102,241,0.15);
+    border: 1px solid rgba(99,102,241,0.25);
+    color: #a5b4fc;
+    border-radius: 5px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.excel-copy-btn:hover {
+    background: rgba(99,102,241,0.25);
+    color: #c4b5fd;
+}
+.excel-json-pre {
+    margin: 0;
+    padding: 16px;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* 逐行 JSON 展示（objects 模式） */
+.excel-rows-block {
+    margin-top: 16px;
+}
+
+.excel-rows-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface-bg);
+    border: 1px solid var(--surface-border);
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+}
+
+.excel-rows-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.excel-rows-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.excel-rows-container {
+    border: 1px solid var(--surface-border);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 520px;
+    overflow-y: auto;
+    background: var(--input-bg);
+}
+
+.excel-row-item {
+    border-bottom: 1px solid var(--surface-border);
+}
+
+.excel-row-item:last-child {
+    border-bottom: none;
+}
+
+.excel-row-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: rgba(99,102,241,0.06);
+    border-bottom: 1px solid rgba(99,102,241,0.08);
+}
+
+.excel-row-num {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(99,102,241,0.12);
+    padding: 2px 10px;
+    border-radius: 10px;
+}
+
+.excel-row-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.excel-row-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--surface-border);
+    border-radius: 5px;
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.excel-row-btn:hover {
+    background: rgba(99,102,241,0.15);
+    border-color: rgba(99,102,241,0.3);
+    color: var(--text-primary);
+}
+
+.excel-row-json {
+    margin: 0;
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow-x: auto;
+    background: transparent;
+    transition: all 0.2s;
+}
+
+.excel-row-json.expanded {
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* ===== Excel 数据网格表格（objects 模式新版）===== */
+.excel-grid-block {
+    margin-top: 16px;
+}
+
+.excel-grid-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface-bg);
+    border: 1px solid var(--surface-border);
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+}
+
+.excel-grid-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.excel-grid-wrapper {
+    border: 1px solid var(--surface-border);
+    border-radius: 0 0 8px 8px;
+    max-height: 520px;
+    overflow: auto;
+    background: var(--input-bg);
+}
+
+.excel-grid-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 600px;
+}
+
+.excel-grid-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.excel-grid-table thead th {
+    background: rgba(99,102,241,0.12);
+    color: var(--text-primary);
+    font-weight: 600;
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 2px solid rgba(99,102,241,0.18);
+    white-space: nowrap;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+}
+
+.excel-grid-num {
+    width: 44px;
+    min-width: 44px;
+    text-align: center !important;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.excel-grid-actions-th {
+    width: 70px;
+    min-width: 70px;
+    text-align: center !important;
+}
+
+.excel-grid-row {
+    transition: background 0.15s;
+}
+
+.excel-grid-row:hover {
+    background: rgba(99,102,241,0.04);
+}
+
+.excel-grid-row td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--surface-border);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+}
+
+.excel-grid-actions-cell {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.excel-grid-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--surface-border);
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin: 0 2px;
+}
+
+.excel-grid-btn:hover {
+    background: rgba(99,102,241,0.15);
+    border-color: rgba(99,102,241,0.3);
+    color: var(--text-primary);
+}
+
+/* JSON 展开模式下的行 */
+.excel-grid-row.excel-grid-json-mode {
+    background: rgba(99,102,241,0.03);
+}
+
+.excel-grid-row.excel-grid-json-mode td {
+    border-bottom: 1px solid rgba(99,102,241,0.1);
+}
+
+.excel-grid-json-cell {
+    padding: 8px 12px !important;
+    max-width: none !important;
+    overflow: visible !important;
+}
+
+.excel-grid-json-pre {
+    margin: 0;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* ===== 批量 HTTP 请求（batch-http）===== */
+.batch-http-stats {
+    display: flex;
+    gap: 12px;
+    margin: 12px 0;
+    flex-wrap: wrap;
+}
+
+.batch-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.batch-stat-ok {
+    background: rgba(74,222,128,0.15);
+    color: #4ade80;
+    border: 1px solid rgba(74,222,128,0.25);
+}
+
+.batch-stat-fail {
+    background: rgba(239,68,68,0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239,68,68,0.25);
+}
+
+.batch-stat-total {
+    background: rgba(99,102,241,0.12);
+    color: #818cf8;
+    border: 1px solid rgba(99,102,241,0.2);
+}
+
+.batch-http-results {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.batch-http-item {
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--input-bg);
+    transition: border-color 0.15s;
+}
+
+.batch-http-item.batch-status-ok {
+    border-left: 3px solid #4ade80;
+}
+
+.batch-http-item.batch-status-fail {
+    border-left: 3px solid #ef4444;
+}
+
+.batch-item-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--surface-bg);
+    border-bottom: 1px solid var(--surface-border);
+    font-size: 13px;
+}
+
+.batch-item-num {
+    font-weight: 700;
+    color: var(--text-muted);
+    min-width: 30px;
+    font-size: 12px;
+}
+
+.batch-item-status {
+    font-weight: 700;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: 14px;
+}
+
+.batch-status-ok .batch-item-status {
+    color: #4ade80;
+}
+
+.batch-status-fail .batch-item-status {
+    color: #ef4444;
+}
+
+.batch-item-time {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    margin-left: auto;
+}
+
+.batch-item-actions {
+    display: flex;
+    gap: 2px;
+}
+
+.batch-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--surface-border);
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.batch-copy-btn:hover {
+    background: rgba(99,102,241,0.15);
+    border-color: rgba(99,102,241,0.3);
+    color: var(--text-primary);
+}
+
+.batch-item-error {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #ef4444;
+    background: rgba(239,68,68,0.08);
+    border-bottom: 1px solid rgba(239,68,68,0.15);
+    word-break: break-all;
+}
+
+.batch-item-body-wrapper {
+    padding: 8px 12px;
+}
+
+.batch-item-body {
+    margin: 0;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.batch-item-body.batch-expanded {
+    max-height: none;
+}
+
+.batch-expand-btn {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 12px;
+    background: transparent;
+    border: 1px solid var(--surface-border);
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.batch-expand-btn:hover {
+    background: rgba(99,102,241,0.12);
+    border-color: rgba(99,102,241,0.3);
+    color: var(--text-primary);
+}
+
+.batch-item-data-wrapper {
+    padding: 0 12px 8px;
+}
+
+.batch-item-data {
+    margin: 0;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #94a3b8;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 120px;
+    overflow-y: auto;
 }

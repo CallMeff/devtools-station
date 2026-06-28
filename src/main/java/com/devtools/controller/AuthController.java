@@ -23,6 +23,9 @@ public class AuthController {
     private final AuthService authService;
     private final UserSettingsService settingsService;
 
+    @org.springframework.beans.factory.annotation.Value("${app.security.password-min-length:8}")
+    private int passwordMinLength;
+
     /**
      * 发送注册验证码
      */
@@ -73,8 +76,8 @@ public class AuthController {
             if (verifyCode == null || verifyCode.trim().isEmpty()) {
                 return Result.error(400, "验证码不能为空");
             }
-            if (newPassword == null || newPassword.length() < 8) {
-                return Result.error(400, "新密码至少8位");
+            if (newPassword == null || newPassword.length() < passwordMinLength) {
+                return Result.error(400, "新密码至少" + passwordMinLength + "位");
             }
 
             authService.resetPassword(email.trim(), verifyCode.trim(), newPassword);
@@ -98,8 +101,8 @@ public class AuthController {
             if (username == null || username.trim().isEmpty()) {
                 return Result.error(400, "用户名不能为空");
             }
-            if (password == null || password.length() < 8) {
-                return Result.error(400, "密码至少8位");
+            if (password == null || password.length() < passwordMinLength) {
+                return Result.error(400, "密码至少" + passwordMinLength + "位");
             }
             if (username.length() < 2 || username.length() > 20) {
                 return Result.error(400, "用户名2-20个字符");

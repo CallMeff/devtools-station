@@ -7,8 +7,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.devtools.entity.*;
 import com.devtools.mapper.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,6 +25,7 @@ import java.util.Map;
  * 3. 传输：前端 AES 加密敏感字段 + HTTPS
  * 4. Token密钥：从外部配置读取（可通过环境变量 APP_TOKEN_SECRET 覆盖）
  */
+@Slf4j
 @Service
 public class AuthService {
 
@@ -413,5 +416,21 @@ public class AuthService {
         activity.setDetail(detail);
         activity.setIpAddress(ip);
         activityMapper.insert(activity);
+    }
+
+    /**
+     * 定时清理过期会话（每小时执行一次）
+     */
+    @Scheduled(fixedRate = 3600000)
+    public void cleanExpiredSessions() {
+        try {
+            int deleted = sessionMapper.delete(new LambdaQueryWrapper<UserSession>()
+                    .lt(UserSession::getExpiresAt, LocalDateTime.now()));
+            if (deleted > 0) {
+                log.info("清理过期会话: {} 条", deleted);
+            }
+        } catch (Exception e) {
+            log.error("清理过期会话失败", e);
+        }
     }
 }

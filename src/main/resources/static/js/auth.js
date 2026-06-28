@@ -10,6 +10,14 @@
     var USER_KEY = 'devtools-user-info';
     var API_BASE = '';
 
+    // 从页面 meta 标签读取服务端配置
+    function getPasswordMinLength() {
+        var meta = document.querySelector('meta[name="app-password-min-length"]');
+        return meta ? parseInt(meta.getAttribute('content')) || 8 : 8;
+    }
+    function getUserMinLength() { return 2; }
+    function getUserMaxLength() { return 20; }
+
     // 翻译辅助函数
     function __(key, params) {
         if (window.__I18N__ && typeof window.__I18N__.t === 'function') {
@@ -196,7 +204,7 @@
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' +
                                 '</div>' +
-                                '<input type="text" id="regUsername" name="regUsername" data-i18n-placeholder="auth.username_reg_placeholder" placeholder="用户名（2-20位）" autocomplete="username">' +
+                                '<input type="text" id="regUsername" name="regUsername" data-i18n-placeholder="auth.username_reg_placeholder" placeholder="用户名（' + getUserMinLength() + '-' + getUserMaxLength() + '位）" autocomplete="username">' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
@@ -208,7 +216,7 @@
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
                                 '</div>' +
-                                '<input type="password" id="regPassword" name="regPassword" data-i18n-placeholder="auth.password_reg_placeholder" placeholder="密码（至少8位）" autocomplete="new-password">' +
+                                '<input type="password" id="regPassword" name="regPassword" data-i18n-placeholder="auth.password_reg_placeholder" placeholder="密码（至少' + getPasswordMinLength() + '位）" autocomplete="new-password">' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
@@ -247,7 +255,7 @@
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
                                 '</div>' +
-                                '<input type="password" id="resetNewPassword" name="resetNewPassword" data-i18n-placeholder="auth.reset_new_pwd_placeholder" placeholder="新密码（至少8位）" autocomplete="new-password">' +
+                                '<input type="password" id="resetNewPassword" name="resetNewPassword" data-i18n-placeholder="auth.reset_new_pwd_placeholder" placeholder="新密码（至少' + getPasswordMinLength() + '位）" autocomplete="new-password">' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
@@ -350,6 +358,7 @@
                         }
                         closeOverlay();
                         updateUI();
+                        if (window.DevFavorites) window.DevFavorites.refresh();
                         showToast(__('toast.login_success'));
                     } else {
                         errEl.textContent = res.message || __('validate.login_failed');
@@ -376,7 +385,7 @@
             if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(username)) { errEl.textContent = __('validate.username_chars'); return; }
             if (!email) { errEl.textContent = __('validate.email_required'); return; }
             if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) { errEl.textContent = __('validate.email_format'); return; }
-            if (!password || password.length < 8) { errEl.textContent = __('validate.password_min'); return; }
+            if (!password || password.length < getPasswordMinLength()) { errEl.textContent = __('validate.password_min', [getPasswordMinLength()]); return; }
             if (password !== password2) { errEl.textContent = __('validate.password_mismatch'); return; }
 
             var btn = overlay.querySelector('#regSubmit');
@@ -402,6 +411,7 @@
                         }
                         closeOverlay();
                         updateUI();
+                        if (window.DevFavorites) window.DevFavorites.refresh();
                         showToast(__('toast.register_success'));
                     } else {
                         errEl.textContent = res.message || __('validate.register_failed');
@@ -472,7 +482,7 @@
             if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) { errEl.textContent = __('validate.email_format'); return; }
             if (!verifyCode) { errEl.textContent = __('validate.code_required'); return; }
             if (verifyCode.length !== 6) { errEl.textContent = __('validate.code_format'); return; }
-            if (!newPassword || newPassword.length < 8) { errEl.textContent = __('validate.password_min'); return; }
+            if (!newPassword || newPassword.length < getPasswordMinLength()) { errEl.textContent = __('validate.password_min', [getPasswordMinLength()]); return; }
             if (newPassword !== newPassword2) { errEl.textContent = __('validate.password_mismatch'); return; }
 
             var btn = overlay.querySelector('#resetSubmit');
@@ -561,6 +571,7 @@
                         }
                         closeOverlay();
                         updateUI();
+                        if (window.DevFavorites) window.DevFavorites.refresh();
                         showToast(__('toast.wx_login_success'));
                     }, function(status) {
                         statusEl.textContent = status;
@@ -929,7 +940,7 @@
             errEl.textContent = '';
 
             if (!oldPassword) { errEl.textContent = __('validate.old_pwd_required'); return; }
-            if (!newPassword || newPassword.length < 8) { errEl.textContent = __('validate.password_min'); return; }
+            if (!newPassword || newPassword.length < getPasswordMinLength()) { errEl.textContent = __('validate.password_min', [getPasswordMinLength()]); return; }
             if (newPassword !== newPassword2) { errEl.textContent = __('validate.password_mismatch'); return; }
             if (oldPassword === newPassword) { errEl.textContent = __('validate.new_pwd_diff'); return; }
 
@@ -1022,6 +1033,7 @@
                     currentUser = res.data;
                     localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
                     updateUI();
+                    if (window.DevFavorites) window.DevFavorites.refresh();
                     // 同步主题
                     if (res.data.theme && window.DevTheme) {
                         window.DevTheme.set(res.data.theme);
@@ -1065,6 +1077,7 @@
             }
             clearAuth();
             updateUI();
+            if (window.DevFavorites) window.DevFavorites.refresh();
             showToast('已退出登录');
         },
 

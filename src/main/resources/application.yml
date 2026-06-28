@@ -13,6 +13,11 @@ spring:
   # 默认激活 prod 配置（使用 MySQL 数据库）
   profiles:
     active: prod
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   # Thymeleaf 配置
   thymeleaf:
     prefix: classpath:/templates/
@@ -20,6 +25,10 @@ spring:
     cache: false
     encoding: UTF-8
     mode: HTML
+  web:
+    resources:
+      chain:
+        cache: false
 
 # 应用安全配置
 app:
@@ -77,6 +86,44 @@ spring:
       idle-timeout: 30000
       max-lifetime: 1800000
       connection-timeout: 30000
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/data.sql
+      continue-on-error: true
+      encoding: UTF-8
+  mail:
+    host: smtp.qq.com
+    port: 465
+    username: your-email@qq.com
+    password: your-smtp-auth-code
+    protocol: smtps
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          starttls:
+            enable: true
+            required: true
+
+---
+# H2 便携版配置（免 MySQL，数据存本地文件 devtools.mv.db）
+spring:
+  config:
+    activate:
+      on-profile: portable
+  datasource:
+    url: jdbc:h2:file:./data/devtools;MODE=MySQL;DB_CLOSE_DELAY=-1;AUTO_RECONNECT=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
   sql:
     init:
       mode: always

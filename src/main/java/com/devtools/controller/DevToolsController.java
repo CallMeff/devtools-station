@@ -2,6 +2,7 @@ package com.devtools.controller;
 
 import com.devtools.common.Result;
 import com.devtools.service.DevToolsService;
+import com.devtools.service.JwtService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -14,9 +15,11 @@ import java.util.Map;
 public class DevToolsController {
 
     private final DevToolsService devToolsService;
+    private final JwtService jwtService;
 
-    public DevToolsController(DevToolsService devToolsService) {
+    public DevToolsController(DevToolsService devToolsService, JwtService jwtService) {
         this.devToolsService = devToolsService;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/cron")
@@ -32,5 +35,10 @@ public class DevToolsController {
     @GetMapping("/mime")
     public Result<Map<String, Object>> mimeTypes() {
         return Result.success(devToolsService.mimeTypes());
+    }
+
+    @PostMapping("/jwt")
+    public Result<Map<String, Object>> jwtDecode(@RequestParam String input) {
+        return Result.success(jwtService.decode(input));
     }
 }

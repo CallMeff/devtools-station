@@ -38,6 +38,8 @@ INSERT INTO dt_tool (category_id, name, description, icon, route, api_path, sort
 (3, '颜色转换', 'HEX/RGB/HSL 颜色格式互转', '🎯', '/tools/converter/color', '/api/tools/convert/color', 3, 0, 0),
 (3, '大小写转换', '大小写/驼峰/蛇形/常量命名转换', '🔤', '/tools/converter/case', '/api/tools/convert/case', 4, 0, 0),
 (3, 'Unicode 转换', 'Unicode 与中文互转', '🌍', '/tools/converter/unicode', '/api/tools/convert/unicode', 5, 0, 0),
+(3, 'Excel转JSON', 'Excel文件(.xlsx/.xls)转换为JSON格式', '📊', '/tools/converter/excel2json', '/api/tools/convert/excel2json', 6, 0, 1),
+(3, 'JSON 转 YAML', 'JSON 与 YAML 格式互转', '🔄', '/tools/converter/json-yaml', '/api/tools/convert/json-yaml', 7, 0, 1),
 
 -- 生成器
 (4, 'UUID 生成', '批量生成 UUID/GUID', '🆔', '/tools/generator/uuid', '/api/tools/generate/uuid', 1, 1, 0),
@@ -58,11 +60,13 @@ INSERT INTO dt_tool (category_id, name, description, icon, route, api_path, sort
 (6, 'User-Agent 解析', '浏览器 UA 字符串解析', '🔍', '/tools/network/ua', '/api/tools/network/ua', 2, 0, 0),
 (6, 'HTTP 状态码', 'HTTP 状态码参考大全', '📡', '/tools/network/http-status', '/api/tools/network/httpstatus', 3, 0, 0),
 (6, 'URL 编解码', 'URL 编码与解码', '🔗', '/tools/network/url', '/api/tools/network/url', 4, 0, 0),
+(6, '批量发送 HTTP 请求', '上传 Excel 作为数据源，逐行或批量发送 HTTP 请求', '📬', '/tools/network/batch-http', '/api/tools/network/batch-http', 5, 1, 1),
 
 -- 开发者工具
 (7, 'Cron 表达式', 'Cron 表达式解析与生成', '⏱️', '/tools/devtools/cron', '/api/tools/dev/cron', 1, 1, 0),
 (7, 'Git 命令速查', '常用 Git 命令速查表', '📚', '/tools/devtools/git', '/api/tools/dev/git', 2, 0, 0),
 (7, 'MIME 类型', '文件扩展名与 MIME 类型对照', '📁', '/tools/devtools/mime', '/api/tools/dev/mime', 3, 0, 0),
+(7, 'JWT 调试器', 'JWT Token 解析与字段分析（不验证签名）', '🎫', '/tools/devtools/jwt', '/api/tools/dev/jwt', 4, 0, 1),
 
 -- 编码解码
 (8, 'URL 编解码', 'URL Encode / Decode', '🔗', '/tools/encode/url', '/api/tools/encode/url', 1, 0, 0),

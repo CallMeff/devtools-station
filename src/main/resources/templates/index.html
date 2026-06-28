@@ -6,6 +6,7 @@
     <title data-i18n="home.page_title">DevTools Station - 开发者在线工具箱</title>
     <meta name="description" data-i18n-content="home.meta_desc" content="一站式开发者在线工具箱，提供加解密、格式化、转换、生成等40+开发常用工具">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="app-password-min-length" th:content="${passwordMinLength}">
     <!-- 防闪烁：在 CSS 加载前立即应用保存的主题 -->
     <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
     <link rel="stylesheet" href="/css/style.css">
@@ -13,7 +14,8 @@
     <script src="/js/i18n.js" defer></script>
     <script src="/js/auth.js" defer></script>
 </head>
-<body class="theme-dark">
+<body>
+    <script>(function(){var t=localStorage.getItem('devtools-theme')||'dark';document.body.className='theme-'+t;})()</script>
     <!-- 顶部导航 -->
     <header class="navbar">
         <div class="nav-inner">
@@ -87,6 +89,19 @@
         </div>
     </section>
 
+    <!-- 我的常用工具（登录用户可见，JS 动态渲染） -->
+    <section class="section" id="favoriteSection" style="display:none;">
+        <div class="section-header">
+            <h2 class="section-title">⭐ 我的常用工具</h2>
+            <p class="section-desc">你收藏的常用工具，快速访问</p>
+        </div>
+        <div class="tools-grid" id="favoriteToolsGrid"></div>
+        <div class="favorite-empty" id="favoriteEmpty" style="display:none;">
+            <div class="favorite-empty-icon">📌</div>
+            <p>还没有收藏的工具，点击工具卡片上的 <span class="fav-star fav-star-filled"></span> 按钮即可添加</p>
+        </div>
+    </section>
+
     <!-- 热门工具 -->
     <section class="section" th:if="${not #lists.isEmpty(hotTools)}">
         <div class="section-header">
@@ -95,12 +110,13 @@
         </div>
         <div class="hot-tools-grid">
             <a th:each="tool : ${hotTools}" th:href="@{${tool.route}}"
-               class="hot-tool-card" th:attr="data-tool-key=${tool.route}">
+               class="hot-tool-card" th:attr="data-tool-key=${tool.route},data-tool-id=${tool.id}">
                 <span class="tool-icon" th:text="${tool.icon}">🔑</span>
                 <div class="tool-info">
                     <h3 th:text="${tool.name}" th:attr="data-i18n-toolname=${tool.route}">工具名称</h3>
                     <p th:text="${tool.description}" th:attr="data-i18n-tooldesc=${tool.route}">工具描述</p>
                 </div>
+                <button class="fav-star" th:attr="data-tool-id=${tool.id}" title="添加到常用工具" onclick="event.preventDefault(); DevFavorites.toggle(this)" aria-label="收藏工具"></button>
                 <svg class="card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
             </a>
         </div>
@@ -122,12 +138,13 @@
                 <a th:each="tool : ${toolMap.get(cat.id)}"
                    th:if="${toolMap.containsKey(cat.id)}"
                    th:href="@{${tool.route}}"
-                   class="tool-card" th:attr="data-tool-key=${tool.route}">
+                   class="tool-card" th:attr="data-tool-key=${tool.route},data-tool-id=${tool.id}">
                     <span class="tool-card-icon" th:text="${tool.icon}">🔑</span>
                     <div class="tool-card-body">
                         <h4 class="tool-card-name" th:text="${tool.name}" th:attr="data-i18n-toolname=${tool.route}">工具名称</h4>
                         <p class="tool-card-desc" th:text="${tool.description}" th:attr="data-i18n-tooldesc=${tool.route}">描述</p>
                     </div>
+                    <button class="fav-star" th:attr="data-tool-id=${tool.id}" title="添加到常用工具" onclick="event.preventDefault(); DevFavorites.toggle(this)" aria-label="收藏工具"></button>
                     <span th:if="${tool.isNew == 1}" class="tag-new">NEW</span>
                 </a>
             </div>

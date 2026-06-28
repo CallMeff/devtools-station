@@ -232,9 +232,9 @@ a {
     display: none !important;
     visibility: hidden;
     position: absolute;
-    top: 46px;
-    right: 0;
-    width: 180px;
+    top: calc(100% + 4px);
+    right: -4px;
+    min-width: 200px;
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 14px;
@@ -246,6 +246,10 @@ a {
     display: block !important;
     visibility: visible;
     animation: fadeInDown 0.2s ease;
+}
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 .lang-option {
     display: flex;
@@ -1644,6 +1648,128 @@ body.theme-anime .auth-left-cpwd {
     gap: 8px;
 }
 .auth-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================
+   我的常用工具（收藏功能）
+   ============================================ */
+
+/* 收藏星标按钮 */
+.fav-star {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    padding: 0;
+}
+
+.fav-star::before {
+    content: '☆';
+    font-size: 18px;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.fav-star:hover {
+    background: rgba(251, 191, 36, 0.12);
+}
+
+.fav-star:hover::before {
+    color: #fbbf24;
+    transform: scale(1.15);
+}
+
+/* 已收藏状态 */
+.fav-star.fav-star-filled {
+    opacity: 1;
+}
+
+.fav-star.fav-star-filled::before {
+    content: '★';
+    color: #fbbf24;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+}
+
+/* 卡片 hover 时显示星标 */
+.tool-card:hover .fav-star,
+.hot-tool-card:hover .fav-star {
+    opacity: 1;
+}
+
+/* 已收藏的星标始终可见 */
+.tool-card .fav-star.fav-star-filled,
+.hot-tool-card .fav-star.fav-star-filled {
+    opacity: 1;
+}
+
+/* 收藏区域空状态 */
+.favorite-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+.favorite-empty-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    opacity: 0.6;
+}
+
+.favorite-empty p {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.favorite-empty .fav-star-filled {
+    display: inline-flex;
+    position: static;
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    opacity: 1;
+}
+
+.favorite-empty .fav-star-filled::before {
+    content: '★';
+    color: #fbbf24;
+    font-size: 16px;
+}
+
+/* 收藏 Toast */
+.fav-toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    padding: 10px 22px;
+    border-radius: 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+    z-index: 3000;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+}
+
+.fav-toast.show {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
