@@ -55,5 +55,4 @@ dist/
 .codebuddy/
 
 # ====== Temp ======
-/server.log
-/server_err.log
+# *.log already covers all log files
