@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/themes.css">
     <link rel="stylesheet" href="/css/tool.css">
+    <script src="/js/i18n.js" defer></script>
     <script src="/js/auth.js" defer></script>
 </head>
 <body class="theme-dark">
@@ -29,7 +30,7 @@
             <div class="nav-actions">
                 <div class="theme-switcher"></div>
                 <div class="lang-switcher"></div>
-                <a href="/" class="btn-ghost">🏠 首页</a>
+                <a href="/" class="btn-ghost" data-i18n="nav.home">🏠 首页</a>
             </div>
         </div>
     </header>
@@ -37,9 +38,9 @@
     <!-- 面包屑导航 -->
     <div class="breadcrumb-bar">
         <div class="breadcrumb-inner">
-            <a href="/">首页</a>
+            <a href="/" data-i18n="tool.breadcrumb_home">首页</a>
             <span class="breadcrumb-sep">/</span>
-            <a th:href="'/' + '#tools'" th:text="${category?.name}">分类</a>
+            <a th:href="'/' + '#tools'" th:text="${category?.name}" th:attr="data-cat-name-i18n=${category?.id}">分类</a>
             <span class="breadcrumb-sep">/</span>
             <span class="breadcrumb-current" th:text="${tool.name}">工具</span>
         </div>
@@ -55,21 +56,21 @@
                     <h1 class="tool-page-title" th:text="${tool.name}">工具名称</h1>
                     <p class="tool-page-desc" th:text="${tool.description}">工具描述</p>
                     <span th:if="${tool.isNew == 1}" class="tag-new" style="display:inline-block;margin-top:4px;">NEW</span>
-                    <span th:if="${tool.isHot == 1}" class="tag-hot" style="display:inline-block;margin-top:4px;margin-left:4px;background:#f59e0b;color:#000;padding:2px 8px;border-radius:4px;font-size:12px;">🔥 热门</span>
+                    <span th:if="${tool.isHot == 1}" class="tag-hot" style="display:inline-block;margin-top:4px;margin-left:4px;background:#f59e0b;color:#000;padding:2px 8px;border-radius:4px;font-size:12px;" data-i18n="tool.tag_hot">🔥 热门</span>
                 </div>
             </div>
 
             <!-- 动态输入区域 -->
             <div id="toolInputSection" class="tool-input-section">
-                <div class="loading-placeholder">加载中...</div>
+                <div class="loading-placeholder" data-i18n="tool.loading">加载中...</div>
             </div>
 
             <!-- 输出区域 -->
             <div id="toolOutputSection" class="tool-output-section" style="display:none;">
                 <div class="output-header">
-                    <h3>结果</h3>
-                    <button class="btn-sm" onclick="copyResult()">📋 复制</button>
-                    <button class="btn-sm" onclick="clearResult()">🗑 清除</button>
+                    <h3 data-i18n="tool.result">结果</h3>
+                    <button class="btn-sm" onclick="copyResult()" data-i18n="tool.copy">📋 复制</button>
+                    <button class="btn-sm" onclick="clearResult()" data-i18n="tool.clear">🗑 清除</button>
                 </div>
                 <div id="toolOutput" class="tool-output"></div>
             </div>
@@ -79,23 +80,23 @@
         <!-- 侧边栏：同类工具 -->
         <aside class="tool-sidebar">
             <div class="sidebar-card">
-                <h3 class="sidebar-title">同类工具</h3>
+                <h3 class="sidebar-title" data-i18n="tool.similar">同类工具</h3>
                 <ul class="sidebar-list">
                     <li th:each="t : ${relatedTools}" th:classappend="${t.id == tool.id} ? 'active'">
                         <a th:href="@{${t.route}}">
                             <span th:text="${t.icon}">🔧</span>
-                            <span th:text="${t.name}">工具名</span>
+                            <span th:text="${t.name}" th:attr="data-i18n-toolname=${t.route}">工具名</span>
                         </a>
                     </li>
                 </ul>
             </div>
             <div class="sidebar-card">
-                <h3 class="sidebar-title">分类导航</h3>
+                <h3 class="sidebar-title" data-i18n="tool.category_nav">分类导航</h3>
                 <ul class="sidebar-list">
                     <li th:each="cat : ${categories}">
                         <a th:href="'/#tools'">
                             <span th:text="${cat.icon}">📂</span>
-                            <span th:text="${cat.name}">分类</span>
+                            <span th:text="${cat.name}" th:attr="data-cat-name-i18n=${cat.id}">分类</span>
                         </a>
                     </li>
                 </ul>
@@ -107,29 +108,29 @@
     <footer class="footer" style="margin-top:60px;">
         <div class="footer-inner">
             <div class="footer-brand">
-                <span class="footer-logo">⚡ DevTools Station</span>
-                <p>为开发者打造的一站式在线工具箱</p>
+                <span class="footer-logo" data-i18n="footer.brand">⚡ DevTools Station</span>
+                <p data-i18n="footer.desc">为开发者打造的一站式在线工具箱</p>
             </div>
             <div class="footer-links">
                 <div class="footer-col">
-                    <h4>产品</h4>
-                    <a href="/#tools">全部工具</a>
-                    <a href="/api">API 文档</a>
+                    <h4 data-i18n="footer.product">产品</h4>
+                    <a href="/#tools" data-i18n="footer.all_tools">全部工具</a>
+                    <a href="/api" data-i18n="footer.api_docs">API 文档</a>
                 </div>
                 <div class="footer-col">
-                    <h4>资源</h4>
-                    <a href="/guide">使用指南</a>
-                    <a href="/changelog">更新日志</a>
+                    <h4 data-i18n="footer.resources">资源</h4>
+                    <a href="/guide" data-i18n="footer.guide">使用指南</a>
+                    <a href="/changelog" data-i18n="footer.changelog">更新日志</a>
                 </div>
                 <div class="footer-col">
-                    <h4>关于</h4>
-                    <a href="/about">关于我们</a>
-                    <a href="/feedback">反馈建议</a>
+                    <h4 data-i18n="footer.about">关于</h4>
+                    <a href="/about" data-i18n="footer.about_us">关于我们</a>
+                    <a href="/feedback" data-i18n="footer.feedback">反馈建议</a>
                 </div>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© 2024 DevTools Station. Built with ❤️ for developers.</p>
+            <p data-i18n="footer.copyright">© 2024 DevTools Station. Built with ❤️ for developers.</p>
         </div>
     </footer>
 
@@ -142,7 +143,8 @@
             apiPath: /*[[${tool.apiPath}]]*/ '',
             description: /*[[${tool.description}]]*/ '',
             icon: /*[[${tool.icon}]]*/ '🔧',
-            categoryId: /*[[${tool.categoryId}]]*/ 0
+            categoryId: /*[[${tool.categoryId}]]*/ 0,
+            i18nKey: /*[[${#strings.arraySplit(tool.route, '/')[#arrays.length(#strings.arraySplit(tool.route, '/')) - 1]}]]*/ ''
         };
     </script>
     <script src="/js/theme.js"></script>

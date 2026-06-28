@@ -75,7 +75,8 @@ public class WxLoginController {
                     }
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            // 无法获取局域网 IP，返回 null 使用默认值
         }
         return null;
     }

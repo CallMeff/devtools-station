@@ -1,6 +1,7 @@
 package com.devtools.controller;
 
 import com.devtools.common.Result;
+import com.devtools.common.WebUtils;
 import com.devtools.service.CryptoService;
 import com.devtools.service.NetworkService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +31,7 @@ public class NetworkController {
 
     @GetMapping("/ip")
     public Result<Map<String, Object>> clientIp(HttpServletRequest request) {
-        String ip = getClientIp(request);
+        String ip = WebUtils.getClientIp(request);
         String ua = request.getHeader("User-Agent");
         return Result.success(networkService.getClientIpInfo(ip, ua));
     }
@@ -44,22 +45,5 @@ public class NetworkController {
     public Result<Map<String, String>> urlEncode(@RequestParam String input,
                                                    @RequestParam(defaultValue = "encode") String mode) {
         return Result.success(cryptoService.urlCode(input, mode));
-    }
-
-    private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("X-Real-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        if (ip != null && ip.contains(",")) {
-            ip = ip.split(",")[0].trim();
-        }
-        return ip;
     }
 }

@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>反馈建议 - DevTools Station</title>
+    <title data-i18n="feedback.page_title">反馈建议 - DevTools Station</title>
     <!-- 防闪烁：在 CSS 加载前立即应用保存的主题 -->
     <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/themes.css">
+    <script src="/js/i18n.js" defer></script>
     <script src="/js/auth.js" defer></script>
     <style>
         .page-container { max-width:700px; margin:0 auto; padding:60px 24px; }
@@ -54,71 +55,110 @@
             <div class="nav-actions">
                 <div class="theme-switcher"></div>
                 <div class="lang-switcher"></div>
-                <a href="/" class="btn-ghost">🏠 首页</a>
+                <a href="/" class="btn-ghost" data-i18n="nav.home">🏠 首页</a>
             </div>
         </div>
     </header>
 
     <main class="page-container">
-        <h1>💬 反馈建议</h1>
-        <p class="subtitle">我们非常重视你的意见和建议，请告诉我们你的想法。</p>
+        <h1 data-i18n="feedback.title">💬 反馈建议</h1>
+        <p class="subtitle" data-i18n="feedback.subtitle">我们非常重视你的意见和建议，请告诉我们你的想法。</p>
 
         <div class="feedback-card" id="feedbackForm">
-            <h2>提交反馈</h2>
-            <p>无论是 Bug 报告、功能建议还是使用体验，欢迎随时提出。</p>
+            <h2 data-i18n="feedback.form_title">提交反馈</h2>
+            <p data-i18n="feedback.form_desc">无论是 Bug 报告、功能建议还是使用体验，欢迎随时提出。</p>
             <div class="form-group">
-                <label>反馈类型</label>
+                <label data-i18n="feedback.type">反馈类型</label>
                 <select id="fbType">
-                    <option value="suggestion">💡 功能建议</option>
-                    <option value="bug">🐛 Bug 报告</option>
-                    <option value="experience">😊 使用体验</option>
-                    <option value="other">📝 其他</option>
+                    <option value="suggestion" data-i18n="feedback.type_suggestion">💡 功能建议</option>
+                    <option value="bug" data-i18n="feedback.type_bug">🐛 Bug 报告</option>
+                    <option value="experience" data-i18n="feedback.type_experience">😊 使用体验</option>
+                    <option value="other" data-i18n="feedback.type_other">📝 其他</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>标题</label>
-                <input type="text" id="fbTitle" placeholder="简短描述你的反馈...">
+                <label data-i18n="feedback.title_label">标题</label>
+                <input type="text" id="fbTitle" data-i18n-placeholder="feedback.title_placeholder" placeholder="简短描述你的反馈...">
             </div>
             <div class="form-group">
-                <label>详细描述</label>
-                <textarea id="fbContent" placeholder="请详细描述你的建议或遇到的问题..."></textarea>
+                <label data-i18n="feedback.detail">详细描述</label>
+                <textarea id="fbContent" data-i18n-placeholder="feedback.detail_placeholder" placeholder="请详细描述你的建议或遇到的问题..."></textarea>
             </div>
-            <button class="submit-btn" onclick="submitFeedback()">📤 提交反馈</button>
+            <button class="submit-btn" onclick="submitFeedback()" data-i18n="feedback.submit">📤 提交反馈</button>
         </div>
 
         <div class="feedback-card success-msg" id="successMsg">
             <div class="icon">✅</div>
-            <h2>感谢你的反馈！</h2>
-            <p style="color:#9ca3af;">我们会认真对待每一条建议。</p>
-            <button class="submit-btn" style="margin-top:20px;" onclick="resetForm()">📝 再写一条</button>
+            <h2 data-i18n="feedback.success">感谢你的反馈！</h2>
+            <p style="color:#9ca3af;" data-i18n="feedback.success_desc">我们会认真对待每一条建议。</p>
+            <button class="submit-btn" style="margin-top:20px;" onclick="resetForm()" data-i18n="feedback.another">📝 再写一条</button>
         </div>
     </main>
 
     <footer class="footer" style="margin-top:60px;">
         <div class="footer-inner">
             <div class="footer-brand">
-                <span class="footer-logo">⚡ DevTools Station</span>
-                <p>为开发者打造的一站式在线工具箱</p>
+                <span class="footer-logo" data-i18n="footer.brand">⚡ DevTools Station</span>
+                <p data-i18n="footer.desc">为开发者打造的一站式在线工具箱</p>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© 2024 DevTools Station. Built with ❤️ for developers.</p>
+            <p data-i18n="footer.copyright">© 2024 DevTools Station. Built with ❤️ for developers.</p>
         </div>
     </footer>
 
     <script src="/js/theme.js"></script>
+    <script src="/js/auth.js"></script>
     <script>
         function submitFeedback() {
             var type = document.getElementById('fbType').value;
-            var title = document.getElementById('fbTitle').value;
-            var content = document.getElementById('fbContent').value;
+            var title = document.getElementById('fbTitle').value.trim();
+            var content = document.getElementById('fbContent').value.trim();
+            var __t = (window.__I18N__ && function(k,d){ return window.__I18N__.t(k); }) || function(k,d){return d||k;};
+
             if (!title || !content) {
-                alert('请填写标题和详细描述');
+                alert(__t('feedback.validate_empty', '请填写标题和详细描述'));
                 return;
             }
-            console.log('Feedback:', {type:type, title:title, content:content});
-            document.getElementById('feedbackForm').style.display = 'none';
-            document.getElementById('successMsg').style.display = 'block';
+            if (title.length < 2) {
+                alert(__t('feedback.title_short', '标题至少2个字符'));
+                return;
+            }
+            if (content.length < 10) {
+                alert(__t('feedback.content_short', '内容至少10个字符'));
+                return;
+            }
+
+            var btn = document.querySelector('.submit-btn');
+            var origText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = __t('feedback.submitting', '提交中...');
+
+            var token = window.DevAuth ? window.DevAuth.getToken() : null;
+            var headers = { 'Content-Type': 'application/json' };
+            if (token) headers['X-Auth-Token'] = token;
+
+            fetch('/api/feedback', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ type: type, title: title, content: content })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                btn.disabled = false;
+                btn.textContent = origText;
+                if (res.code === 200) {
+                    document.getElementById('feedbackForm').style.display = 'none';
+                    document.getElementById('successMsg').style.display = 'block';
+                } else {
+                    alert(res.message || __t('feedback.submit_failed', '提交失败，请稍后重试'));
+                }
+            })
+            .catch(function() {
+                btn.disabled = false;
+                btn.textContent = origText;
+                alert(__t('toast.network_error', '网络错误，请稍后重试'));
+            });
         }
         function resetForm() {
             document.getElementById('feedbackForm').style.display = 'block';

@@ -55,8 +55,11 @@ public class GeneratorService {
         if (hasSpecial) { charPool.append(specialChars); required.add(specialChars); }
 
         if (charPool.isEmpty()) {
-            charPool.append(lowerChars).append(digitChars);
+            charPool.append(lowerChars).append(digitChars).append(upperChars).append(specialChars);
             required.add(lowerChars);
+            required.add(digitChars);
+            required.add(upperChars);
+            required.add(specialChars);
         }
 
         // 确保每种类型至少有一个

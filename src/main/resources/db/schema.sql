@@ -113,6 +113,18 @@ CREATE TABLE IF NOT EXISTS dt_wx_qr_state (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 用户反馈表
+CREATE TABLE IF NOT EXISTS dt_feedback (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(32) DEFAULT 'other' COMMENT '反馈类型: suggestion/bug/experience/other',
+    title VARCHAR(256) NOT NULL COMMENT '反馈标题',
+    content TEXT NOT NULL COMMENT '反馈内容',
+    user_id BIGINT DEFAULT NULL COMMENT '提交用户ID',
+    contact VARCHAR(128) DEFAULT NULL COMMENT '联系方式',
+    status VARCHAR(32) DEFAULT 'pending' COMMENT '处理状态: pending/processing/resolved/closed',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 邮箱验证码表
 CREATE TABLE IF NOT EXISTS dt_email_verification (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

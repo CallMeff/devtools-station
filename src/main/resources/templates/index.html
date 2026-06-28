@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevTools Station - 开发者在线工具箱</title>
-    <meta name="description" content="一站式开发者在线工具箱，提供加解密、格式化、转换、生成等40+开发常用工具">
+    <title data-i18n="home.page_title">DevTools Station - 开发者在线工具箱</title>
+    <meta name="description" data-i18n-content="home.meta_desc" content="一站式开发者在线工具箱，提供加解密、格式化、转换、生成等40+开发常用工具">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <!-- 防闪烁：在 CSS 加载前立即应用保存的主题 -->
     <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/themes.css">
+    <script src="/js/i18n.js" defer></script>
     <script src="/js/auth.js" defer></script>
 </head>
 <body class="theme-dark">
@@ -27,14 +28,14 @@
             </a>
             <div class="nav-search" id="navSearch">
                 <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input type="text" id="searchInput" placeholder="搜索工具... (支持拼音、英文)" autocomplete="off">
+                <input type="text" id="searchInput" data-i18n-placeholder="search.placeholder" placeholder="搜索工具... (支持拼音、英文)" autocomplete="off">
                 <kbd class="search-kbd">⌘K</kbd>
                 <div class="search-dropdown" id="searchDropdown"></div>
             </div>
             <div class="nav-actions">
                 <div class="theme-switcher"></div>
                 <div class="lang-switcher"></div>
-                <a href="/doc.html" class="btn-ghost" target="_blank">API 文档</a>
+                <a href="/doc.html" class="btn-ghost" target="_blank" data-i18n="nav.api_docs">API 文档</a>
             </div>
         </div>
     </header>
@@ -44,21 +45,21 @@
         <div class="hero-content">
             <div class="hero-badge">
                 <span class="badge-dot"></span>
-                <span th:text="'共 ' + ${totalTools} + ' 个实用工具'">40+ 个实用工具</span>
+                <span th:text="'共 ' + ${totalTools} + ' 个实用工具'" data-i18n="hero.badge_fallback">40+ 个实用工具</span>
             </div>
-            <h1 class="hero-title">
-                开发者<span class="gradient-text">在线工具箱</span>
+            <h1 class="hero-title" data-i18n="hero.title_prefix">
+                开发者<span class="gradient-text" data-i18n="hero.title_suffix">在线工具箱</span>
             </h1>
             <p class="hero-subtitle">
-                一站式开发工具集合，涵盖加解密、格式化、转换器、生成器、文本处理等常用功能。
-                <br>无需安装，打开即用，让开发更高效。
+                <span data-i18n="hero.subtitle1">一站式开发工具集合，涵盖加解密、格式化、转换器、生成器、文本处理等常用功能。</span>
+                <br><span data-i18n="hero.subtitle2">无需安装，打开即用，让开发更高效。</span>
             </p>
             <div class="hero-actions">
-                <a href="#tools" class="btn-primary">
+                <a href="#tools" class="btn-primary" data-i18n="hero.btn_start">
                     开始使用
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
                 </a>
-                <a href="/doc.html" class="btn-ghost" target="_blank">查看 API</a>
+                <a href="/doc.html" class="btn-ghost" target="_blank" data-i18n="hero.btn_api">查看 API</a>
             </div>
         </div>
         <div class="hero-visual">
@@ -70,14 +71,14 @@
                     <span class="code-title">DevTools Station</span>
                 </div>
                 <div class="code-body">
-                    <pre><code><span class="code-comment">// 🛠️ 一站式开发工具集</span>
+                    <pre><code><span class="code-comment" data-i18n="hero.code_comment">// 🛠️ 一站式开发工具集</span>
 <span class="code-keyword">import</span> { DevTools } <span class="code-keyword">from</span> <span class="code-string">'@devtools/station'</span>;
 
 <span class="code-keyword">const</span> tools = [
-  <span class="code-string">'🔐 加解密'</span>,   <span class="code-string">'📝 格式化'</span>,
-  <span class="code-string">'🔄 转换器'</span>,   <span class="code-string">'⚡ 生成器'</span>,
-  <span class="code-string">'📄 文本处理'</span>, <span class="code-string">'🌐 网络工具'</span>,
-  <span class="code-string">'💻 开发工具'</span>,
+  <span class="code-string" data-i18n="home.code_crypto">'🔐 加解密'</span>,   <span class="code-string" data-i18n="home.code_format">'📝 格式化'</span>,
+  <span class="code-string" data-i18n="home.code_convert">'🔄 转换器'</span>,   <span class="code-string" data-i18n="home.code_generate">'⚡ 生成器'</span>,
+  <span class="code-string" data-i18n="home.code_text">'📄 文本处理'</span>, <span class="code-string" data-i18n="home.code_network">'🌐 网络工具'</span>,
+  <span class="code-string" data-i18n="home.code_dev">'💻 开发工具'</span>,
 ];
 
 <span class="code-keyword">await</span> DevTools.<span class="code-method">launch</span>({ tools });</code></pre>
@@ -89,16 +90,16 @@
     <!-- 热门工具 -->
     <section class="section" th:if="${not #lists.isEmpty(hotTools)}">
         <div class="section-header">
-            <h2 class="section-title">🔥 热门工具</h2>
-            <p class="section-desc">最常用的开发工具，助你事半功倍</p>
+            <h2 class="section-title" data-i18n="home.hot_title">🔥 热门工具</h2>
+            <p class="section-desc" data-i18n="home.hot_desc">最常用的开发工具，助你事半功倍</p>
         </div>
         <div class="hot-tools-grid">
             <a th:each="tool : ${hotTools}" th:href="@{${tool.route}}"
-               class="hot-tool-card">
+               class="hot-tool-card" th:attr="data-tool-key=${tool.route}">
                 <span class="tool-icon" th:text="${tool.icon}">🔑</span>
                 <div class="tool-info">
-                    <h3 th:text="${tool.name}">工具名称</h3>
-                    <p th:text="${tool.description}">工具描述</p>
+                    <h3 th:text="${tool.name}" th:attr="data-i18n-toolname=${tool.route}">工具名称</h3>
+                    <p th:text="${tool.description}" th:attr="data-i18n-tooldesc=${tool.route}">工具描述</p>
                 </div>
                 <svg class="card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
             </a>
@@ -108,24 +109,24 @@
     <!-- 工具分类 -->
     <section class="section" id="tools">
         <div class="section-header">
-            <h2 class="section-title">🛠️ 全部工具</h2>
-            <p class="section-desc">按分类浏览所有工具，点击即可使用</p>
+            <h2 class="section-title" data-i18n="home.all_title">🛠️ 全部工具</h2>
+            <p class="section-desc" data-i18n="home.all_desc">按分类浏览所有工具，点击即可使用</p>
         </div>
-        <div th:each="cat : ${categories}" class="category-section">
+        <div th:each="cat : ${categories}" class="category-section" th:attr="data-cat-id=${cat.id}">
             <div class="category-header">
                 <span class="category-icon" th:text="${cat.icon}">🔐</span>
-                <h3 class="category-name" th:text="${cat.name}">分类名称</h3>
+                <h3 class="category-name" th:text="${cat.name}" th:attr="data-cat-name-i18n=${cat.id}">分类名称</h3>
                 <span class="category-count" th:text="${#maps.containsKey(toolMap, cat.id) ? #lists.size(toolMap.get(cat.id)) : 0} + ' 个工具'">0 个工具</span>
             </div>
             <div class="tools-grid">
                 <a th:each="tool : ${toolMap.get(cat.id)}"
                    th:if="${toolMap.containsKey(cat.id)}"
                    th:href="@{${tool.route}}"
-                   class="tool-card">
+                   class="tool-card" th:attr="data-tool-key=${tool.route}">
                     <span class="tool-card-icon" th:text="${tool.icon}">🔑</span>
                     <div class="tool-card-body">
-                        <h4 class="tool-card-name" th:text="${tool.name}">工具名称</h4>
-                        <p class="tool-card-desc" th:text="${tool.description}">描述</p>
+                        <h4 class="tool-card-name" th:text="${tool.name}" th:attr="data-i18n-toolname=${tool.route}">工具名称</h4>
+                        <p class="tool-card-desc" th:text="${tool.description}" th:attr="data-i18n-tooldesc=${tool.route}">描述</p>
                     </div>
                     <span th:if="${tool.isNew == 1}" class="tag-new">NEW</span>
                 </a>
@@ -137,29 +138,29 @@
     <footer class="footer">
         <div class="footer-inner">
             <div class="footer-brand">
-                <span class="footer-logo">⚡ DevTools Station</span>
-                <p>为开发者打造的一站式在线工具箱</p>
+                <span class="footer-logo" data-i18n="footer.brand">⚡ DevTools Station</span>
+                <p data-i18n="footer.desc">为开发者打造的一站式在线工具箱</p>
             </div>
             <div class="footer-links">
                 <div class="footer-col">
-                    <h4>产品</h4>
-                    <a href="/#tools">全部工具</a>
-                    <a href="/doc.html">API 文档</a>
+                    <h4 data-i18n="footer.product">产品</h4>
+                    <a href="/#tools" data-i18n="footer.all_tools">全部工具</a>
+                    <a href="/doc.html" data-i18n="footer.api_docs">API 文档</a>
                 </div>
                 <div class="footer-col">
-                    <h4>资源</h4>
-                    <a href="/guide">使用指南</a>
-                    <a href="/changelog">更新日志</a>
+                    <h4 data-i18n="footer.resources">资源</h4>
+                    <a href="/guide" data-i18n="footer.guide">使用指南</a>
+                    <a href="/changelog" data-i18n="footer.changelog">更新日志</a>
                 </div>
                 <div class="footer-col">
-                    <h4>关于</h4>
-                    <a href="/about">关于我们</a>
-                    <a href="/feedback">反馈建议</a>
+                    <h4 data-i18n="footer.about">关于</h4>
+                    <a href="/about" data-i18n="footer.about_us">关于我们</a>
+                    <a href="/feedback" data-i18n="footer.feedback">反馈建议</a>
                 </div>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© 2024 DevTools Station. Built with ❤️ for developers.</p>
+            <p data-i18n="footer.copyright">© 2024 DevTools Station. Built with ❤️ for developers.</p>
         </div>
     </footer>
 

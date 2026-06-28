@@ -1,4 +1,10 @@
 -- DevTools Station - 初始化数据
+-- 先清除旧数据，确保每次重启都用正确编码重新导入
+DELETE FROM dt_tool;
+DELETE FROM dt_category;
+ALTER TABLE dt_tool AUTO_INCREMENT = 1;
+ALTER TABLE dt_category AUTO_INCREMENT = 1;
+
 -- 分类数据
 INSERT INTO dt_category (name, icon, sort_order, description) VALUES
 ('加密解密', '🔐', 1, 'MD5、SHA、AES、Bcrypt 等加解密工具'),

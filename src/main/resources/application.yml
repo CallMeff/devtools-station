@@ -1,6 +1,11 @@
 # DevTools Station - 应用配置
 server:
-  port: 8089
+  port: 8088
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 spring:
   application:
@@ -15,6 +20,14 @@ spring:
     cache: false
     encoding: UTF-8
     mode: HTML
+
+# 应用安全配置
+app:
+  security:
+    # Token AES 密钥（可通过环境变量 APP_TOKEN_SECRET 覆盖）
+    token-secret: ${APP_TOKEN_SECRET:DevTools!Station@2026#SecureKey}
+    # 密码最小长度
+    password-min-length: 8
 
 # MyBatis Plus 配置
 mybatis-plus:
@@ -54,7 +67,7 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: jdbc:mysql://localhost:3306/devtools_station?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/devtools_station?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true&sessionVariables=character_set_client=utf8mb4,character_set_connection=utf8mb4,character_set_results=utf8mb4,collation_connection=utf8mb4_unicode_ci
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -70,6 +83,7 @@ spring:
       schema-locations: classpath:db/schema.sql
       data-locations: classpath:db/data.sql
       continue-on-error: true
+      encoding: UTF-8
   mail:
     host: smtp.qq.com
     port: 465

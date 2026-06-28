@@ -1,7 +1,6 @@
 package com.devtools.service;
 
 import cn.hutool.core.util.RandomUtil;
-import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.crypto.symmetric.AES;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -9,11 +8,10 @@ import com.devtools.entity.*;
 import com.devtools.mapper.*;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,9 +21,9 @@ import java.util.Map;
  * 1. 密码：BCrypt 哈希存储（带随机盐）
  * 2. Token：AES加密 + SHA-256哈希双重保护
  * 3. 传输：前端 AES 加密敏感字段 + HTTPS
+ * 4. Token密钥：从外部配置读取（可通过环境变量 APP_TOKEN_SECRET 覆盖）
  */
 @Service
-@RequiredArgsConstructor
 public class AuthService {
 
     private final UserMapper userMapper;
@@ -34,13 +32,29 @@ public class AuthService {
     private final UserActivityMapper activityMapper;
     private final EmailService emailService;
 
-    // Token AES 密钥（生产环境应从配置中心读取）
-    private static final String TOKEN_SECRET = "DevTools!Station@2026#SecureKey";
+    // Token AES 密钥（从配置文件读取，支持环境变量覆盖）
+    @Value("${app.security.token-secret:DevTools!Station@2026#SecureKey}")
+    private String tokenSecret;
+
+    // 密码最小长度
+    @Value("${app.security.password-min-length:8}")
+    private int passwordMinLength;
+
     // Token 有效期：7天
     private static final int TOKEN_EXPIRE_DAYS = 7;
 
+    public AuthService(UserMapper userMapper, UserSessionMapper sessionMapper,
+                       UserSettingsMapper settingsMapper, UserActivityMapper activityMapper,
+                       EmailService emailService) {
+        this.userMapper = userMapper;
+        this.sessionMapper = sessionMapper;
+        this.settingsMapper = settingsMapper;
+        this.activityMapper = activityMapper;
+        this.emailService = emailService;
+    }
+
     private AES getTokenAes() {
-        byte[] fullKey = DigestUtil.sha256(TOKEN_SECRET);
+        byte[] fullKey = DigestUtil.sha256(tokenSecret);
         // AES-128: key 和 IV 各取前 16 字节
         byte[] aesKey = new byte[16];
         byte[] iv = new byte[16];
@@ -107,8 +121,8 @@ public class AuthService {
         }
 
         // 校验新密码
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new RuntimeException("新密码至少6位");
+        if (newPassword == null || newPassword.length() < passwordMinLength) {
+            throw new RuntimeException("新密码至少" + passwordMinLength + "位");
         }
 
         // 验证验证码
@@ -354,8 +368,8 @@ public class AuthService {
             throw new RuntimeException("旧密码不能为空");
         }
         // 校验新密码
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new RuntimeException("新密码至少6位");
+        if (newPassword == null || newPassword.length() < passwordMinLength) {
+            throw new RuntimeException("新密码至少" + passwordMinLength + "位");
         }
         // 新旧密码不能相同
         if (oldPassword.equals(newPassword)) {

@@ -7,10 +7,17 @@
 
     var THEME_KEY = 'devtools-theme';
     var themes = [
-        { id: 'dark',  name: '暗黑',    desc: '护眼深邃 · 专业暗色',     icon: '🌙' },
-        { id: 'light', name: '明亮',    desc: '清爽简洁 · 经典白昼',    icon: '☀️' },
-        { id: 'anime', name: '二次元',  desc: '樱花甜心 · 动漫风格',    icon: '🌸' }
+        { id: 'dark',  name: function() { return (window.__I18N__ && window.__I18N__.t('theme.dark')) || '暗黑'; },   desc: function() { return (window.__I18N__ && window.__I18N__.t('theme.dark_desc')) || '护眼深邃 · 专业暗色'; },     icon: '🌙' },
+        { id: 'light', name: function() { return (window.__I18N__ && window.__I18N__.t('theme.light')) || '明亮'; },   desc: function() { return (window.__I18N__ && window.__I18N__.t('theme.light_desc')) || '清爽简洁 · 经典白昼'; },    icon: '☀️' },
+        { id: 'anime', name: function() { return (window.__I18N__ && window.__I18N__.t('theme.anime')) || '二次元'; },  desc: function() { return (window.__I18N__ && window.__I18N__.t('theme.anime_desc')) || '樱花甜心 · 动漫风格'; },    icon: '🌸' }
     ];
+
+    function getThemeName(t) {
+        return typeof t.name === 'function' ? t.name() : t.name;
+    }
+    function getThemeDesc(t) {
+        return typeof t.desc === 'function' ? t.desc() : t.desc;
+    }
 
     function getTheme() {
         var saved = localStorage.getItem(THEME_KEY);
@@ -53,7 +60,7 @@
 
         container.className = 'theme-switcher';
         container.innerHTML =
-            '<button class="theme-switcher-btn" id="themeSwitcherBtn" title="切换主题">' +
+            '<button class="theme-switcher-btn" id="themeSwitcherBtn" data-i18n-title="theme.switch_title" title="' + ((window.__I18N__ && window.__I18N__.t('theme.switch_title')) || '切换主题') + '">' +
                 currentTheme.icon +
             '</button>' +
             '<div class="theme-dropdown" id="themeDropdown">' +
@@ -61,8 +68,8 @@
                     return '<div class="theme-option' + (t.id === current ? ' active' : '') + '" data-theme="' + t.id + '">' +
                         '<div class="theme-preview theme-preview-' + t.id + '"></div>' +
                         '<div class="theme-option-info">' +
-                            '<div class="theme-option-name">' + t.icon + ' ' + t.name + '</div>' +
-                            '<div class="theme-option-desc">' + t.desc + '</div>' +
+                            '<div class="theme-option-name">' + t.icon + ' ' + getThemeName(t) + '</div>' +
+                            '<div class="theme-option-desc">' + getThemeDesc(t) + '</div>' +
                         '</div>' +
                         '<div class="theme-option-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>' +
                     '</div>';

@@ -10,6 +10,14 @@
     var USER_KEY = 'devtools-user-info';
     var API_BASE = '';
 
+    // 翻译辅助函数
+    function __(key, params) {
+        if (window.__I18N__ && typeof window.__I18N__.t === 'function') {
+            return window.__I18N__.t(key, params);
+        }
+        return key;
+    }
+
     // ============ 状态管理 ============
     var currentUser = null;
     var currentToken = null;
@@ -130,19 +138,19 @@
                                 '<defs><linearGradient id="authLogoGrad" x1="0" y1="0" x2="36" y2="36"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>' +
                             '</svg>' +
                         '</div>' +
-                        '<h2 class="auth-left-title">DevTools Station</h2>' +
-                        '<p class="auth-left-desc">微信扫码 安全登录</p>' +
+                        '<h2 class="auth-left-title" data-i18n="auth.wx_title">DevTools Station</h2>' +
+                        '<p class="auth-left-desc" data-i18n="auth.wx_desc">微信扫码 安全登录</p>' +
                         // 二维码区域
                         '<div class="auth-qr-wrapper" id="xhsQrWrapper">' +
                             '<div class="auth-qr-loading" id="xhsQrLoading">' +
                                 '<div class="auth-spinner"></div>' +
-                                '<p>正在加载二维码...</p>' +
+                                '<p data-i18n="auth.wx_loading">正在加载二维码...</p>' +
                             '</div>' +
                         '</div>' +
                         '<div class="auth-left-status" id="xhsWxStatus"></div>' +
                         '<p class="auth-left-hint">' +
                             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>' +
-                            ' 打开微信扫一扫' +
+                            '<span data-i18n="auth.wx_tip">打开微信扫一扫</span>' +
                         '</p>' +
                     '</div>' +
                 '</div>' +
@@ -152,8 +160,8 @@
                     '<div class="auth-right-inner">' +
                         // Tab 切换
                         '<div class="auth-tabs">' +
-                            '<button class="auth-tab' + (isLogin ? ' active' : '') + '" id="authTabLogin">账号登录</button>' +
-                            '<button class="auth-tab' + (!isLogin ? ' active' : '') + '" id="authTabReg">注册账号</button>' +
+                            '<button class="auth-tab' + (isLogin ? ' active' : '') + '" id="authTabLogin" data-i18n="auth.tab_login">账号登录</button>' +
+                            '<button class="auth-tab' + (!isLogin ? ' active' : '') + '" id="authTabReg" data-i18n="auth.tab_register">注册账号</button>' +
                         '</div>' +
 
                         // 登录表单（用 form 包裹以隔离浏览器自动填充）
@@ -163,22 +171,22 @@
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' +
                                 '</div>' +
-                                '<input type="text" id="loginUsername" name="loginUsername" placeholder="请输入用户名" autocomplete="username">' +
+                                '<input type="text" id="loginUsername" name="loginUsername" data-i18n-placeholder="auth.username_placeholder" placeholder="请输入用户名" autocomplete="username">' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
                                 '</div>' +
-                                '<input type="password" id="loginPassword" name="loginPassword" placeholder="请输入密码" autocomplete="current-password">' +
+                                '<input type="password" id="loginPassword" name="loginPassword" data-i18n-placeholder="auth.password_placeholder" placeholder="请输入密码" autocomplete="current-password">' +
                             '</div>' +
                             '<div class="auth-error" id="loginError"></div>' +
                             '<button type="button" class="auth-submit" id="loginSubmit">' +
-                                '<span>登 录</span>' +
+                                '<span data-i18n="auth.btn_login">登 录</span>' +
                             '</button>' +
                             '<div class="auth-links-row">' +
-                                '<button type="button" class="auth-link-btn" id="forgotPwdBtn">忘记密码？</button>' +
+                                '<button type="button" class="auth-link-btn" id="forgotPwdBtn" data-i18n="auth.forgot_pwd">忘记密码？</button>' +
                             '</div>' +
-                            '<p class="auth-switch-hint">还没有账号？<button type="button" class="auth-link-btn" id="switchToReg">立即注册</button></p>' +
+                            '<p class="auth-switch-hint"><span data-i18n="auth.no_account">还没有账号？</span><button type="button" class="auth-link-btn" id="switchToReg" data-i18n="auth.go_register">立即注册</button></p>' +
                         '</form>' +
 
                         // 注册表单（用 form 包裹以隔离浏览器自动填充）
@@ -188,76 +196,81 @@
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' +
                                 '</div>' +
-                                '<input type="text" id="regUsername" name="regUsername" placeholder="用户名（2-20位）" autocomplete="username">' +
+                                '<input type="text" id="regUsername" name="regUsername" data-i18n-placeholder="auth.username_reg_placeholder" placeholder="用户名（2-20位）" autocomplete="username">' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.6 6.5a2 2 0 0 1-2.8 0L2 7"/></svg>' +
                                 '</div>' +
-                                '<input type="email" id="regEmail" name="regEmail" placeholder="邮箱（必填）" autocomplete="email" required>' +
+                                '<input type="email" id="regEmail" name="regEmail" data-i18n-placeholder="auth.email_reg_placeholder" placeholder="邮箱（必填）" autocomplete="email" required>' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
                                 '</div>' +
-                                '<input type="password" id="regPassword" name="regPassword" placeholder="密码（至少6位）" autocomplete="new-password">' +
+                                '<input type="password" id="regPassword" name="regPassword" data-i18n-placeholder="auth.password_reg_placeholder" placeholder="密码（至少8位）" autocomplete="new-password">' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
                                 '</div>' +
-                                '<input type="password" id="regPassword2" name="regPassword2" placeholder="确认密码" autocomplete="new-password">' +
+                                '<input type="password" id="regPassword2" name="regPassword2" data-i18n-placeholder="auth.confirm_pwd_reg_placeholder" placeholder="确认密码" autocomplete="new-password">' +
                             '</div>' +
                             '<div class="auth-error" id="regError"></div>' +
                             '<button type="button" class="auth-submit" id="regSubmit">' +
-                                '<span>注 册</span>' +
+                                '<span data-i18n="auth.btn_register">注 册</span>' +
                             '</button>' +
-                            '<p class="auth-switch-hint">已有账号？<button type="button" class="auth-link-btn" id="switchToLogin">立即登录</button></p>' +
+                            '<p class="auth-switch-hint"><span data-i18n="auth.has_account">已有账号？</span><button type="button" class="auth-link-btn" id="switchToLogin" data-i18n="auth.go_login">立即登录</button></p>' +
                         '</form>' +
 
                         // 忘记密码表单（用 form 包裹以隔离浏览器自动填充）
                         '<form class="auth-body" id="authBodyReset" style="display:none" autocomplete="on">' +
                             '<input type="hidden" name="username" autocomplete="username" style="display:none">' +
                             '<div class="auth-reset-header">' +
-                                '<h3>重置密码</h3>' +
-                                '<p>请输入注册时使用的邮箱，我们将发送验证码</p>' +
+                                '<h3 data-i18n="auth.reset_title">重置密码</h3>' +
+                                '<p data-i18n="auth.reset_desc">请输入注册时使用的邮箱，我们将发送验证码</p>' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.6 6.5a2 2 0 0 1-2.8 0L2 7"/></svg>' +
                                 '</div>' +
-                                '<input type="email" id="resetEmail" name="resetEmail" placeholder="请输入注册邮箱" autocomplete="email">' +
+                                '<input type="email" id="resetEmail" name="resetEmail" data-i18n-placeholder="auth.reset_email_placeholder" placeholder="请输入注册邮箱" autocomplete="email">' +
                             '</div>' +
                             '<div class="auth-field auth-field-code">' +
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
                                 '</div>' +
-                                '<input type="text" id="resetVerifyCode" name="resetVerifyCode" placeholder="验证码" maxlength="6" autocomplete="off">' +
-                                '<button type="button" class="auth-send-code" id="resetSendCodeBtn">发送验证码</button>' +
+                                '<input type="text" id="resetVerifyCode" name="resetVerifyCode" data-i18n-placeholder="auth.reset_code_placeholder" placeholder="验证码" maxlength="6" autocomplete="off">' +
+                                '<button type="button" class="auth-send-code" id="resetSendCodeBtn" data-i18n="profile.send_code">发送验证码</button>' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
                                 '</div>' +
-                                '<input type="password" id="resetNewPassword" name="resetNewPassword" placeholder="新密码（至少6位）" autocomplete="new-password">' +
+                                '<input type="password" id="resetNewPassword" name="resetNewPassword" data-i18n-placeholder="auth.reset_new_pwd_placeholder" placeholder="新密码（至少8位）" autocomplete="new-password">' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
                                 '</div>' +
-                                '<input type="password" id="resetNewPassword2" name="resetNewPassword2" placeholder="确认新密码" autocomplete="new-password">' +
+                                '<input type="password" id="resetNewPassword2" name="resetNewPassword2" data-i18n-placeholder="auth.reset_confirm_pwd_placeholder" placeholder="确认新密码" autocomplete="new-password">' +
                             '</div>' +
                             '<div class="auth-error" id="resetError"></div>' +
                             '<button type="button" class="auth-submit" id="resetSubmit">' +
-                                '<span>重置密码</span>' +
+                                '<span data-i18n="auth.btn_reset">重置密码</span>' +
                             '</button>' +
-                            '<p class="auth-switch-hint"><button type="button" class="auth-link-btn" id="switchToLoginFromReset">返回登录</button></p>' +
+                            '<p class="auth-switch-hint"><button type="button" class="auth-link-btn" id="switchToLoginFromReset" data-i18n="auth.back_login">返回登录</button></p>' +
                         '</form>' +
                     '</div>' +
                 '</div>' +
             '</div>';
 
         var overlay = createOverlay(innerHTML);
+
+        // 立即应用翻译到弹窗内容
+        if (window.__I18N__ && typeof window.__I18N__.refreshPage === 'function') {
+            window.__I18N__.refreshPage();
+        }
 
         // 关闭按钮
         overlay.querySelector('#authCloseBtn').addEventListener('click', function() {
@@ -310,18 +323,18 @@
             errEl.textContent = '';
 
             if (!username || !password) {
-                errEl.textContent = '请输入用户名和密码';
+                errEl.textContent = __('validate.username_password_required');
                 return;
             }
 
             var btn = overlay.querySelector('#loginSubmit');
             btn.classList.add('loading');
-            btn.querySelector('span').textContent = '登录中...';
+            btn.querySelector('span').textContent = __('toast.logging_in');
 
             apiPost('/api/auth/login', { username: username, password: password })
                 .then(function(res) {
                     btn.classList.remove('loading');
-                    btn.querySelector('span').textContent = '登 录';
+                    btn.querySelector('span').textContent = __('auth.btn_login');
                     if (res.code === 200) {
                         saveAuth(res.data.token, {
                             id: res.data.id,
@@ -337,15 +350,15 @@
                         }
                         closeOverlay();
                         updateUI();
-                        showToast('登录成功，欢迎回来！');
+                        showToast(__('toast.login_success'));
                     } else {
-                        errEl.textContent = res.message || '登录失败';
+                        errEl.textContent = res.message || __('validate.login_failed');
                     }
                 })
                 .catch(function() {
                     btn.classList.remove('loading');
-                    btn.querySelector('span').textContent = '登 录';
-                    errEl.textContent = '网络错误，请稍后重试';
+                    btn.querySelector('span').textContent = __('auth.btn_login');
+                    errEl.textContent = __('toast.network_error');
                 });
         });
 
@@ -358,22 +371,22 @@
             var errEl = overlay.querySelector('#regError');
             errEl.textContent = '';
 
-            if (!username) { errEl.textContent = '请输入用户名'; return; }
-            if (username.length < 2 || username.length > 20) { errEl.textContent = '用户名2-20个字符'; return; }
-            if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(username)) { errEl.textContent = '用户名只能包含字母、数字、下划线和中文'; return; }
-            if (!email) { errEl.textContent = '请输入邮箱'; return; }
-            if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) { errEl.textContent = '邮箱格式不正确'; return; }
-            if (!password || password.length < 6) { errEl.textContent = '密码至少6位'; return; }
-            if (password !== password2) { errEl.textContent = '两次密码不一致'; return; }
+            if (!username) { errEl.textContent = __('validate.username_required'); return; }
+            if (username.length < 2 || username.length > 20) { errEl.textContent = __('validate.username_format'); return; }
+            if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(username)) { errEl.textContent = __('validate.username_chars'); return; }
+            if (!email) { errEl.textContent = __('validate.email_required'); return; }
+            if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) { errEl.textContent = __('validate.email_format'); return; }
+            if (!password || password.length < 8) { errEl.textContent = __('validate.password_min'); return; }
+            if (password !== password2) { errEl.textContent = __('validate.password_mismatch'); return; }
 
             var btn = overlay.querySelector('#regSubmit');
             btn.classList.add('loading');
-            btn.querySelector('span').textContent = '注册中...';
+            btn.querySelector('span').textContent = __('toast.registering');
 
             apiPost('/api/auth/register', { username: username, password: password, email: email })
                 .then(function(res) {
                     btn.classList.remove('loading');
-                    btn.querySelector('span').textContent = '注 册';
+                    btn.querySelector('span').textContent = __('auth.btn_register');
                     if (res.code === 200) {
                         saveAuth(res.data.token, {
                             id: res.data.id,
@@ -389,15 +402,15 @@
                         }
                         closeOverlay();
                         updateUI();
-                        showToast('注册成功，欢迎加入！');
+                        showToast(__('toast.register_success'));
                     } else {
-                        errEl.textContent = res.message || '注册失败';
+                        errEl.textContent = res.message || __('validate.register_failed');
                     }
                 })
                 .catch(function() {
                     btn.classList.remove('loading');
-                    btn.querySelector('span').textContent = '注 册';
-                    errEl.textContent = '网络错误，请稍后重试';
+                    btn.querySelector('span').textContent = __('auth.btn_register');
+                    errEl.textContent = __('toast.network_error');
                 });
         });
 
@@ -409,8 +422,8 @@
             errEl.textContent = '';
             errEl.style.color = '';  // 重置颜色
 
-            if (!email) { errEl.textContent = '请先输入邮箱'; return; }
-            if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) { errEl.textContent = '邮箱格式不正确'; return; }
+            if (!email) { errEl.textContent = __('validate.email_first'); return; }
+            if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) { errEl.textContent = __('validate.email_format'); return; }
 
             var btn = overlay.querySelector('#resetSendCodeBtn');
             btn.disabled = true;
@@ -418,29 +431,29 @@
             apiPost('/api/auth/send-reset-code', { email: email })
                 .then(function(res) {
                     if (res.code === 200) {
-                        errEl.textContent = res.message || '验证码已发送';
+                        errEl.textContent = res.message || __('toast.code_sent');
                         errEl.style.color = '#4ade80';
                         var sec = 60;
-                        btn.textContent = sec + 's 后重发';
+                        btn.textContent = __('toast.retry_after', [sec]);
                         resetCodeTimer = setInterval(function() {
                             sec--;
                             if (sec <= 0) {
                                 clearInterval(resetCodeTimer);
                                 btn.disabled = false;
-                                btn.textContent = '发送验证码';
+                                btn.textContent = __('profile.send_code');
                             } else {
-                                btn.textContent = sec + 's 后重发';
+                                btn.textContent = __('toast.retry_after', [sec]);
                             }
                         }, 1000);
                     } else {
                         errEl.style.color = '';  // 失败恢复红色
-                        errEl.textContent = res.message || '发送失败';
+                        errEl.textContent = res.message || __('toast.code_send_failed');
                         btn.disabled = false;
                     }
                 })
                 .catch(function() {
                     errEl.style.color = '';
-                    errEl.textContent = '网络错误，请稍后重试';
+                    errEl.textContent = __('toast.network_error');
                     btn.disabled = false;
                 });
         });
@@ -455,34 +468,34 @@
             errEl.textContent = '';
             errEl.style.color = '';  // 重置颜色
 
-            if (!email) { errEl.textContent = '请输入注册邮箱'; return; }
-            if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) { errEl.textContent = '邮箱格式不正确'; return; }
-            if (!verifyCode) { errEl.textContent = '请输入验证码'; return; }
-            if (verifyCode.length !== 6) { errEl.textContent = '验证码为6位数字'; return; }
-            if (!newPassword || newPassword.length < 6) { errEl.textContent = '新密码至少6位'; return; }
-            if (newPassword !== newPassword2) { errEl.textContent = '两次密码不一致'; return; }
+            if (!email) { errEl.textContent = __('validate.email_required'); return; }
+            if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) { errEl.textContent = __('validate.email_format'); return; }
+            if (!verifyCode) { errEl.textContent = __('validate.code_required'); return; }
+            if (verifyCode.length !== 6) { errEl.textContent = __('validate.code_format'); return; }
+            if (!newPassword || newPassword.length < 8) { errEl.textContent = __('validate.password_min'); return; }
+            if (newPassword !== newPassword2) { errEl.textContent = __('validate.password_mismatch'); return; }
 
             var btn = overlay.querySelector('#resetSubmit');
             btn.classList.add('loading');
-            btn.querySelector('span').textContent = '重置中...';
+            btn.querySelector('span').textContent = __('toast.resetting');
 
             apiPost('/api/auth/reset-password', { email: email, verifyCode: verifyCode, newPassword: newPassword })
                 .then(function(res) {
                     btn.classList.remove('loading');
-                    btn.querySelector('span').textContent = '重置密码';
+                    btn.querySelector('span').textContent = __('auth.btn_reset');
                     if (res.code === 200) {
                         // 重置成功，切换到登录表单
                         closeOverlay();
                         showAuthModal('login');
-                        showToast('密码重置成功，请使用新密码登录');
+                        showToast(__('toast.pwd_reset'));
                     } else {
-                        errEl.textContent = res.message || '重置失败';
+                        errEl.textContent = res.message || __('validate.reset_failed');
                     }
                 })
                 .catch(function() {
                     btn.classList.remove('loading');
-                    btn.querySelector('span').textContent = '重置密码';
-                    errEl.textContent = '网络错误，请稍后重试';
+                    btn.querySelector('span').textContent = __('auth.btn_reset');
+                    errEl.textContent = __('toast.network_error');
                 });
         });
 
@@ -548,7 +561,7 @@
                         }
                         closeOverlay();
                         updateUI();
-                        showToast('微信登录成功，欢迎！');
+                        showToast(__('toast.wx_login_success'));
                     }, function(status) {
                         statusEl.textContent = status;
                         statusEl.className = 'auth-left-status ' + (status.indexOf('失败') > -1 || status.indexOf('过期') > -1 ? 'error' : '');
@@ -562,7 +575,7 @@
                                     '<p class="auth-qr-expired-text">' + status + '</p>' +
                                     '<button class="auth-qr-refresh-btn" id="xhsQrRefreshBtn">' +
                                         '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>' +
-                                        '<span>刷新二维码</span>' +
+                                        '<span data-i18n="toast.refresh_qr">' + __('toast.refresh_qr') + '</span>' +
                                     '</button>' +
                                 '</div>';
                             // 绑定刷新事件
@@ -575,8 +588,8 @@
                     qrWrapper.innerHTML =
                         '<div class="auth-qr-error">' +
                             '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>' +
-                            '<p>' + (res.message || '获取二维码失败') + '</p>' +
-                            '<button class="auth-qr-refresh-btn" onclick="DevAuth.refreshWxQr()">刷新重试</button>' +
+                            '<p>' + (res.message || __('toast.qr_failed')) + '</p>' +
+                            '<button class="auth-qr-refresh-btn" onclick="DevAuth.refreshWxQr()" data-i18n="toast.refresh_retry">' + __('toast.refresh_retry') + '</button>' +
                         '</div>';
                 }
             })
@@ -584,8 +597,8 @@
                 qrWrapper.innerHTML =
                     '<div class="auth-qr-error">' +
                         '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>' +
-                        '<p>网络错误</p>' +
-                        '<button class="auth-qr-refresh-btn" onclick="DevAuth.refreshWxQr()">刷新重试</button>' +
+                        '<p data-i18n="toast.network_error">' + __('toast.network_error') + '</p>' +
+                        '<button class="auth-qr-refresh-btn" onclick="DevAuth.refreshWxQr()" data-i18n="toast.refresh_retry">' + __('toast.refresh_retry') + '</button>' +
                     '</div>';
             });
     }
@@ -601,7 +614,7 @@
             attempts++;
             if (attempts > maxAttempts) {
                 clearWxPoll();
-                onStatus('二维码已过期，请重新获取');
+                onStatus(__('toast.qr_expired'));
                 return;
             }
 
@@ -611,10 +624,10 @@
                         if (res.data.status === 'confirmed') {
                             onSuccess(res.data);
                         } else if (res.data.status === 'scanned') {
-                            onStatus('已扫码，请在手机上确认登录');
+                            onStatus(__('toast.qr_scanned'));
                         } else if (res.data.status === 'expired') {
                             clearWxPoll();
-                            onStatus('二维码已过期，请重新获取');
+                            onStatus(__('toast.qr_expired'));
                         }
                         // status === 'pending' 继续轮询
                     }
@@ -651,6 +664,10 @@
     function setLanguage(id) {
         localStorage.setItem(LANG_KEY, id);
         updateLangActive(id);
+        // 刷新页面翻译
+        if (window.__I18N__ && typeof window.__I18N__.refreshPage === 'function') {
+            window.__I18N__.refreshPage();
+        }
         // 同步到后端（已登录用户）
         if (currentToken && currentUser) {
             apiPut('/api/settings', { language: id });
@@ -658,6 +675,11 @@
             localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
         }
     }
+
+    // 监听 i18n 刷新事件，重新渲染动态内容
+    document.addEventListener('i18n:refresh', function() {
+        updateUI();
+    });
 
     function updateLangActive(id) {
         var opts = document.querySelectorAll('.lang-option');
@@ -753,27 +775,27 @@
                                 '</div>' +
                                 '<div class="user-hover-row">' +
                                     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
-                                    '<span>' + (loginTime ? '最近登录 ' + loginTime : '最近登录 --') + '</span>' +
+                                    '<span>' + (loginTime ? (window.__I18N__ ? window.__I18N__.t('nav.last_login') : '最近登录') + ' ' + loginTime : (window.__I18N__ ? window.__I18N__.t('nav.last_login') : '最近登录') + ' --') + '</span>' +
                                 '</div>' +
                             '</div>' +
                             '<div class="user-hover-actions">' +
-                                '<a href="/profile" class="user-hover-btn">查看个人主页</a>' +
+                                '<a href="/profile" class="user-hover-btn" data-i18n="nav.user_card">' + (window.__I18N__ ? window.__I18N__.t('nav.user_card') : '查看个人主页') + '</a>' +
                             '</div>' +
                         '</div>' +
                         // 点击下拉菜单
                         '<div class="user-dropdown" id="userDropdown">' +
                             '<a href="/profile" class="user-dropdown-item">' +
                                 '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' +
-                                '<span>个人主页</span>' +
+                                '<span data-i18n="nav.profile">' + (window.__I18N__ ? window.__I18N__.t('nav.profile') : '个人主页') + '</span>' +
                             '</a>' +
                             '<div class="user-dropdown-item" onclick="DevAuth.showChangePassword()">' +
                                 '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
-                                '<span>修改密码</span>' +
+                                '<span data-i18n="nav.change_pwd">' + (window.__I18N__ ? window.__I18N__.t('nav.change_pwd') : '修改密码') + '</span>' +
                             '</div>' +
                             '<div class="user-dropdown-divider"></div>' +
                             '<div class="user-dropdown-item" onclick="DevAuth.logout()">' +
                                 '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
-                                '<span>退出登录</span>' +
+                                '<span data-i18n="nav.logout">' + (window.__I18N__ ? window.__I18N__.t('nav.logout') : '退出登录') + '</span>' +
                             '</div>' +
                         '</div>' +
                     '</div>';
@@ -799,7 +821,7 @@
                 container.innerHTML =
                     '<button class="btn-ghost" onclick="DevAuth.showLogin()" style="font-weight:600;">' +
                         '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>' +
-                        '<span>登录</span>' +
+                        '<span data-i18n="nav.login">' + (window.__I18N__ ? window.__I18N__.t('nav.login') : '登录') + '</span>' +
                     '</button>';
             }
         });
@@ -845,14 +867,14 @@
                                 '<defs><linearGradient id="authLogoGrad" x1="0" y1="0" x2="36" y2="36"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>' +
                             '</svg>' +
                         '</div>' +
-                        '<h2 class="auth-left-title">修改密码</h2>' +
-                        '<p class="auth-left-desc">为您的账号安全保驾护航</p>' +
+                        '<h2 class="auth-left-title" data-i18n="auth.change_pwd_title_left">' + __('auth.change_pwd_title_left') + '</h2>' +
+                        '<p class="auth-left-desc" data-i18n="auth.change_pwd_desc_left">' + __('auth.change_pwd_desc_left') + '</p>' +
                         '<div class="cpwd-left-icon">' +
                             '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1"/></svg>' +
                         '</div>' +
                         '<p class="auth-left-hint" style="color:#9ca3af;">' +
                             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>' +
-                            ' 修改后需重新登录' +
+                            '<span data-i18n="auth.change_pwd_tip">' + __('auth.change_pwd_tip') + '</span>' +
                         '</p>' +
                     '</div>' +
                 '</div>' +
@@ -860,31 +882,31 @@
                 '<div class="auth-right">' +
                     '<div class="auth-right-inner">' +
                         '<div class="cpwd-header">' +
-                            '<h3>更改账户密码</h3>' +
-                            '<p>请输入当前密码并设置新密码</p>' +
+                            '<h3 data-i18n="auth.change_pwd_title_right">' + __('auth.change_pwd_title_right') + '</h3>' +
+                            '<p data-i18n="auth.change_pwd_desc_right">' + __('auth.change_pwd_desc_right') + '</p>' +
                         '</div>' +
                         '<div class="auth-body">' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
                                 '</div>' +
-                                '<input type="password" id="cpwdOldPassword" placeholder="请输入当前密码" autocomplete="current-password">' +
+                                '<input type="password" id="cpwdOldPassword" data-i18n-placeholder="profile.old_pwd_placeholder" placeholder="' + __('profile.old_pwd_placeholder') + '" autocomplete="current-password">' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
                                 '</div>' +
-                                '<input type="password" id="cpwdNewPassword" placeholder="新密码（至少6位）" autocomplete="new-password">' +
+                                '<input type="password" id="cpwdNewPassword" data-i18n-placeholder="profile.new_pwd_placeholder" placeholder="' + __('profile.new_pwd_placeholder') + '" autocomplete="new-password">' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
                                 '</div>' +
-                                '<input type="password" id="cpwdNewPassword2" placeholder="确认新密码" autocomplete="new-password">' +
+                                '<input type="password" id="cpwdNewPassword2" data-i18n-placeholder="profile.confirm_pwd_placeholder" placeholder="' + __('profile.confirm_pwd_placeholder') + '" autocomplete="new-password">' +
                             '</div>' +
                             '<div class="auth-error" id="cpwdError"></div>' +
                             '<button class="auth-submit" id="cpwdSubmit">' +
-                                '<span>确认修改</span>' +
+                                '<span data-i18n="profile.confirm_change">' + __('profile.confirm_change') + '</span>' +
                             '</button>' +
                         '</div>' +
                     '</div>' +
@@ -906,33 +928,33 @@
             var errEl = overlay.querySelector('#cpwdError');
             errEl.textContent = '';
 
-            if (!oldPassword) { errEl.textContent = '请输入当前密码'; return; }
-            if (!newPassword || newPassword.length < 6) { errEl.textContent = '新密码至少6位'; return; }
-            if (newPassword !== newPassword2) { errEl.textContent = '两次密码不一致'; return; }
-            if (oldPassword === newPassword) { errEl.textContent = '新密码不能与旧密码相同'; return; }
+            if (!oldPassword) { errEl.textContent = __('validate.old_pwd_required'); return; }
+            if (!newPassword || newPassword.length < 8) { errEl.textContent = __('validate.password_min'); return; }
+            if (newPassword !== newPassword2) { errEl.textContent = __('validate.password_mismatch'); return; }
+            if (oldPassword === newPassword) { errEl.textContent = __('validate.new_pwd_diff'); return; }
 
             var btn = overlay.querySelector('#cpwdSubmit');
             btn.classList.add('loading');
-            btn.querySelector('span').textContent = '修改中...';
+            btn.querySelector('span').textContent = __('toast.changing');
 
             apiPost('/api/auth/change-password', { oldPassword: oldPassword, newPassword: newPassword })
                 .then(function(res) {
                     btn.classList.remove('loading');
-                    btn.querySelector('span').textContent = '确认修改';
+                    btn.querySelector('span').textContent = __('profile.confirm_change');
                     if (res.code === 200) {
                         // 密码修改成功，清除登录态并关闭弹窗
                         clearAuth();
                         closeOverlay();
                         updateUI();
-                        showToast('密码修改成功，请重新登录');
+                        showToast(__('toast.pwd_changed'));
                     } else {
-                        errEl.textContent = res.message || '修改失败';
+                        errEl.textContent = res.message || __('validate.change_failed');
                     }
                 })
                 .catch(function() {
                     btn.classList.remove('loading');
-                    btn.querySelector('span').textContent = '确认修改';
-                    errEl.textContent = '网络错误，请稍后重试';
+                    btn.querySelector('span').textContent = __('profile.confirm_change');
+                    errEl.textContent = __('toast.network_error');
                 });
         });
 

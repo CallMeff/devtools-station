@@ -1,6 +1,7 @@
 package com.devtools.controller;
 
 import com.devtools.common.Result;
+import com.devtools.common.WebUtils;
 import com.devtools.entity.User;
 import com.devtools.service.AuthService;
 import com.devtools.service.UserSettingsService;
@@ -72,8 +73,8 @@ public class AuthController {
             if (verifyCode == null || verifyCode.trim().isEmpty()) {
                 return Result.error(400, "验证码不能为空");
             }
-            if (newPassword == null || newPassword.length() < 6) {
-                return Result.error(400, "新密码至少6位");
+            if (newPassword == null || newPassword.length() < 8) {
+                return Result.error(400, "新密码至少8位");
             }
 
             authService.resetPassword(email.trim(), verifyCode.trim(), newPassword);
@@ -97,8 +98,8 @@ public class AuthController {
             if (username == null || username.trim().isEmpty()) {
                 return Result.error(400, "用户名不能为空");
             }
-            if (password == null || password.length() < 6) {
-                return Result.error(400, "密码至少6位");
+            if (password == null || password.length() < 8) {
+                return Result.error(400, "密码至少8位");
             }
             if (username.length() < 2 || username.length() > 20) {
                 return Result.error(400, "用户名2-20个字符");
@@ -132,7 +133,7 @@ public class AuthController {
                 return Result.error(400, "用户名和密码不能为空");
             }
 
-            String ip = getClientIp(request);
+            String ip = WebUtils.getClientIp(request);
             String ua = request.getHeader("User-Agent");
 
             Map<String, Object> userInfo = authService.login(
@@ -225,14 +226,4 @@ public class AuthController {
         return Result.success(result);
     }
 
-    private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("X-Real-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        return ip;
-    }
 }

@@ -68,6 +68,12 @@ body.theme-dark {
     --tag-hot-color: #000;
     --tool-icon-bg: rgba(99, 102, 241, 0.1);
     --card-list-bg: rgba(0, 0, 0, 0.2);
+    /* 认证弹窗左侧面板 */
+    --auth-left-bg: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    --auth-left-text: #e5e7eb;
+    --auth-left-muted: #9ca3af;
+    --auth-left-accent: #a5b4fc;
+    --auth-left-error: #f87171;
 }
 
 /* ========== 明亮主题 ========== */
@@ -134,6 +140,12 @@ body.theme-light {
     --tag-hot-color: #000;
     --tool-icon-bg: rgba(99, 102, 241, 0.08);
     --card-list-bg: rgba(0, 0, 0, 0.04);
+    /* 认证弹窗左侧面板 */
+    --auth-left-bg: linear-gradient(160deg, #e8ecf4 0%, #dce3f0 50%, #c7d2e8 100%);
+    --auth-left-text: #374151;
+    --auth-left-muted: #6b7280;
+    --auth-left-accent: #4f46e5;
+    --auth-left-error: #dc2626;
 }
 
 /* ========== 二次元主题 (Sakura) ========== */
@@ -200,6 +212,12 @@ body.theme-anime {
     --tag-hot-color: #78350f;
     --tool-icon-bg: rgba(255, 107, 157, 0.1);
     --card-list-bg: rgba(255, 107, 157, 0.04);
+    /* 认证弹窗左侧面板 */
+    --auth-left-bg: linear-gradient(160deg, #fce4ec 0%, #f8bbd0 50%, #f48fb1 100%);
+    --auth-left-text: #4a2c3d;
+    --auth-left-muted: #7d5a6e;
+    --auth-left-accent: #ec4899;
+    --auth-left-error: #e11d48;
 }
 
 /* ========== 全局背景 & 过渡 ========== */
@@ -339,7 +357,8 @@ body.theme-anime .category-header::before {
     color: var(--text-primary);
 }
 .theme-dropdown {
-    display: none;
+    display: none !important;
+    visibility: hidden;
     position: absolute;
     top: 46px;
     right: 0;
@@ -352,7 +371,8 @@ body.theme-anime .category-header::before {
     z-index: 1001;
 }
 .theme-dropdown.active {
-    display: block;
+    display: block !important;
+    visibility: visible;
     animation: fadeInDown 0.2s ease;
 }
 @keyframes fadeInDown {

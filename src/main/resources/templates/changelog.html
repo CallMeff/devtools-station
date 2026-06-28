@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>更新日志 - DevTools Station</title>
+    <title data-i18n="changelog.page_title">更新日志 - DevTools Station</title>
     <!-- 防闪烁：在 CSS 加载前立即应用保存的主题 -->
     <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/themes.css">
+    <script src="/js/i18n.js" defer></script>
     <script src="/js/auth.js" defer></script>
     <style>
         .page-container { max-width:800px; margin:0 auto; padding:60px 24px; }
@@ -43,14 +44,14 @@
             <div class="nav-actions">
                 <div class="theme-switcher"></div>
                 <div class="lang-switcher"></div>
-                <a href="/" class="btn-ghost">🏠 首页</a>
+                <a href="/" class="btn-ghost" data-i18n="nav.home">🏠 首页</a>
             </div>
         </div>
     </header>
 
     <main class="page-container">
-        <h1>📋 更新日志</h1>
-        <p class="subtitle">DevTools Station 各版本的更新内容记录。</p>
+        <h1 data-i18n="changelog.title">📋 更新日志</h1>
+        <p class="subtitle" data-i18n="changelog.subtitle">DevTools Station 各版本的更新内容记录。</p>
 
         <div class="timeline">
             <div class="version">
@@ -59,16 +60,16 @@
                     <span class="date">2024-06-19</span>
                 </div>
                 <ul>
-                    <li><span class="tag tag-feature">新增</span> 统一工具页面框架，所有 36 个工具均可正常使用</li>
-                    <li><span class="tag tag-feature">新增</span> HMAC 签名工具</li>
-                    <li><span class="tag tag-feature">新增</span> HTML/XML 格式化工具</li>
-                    <li><span class="tag tag-feature">新增</span> Unicode 转换工具</li>
-                    <li><span class="tag tag-feature">新增</span> 二维码生成工具</li>
-                    <li><span class="tag tag-feature">新增</span> 编码解码分类（URL编码/HTML实体/摩尔斯电码）</li>
-                    <li><span class="tag tag-feature">新增</span> 关于我们、使用指南、反馈建议、更新日志页面</li>
-                    <li><span class="tag tag-fix">修复</span> 所有工具页面路由与实际功能匹配</li>
-                    <li><span class="tag tag-improve">优化</span> 支持 Ctrl+Enter 快捷键执行工具</li>
-                    <li><span class="tag tag-improve">优化</span> 工具页面展示同类工具侧边栏</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> 统一工具页面框架，所有 36 个工具均可正常使用</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> HMAC 签名工具</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> HTML/XML 格式化工具</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> Unicode 转换工具</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> 二维码生成工具</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> 编码解码分类（URL编码/HTML实体/摩尔斯电码）</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> 关于我们、使用指南、反馈建议、更新日志页面</li>
+                    <li><span class="tag tag-fix" data-i18n="changelog.fix">修复</span> 所有工具页面路由与实际功能匹配</li>
+                    <li><span class="tag tag-improve" data-i18n="changelog.optimize">优化</span> 支持 Ctrl+Enter 快捷键执行工具</li>
+                    <li><span class="tag tag-improve" data-i18n="changelog.optimize">优化</span> 工具页面展示同类工具侧边栏</li>
                 </ul>
             </div>
 
@@ -78,14 +79,14 @@
                     <span class="date">2024-06-15</span>
                 </div>
                 <ul>
-                    <li><span class="tag tag-feature">新增</span> 项目初始化，Spring Boot 3.2 架构</li>
-                    <li><span class="tag tag-feature">新增</span> 8 大工具分类，36 个开发常用工具</li>
-                    <li><span class="tag tag-feature">新增</span> 首页展示热门工具和分类导航</li>
-                    <li><span class="tag tag-feature">新增</span> 智能搜索，支持拼音和关键词匹配</li>
-                    <li><span class="tag tag-feature">新增</span> 暗色主题支持</li>
-                    <li><span class="tag tag-feature">新增</span> Knife4j API 文档</li>
-                    <li><span class="tag tag-feature">新增</span> H2 内存数据库（开发模式）</li>
-                    <li><span class="tag tag-improve">优化</span> 响应式布局适配移动端</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> 项目初始化，Spring Boot 3.2 架构</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> 8 大工具分类，36 个开发常用工具</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> 首页展示热门工具和分类导航</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> 智能搜索，支持拼音和关键词匹配</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> 暗色主题支持</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> Knife4j API 文档</li>
+                    <li><span class="tag tag-feature" data-i18n="changelog.new">新增</span> H2 内存数据库（开发模式）</li>
+                    <li><span class="tag tag-improve" data-i18n="changelog.optimize">优化</span> 响应式布局适配移动端</li>
                 </ul>
             </div>
         </div>
@@ -94,12 +95,12 @@
     <footer class="footer" style="margin-top:60px;">
         <div class="footer-inner">
             <div class="footer-brand">
-                <span class="footer-logo">⚡ DevTools Station</span>
-                <p>为开发者打造的一站式在线工具箱</p>
+                <span class="footer-logo" data-i18n="footer.brand">⚡ DevTools Station</span>
+                <p data-i18n="footer.desc">为开发者打造的一站式在线工具箱</p>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© 2024 DevTools Station. Built with ❤️ for developers.</p>
+            <p data-i18n="footer.copyright">© 2024 DevTools Station. Built with ❤️ for developers.</p>
         </div>
     </footer>
 

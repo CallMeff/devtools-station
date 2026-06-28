@@ -1,5 +1,46 @@
 # DevTools Station - 更新日志
 
+## v1.1.0 (2026-06-28)
+
+### 🌍 国际化 (i18n)
+- 新增多语言支持：简体中文、English、日本語、한국어 四种语言
+- 导航栏、首页、工具页、页脚等全部 UI 文案动态切换
+- 工具名称、工具描述、分类名称随语言实时切换（无需刷新页面）
+- 页面 `<title>` 和 `<meta>` 标签同步翻译
+- 语言偏好持久化到 localStorage，刷新后保持
+
+### 🎨 主题系统增强
+- 新增「二次元 (Sakura)」粉系主题
+- 认证弹窗左侧面板适配所有主题（暗黑/明亮/二次元）
+- 主题/语言下拉菜单改为 `display:none!important` + `visibility` 双保险隐藏
+- 修复下拉菜单在特定场景意外显示的 bug
+
+### 🔐 安全增强
+- Token AES 密钥改为从配置文件读取，支持 `APP_TOKEN_SECRET` 环境变量覆盖
+- 密码最小长度从硬编码 6 位改为可配置（默认 8 位）
+- 新增 `app.security.token-secret` / `app.security.password-min-length` 配置项
+- AuthService 改为构造器注入，移除 Lombok `@RequiredArgsConstructor`
+
+### 🗄️ 数据库变更
+- 新增 `dt_feedback` 用户反馈表（支持建议/问题/体验/其他类型）
+- 初始化 SQL 增加数据清除逻辑，确保每次重启正确重导数据
+- MySQL 连接 URL 强制 UTF-8 字符集（`character_set_client/connection/results=utf8mb4`）
+- SQL 初始化文件显式指定 UTF-8 编码
+
+### 🐛 修复
+- 修复 `http-status` 工具页语言切换时路由中连字符导致的翻译 key 不匹配问题
+- 修复导航栏搜索框 `overflow` 导致的输入框被裁剪问题
+- 修复 `text-color` CSS 变量引用错误（改为 `text-primary`）
+- 修复语言切换器在明亮主题下的字体渲染问题
+- 删除冗余的 `dark-theme.css` 文件（已统一到 `themes.css`）
+
+### ⚙️ 其他
+- 服务端口从 8089 改为 8088
+- 服务端强制 UTF-8 字符编码
+- 清理无用 import（`SecureUtil`、`StandardCharsets`、`Base64`）
+
+---
+
 ## v1.0.0 (2024-06-16)
 
 ### 🎉 首次发布
@@ -29,7 +70,7 @@
 
 ## 规划中
 
-### v1.1.0
+### v1.2.0
 - [ ] 二维码生成与解析
 - [ ] 图片压缩工具
 - [ ] JSON 编辑器（树形视图）
@@ -37,7 +78,7 @@
 - [ ] 工具使用统计
 - [ ] 拼音搜索支持
 
-### v1.2.0
+### v1.3.0
 - [ ] JWT 解析器
 - [ ] RSA 密钥对生成
 - [ ] Markdown 编辑器

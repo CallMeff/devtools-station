@@ -49,7 +49,8 @@ function initSearch() {
         );
 
         if (matched.length === 0) {
-            dropdown.innerHTML = '<div class="search-empty">未找到匹配的工具</div>';
+            var noResult = (window.__I18N__ && window.__I18N__.t('search.no_result')) || '未找到匹配的工具';
+            dropdown.innerHTML = '<div class="search-empty">' + noResult + '</div>';
         } else {
             dropdown.innerHTML = matched.slice(0, 8).map(t => `
                 <a href="${t.href}" class="search-item">

@@ -100,8 +100,8 @@ public class ToolService extends ServiceImpl<ToolMapper, Tool> {
         return toolMapper.selectList(new LambdaQueryWrapper<Tool>()
                 .eq(Tool::getStatus, 1)
                 .eq(Tool::getIsHot, 1)
-                .orderByDesc(Tool::getUseCount)
-                .last("LIMIT " + limit));
+                .orderByDesc(Tool::getUseCount))
+                .stream().limit(limit).collect(Collectors.toList());
     }
 
     /**

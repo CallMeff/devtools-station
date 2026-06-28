@@ -148,7 +148,7 @@ public class WxLoginService {
 
             g2.dispose();
         } catch (Exception e) {
-            // 忽略图标绘制失败，二维码仍可使用
+            // 图标绘制失败，二维码仍可使用
         }
     }
 
