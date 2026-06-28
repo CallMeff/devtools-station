@@ -1,0 +1,467 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - img
+        - textbox "搜索工具... (支持拼音、英文)" [ref=e11]
+        - generic: ⌘K
+      - generic [ref=e12]:
+        - button "登录" [ref=e14] [cursor=pointer]:
+          - img [ref=e15]
+          - generic [ref=e18]: 登录
+        - button "🌙" [ref=e20] [cursor=pointer]
+        - generic [ref=e21]:
+          - button "🇨🇳 中文" [active] [ref=e22] [cursor=pointer]
+          - generic [ref=e414]:
+            - generic [ref=e415] [cursor=pointer]:
+              - generic [ref=e416]: 🇨🇳
+              - generic [ref=e417]: 中文
+              - img [ref=e419]
+            - generic [ref=e421] [cursor=pointer]:
+              - generic [ref=e422]: 🇺🇸
+              - generic [ref=e423]: English
+              - img [ref=e425]
+            - generic [ref=e427] [cursor=pointer]:
+              - generic [ref=e428]: 🇯🇵
+              - generic [ref=e429]: 日本語
+              - img [ref=e431]
+            - generic [ref=e433] [cursor=pointer]:
+              - generic [ref=e434]: 🇰🇷
+              - generic [ref=e435]: 한국어
+              - img [ref=e437]
+        - link "API 文档" [ref=e23] [cursor=pointer]:
+          - /url: /doc.html
+  - generic [ref=e24]:
+    - generic [ref=e25]:
+      - generic [ref=e28]: 40+ 个实用工具
+      - heading "开发者在线工具箱" [level=1] [ref=e29]
+      - paragraph [ref=e30]:
+        - text: 一站式开发工具集合，涵盖加解密、格式化、转换器、生成器、文本处理等常用功能。
+        - text: 无需安装，打开即用，让开发更高效。
+      - generic [ref=e31]:
+        - link "开始使用" [ref=e32] [cursor=pointer]:
+          - /url: "#tools"
+          - text: 开始使用
+          - img [ref=e33]
+        - link "查看 API" [ref=e35] [cursor=pointer]:
+          - /url: /doc.html
+    - generic [ref=e37]:
+      - generic [ref=e42]: DevTools Station
+      - code [ref=e45]: "// 🛠️ 一站式开发工具集 import { DevTools } from '@devtools/station'; const tools = [ '🔐 加解密', '📝 格式化', '🔄 转换器', '⚡ 生成器', '📄 文本处理', '🌐 网络工具', '💻 开发工具', ]; await DevTools.launch({ tools });"
+  - text: ★
+  - generic [ref=e46]:
+    - generic [ref=e47]:
+      - heading "🔥 热门工具" [level=2] [ref=e48]
+      - paragraph [ref=e49]: 最常用的开发工具，助你事半功倍
+    - generic [ref=e50]:
+      - link "🔑 MD5 加密 计算字符串的 MD5 哈希值 收藏工具" [ref=e51] [cursor=pointer]:
+        - /url: /tools/crypto/md5
+        - generic [ref=e52]: 🔑
+        - generic [ref=e53]:
+          - heading "MD5 加密" [level=3] [ref=e54]
+          - paragraph [ref=e55]: 计算字符串的 MD5 哈希值
+        - button "收藏工具" [ref=e56]: ☆
+        - img [ref=e57]
+      - link "✨ JSON 格式化 JSON 美化/压缩/校验 收藏工具" [ref=e59] [cursor=pointer]:
+        - /url: /tools/format/json
+        - generic [ref=e60]: ✨
+        - generic [ref=e61]:
+          - heading "JSON 格式化" [level=3] [ref=e62]
+          - paragraph [ref=e63]: JSON 美化/压缩/校验
+        - button "收藏工具" [ref=e64]: ☆
+        - img [ref=e65]
+      - link "⏰ 时间戳转换 Unix 时间戳与日期互转 收藏工具" [ref=e67] [cursor=pointer]:
+        - /url: /tools/converter/timestamp
+        - generic [ref=e68]: ⏰
+        - generic [ref=e69]:
+          - heading "时间戳转换" [level=3] [ref=e70]
+          - paragraph [ref=e71]: Unix 时间戳与日期互转
+        - button "收藏工具" [ref=e72]: ☆
+        - img [ref=e73]
+      - link "🆔 UUID 生成 批量生成 UUID/GUID 收藏工具" [ref=e75] [cursor=pointer]:
+        - /url: /tools/generator/uuid
+        - generic [ref=e76]: 🆔
+        - generic [ref=e77]:
+          - heading "UUID 生成" [level=3] [ref=e78]
+          - paragraph [ref=e79]: 批量生成 UUID/GUID
+        - button "收藏工具" [ref=e80]: ☆
+        - img [ref=e81]
+      - link "⏱️ Cron 表达式 Cron 表达式解析与生成 收藏工具" [ref=e83] [cursor=pointer]:
+        - /url: /tools/devtools/cron
+        - generic [ref=e84]: ⏱️
+        - generic [ref=e85]:
+          - heading "Cron 表达式" [level=3] [ref=e86]
+          - paragraph [ref=e87]: Cron 表达式解析与生成
+        - button "收藏工具" [ref=e88]: ☆
+        - img [ref=e89]
+      - link "🔒 SHA 系列 SHA-1 / SHA-256 / SHA-512 哈希计算 收藏工具" [ref=e91] [cursor=pointer]:
+        - /url: /tools/crypto/sha
+        - generic [ref=e92]: 🔒
+        - generic [ref=e93]:
+          - heading "SHA 系列" [level=3] [ref=e94]
+          - paragraph [ref=e95]: SHA-1 / SHA-256 / SHA-512 哈希计算
+        - button "收藏工具" [ref=e96]: ☆
+        - img [ref=e97]
+      - link "🗄️ SQL 格式化 SQL 语句美化与压缩 收藏工具" [ref=e99] [cursor=pointer]:
+        - /url: /tools/format/sql
+        - generic [ref=e100]: 🗄️
+        - generic [ref=e101]:
+          - heading "SQL 格式化" [level=3] [ref=e102]
+          - paragraph [ref=e103]: SQL 语句美化与压缩
+        - button "收藏工具" [ref=e104]: ☆
+        - img [ref=e105]
+      - link "🔑 密码生成 高强度随机密码生成 收藏工具" [ref=e107] [cursor=pointer]:
+        - /url: /tools/generator/password
+        - generic [ref=e108]: 🔑
+        - generic [ref=e109]:
+          - heading "密码生成" [level=3] [ref=e110]
+          - paragraph [ref=e111]: 高强度随机密码生成
+        - button "收藏工具" [ref=e112]: ☆
+        - img [ref=e113]
+  - generic [ref=e115]:
+    - generic [ref=e116]:
+      - heading "🛠️ 全部工具" [level=2] [ref=e117]
+      - paragraph [ref=e118]: 按分类浏览所有工具，点击即可使用
+    - generic [ref=e119]:
+      - generic [ref=e120]:
+        - generic [ref=e121]: 🔐
+        - heading "加密解密" [level=3] [ref=e122]
+        - generic [ref=e123]: 5 个工具
+      - generic [ref=e124]:
+        - link "🔑 MD5 加密 计算字符串的 MD5 哈希值 收藏工具" [ref=e125] [cursor=pointer]:
+          - /url: /tools/crypto/md5
+          - generic [ref=e126]: 🔑
+          - generic [ref=e127]:
+            - heading "MD5 加密" [level=4] [ref=e128]
+            - paragraph [ref=e129]: 计算字符串的 MD5 哈希值
+          - button "收藏工具" [ref=e130]: ☆
+        - link "🔒 SHA 系列 SHA-1 / SHA-256 / SHA-512 哈希计算 收藏工具" [ref=e131] [cursor=pointer]:
+          - /url: /tools/crypto/sha
+          - generic [ref=e132]: 🔒
+          - generic [ref=e133]:
+            - heading "SHA 系列" [level=4] [ref=e134]
+            - paragraph [ref=e135]: SHA-1 / SHA-256 / SHA-512 哈希计算
+          - button "收藏工具" [ref=e136]: ☆
+        - link "🛡️ AES 加解密 AES 对称加密/解密，支持 CBC/ECB 模式 收藏工具 NEW" [ref=e137] [cursor=pointer]:
+          - /url: /tools/crypto/aes
+          - generic [ref=e138]: 🛡️
+          - generic [ref=e139]:
+            - heading "AES 加解密" [level=4] [ref=e140]
+            - paragraph [ref=e141]: AES 对称加密/解密，支持 CBC/ECB 模式
+          - button "收藏工具" [ref=e142]: ☆
+          - generic [ref=e143]: NEW
+        - link "🔐 Bcrypt 密码 Bcrypt 密码哈希生成与验证 收藏工具" [ref=e144] [cursor=pointer]:
+          - /url: /tools/crypto/bcrypt
+          - generic [ref=e145]: 🔐
+          - generic [ref=e146]:
+            - heading "Bcrypt 密码" [level=4] [ref=e147]
+            - paragraph [ref=e148]: Bcrypt 密码哈希生成与验证
+          - button "收藏工具" [ref=e149]: ☆
+        - link "✍️ HMAC 签名 HMAC-SHA256 消息认证码生成 收藏工具" [ref=e150] [cursor=pointer]:
+          - /url: /tools/crypto/hmac
+          - generic [ref=e151]: ✍️
+          - generic [ref=e152]:
+            - heading "HMAC 签名" [level=4] [ref=e153]
+            - paragraph [ref=e154]: HMAC-SHA256 消息认证码生成
+          - button "收藏工具" [ref=e155]: ☆
+    - generic [ref=e156]:
+      - generic [ref=e157]:
+        - generic [ref=e158]: 📝
+        - heading "格式化工具" [level=3] [ref=e159]
+        - generic [ref=e160]: 5 个工具
+      - generic [ref=e161]:
+        - link "✨ JSON 格式化 JSON 美化/压缩/校验 收藏工具" [ref=e162] [cursor=pointer]:
+          - /url: /tools/format/json
+          - generic [ref=e163]: ✨
+          - generic [ref=e164]:
+            - heading "JSON 格式化" [level=4] [ref=e165]
+            - paragraph [ref=e166]: JSON 美化/压缩/校验
+          - button "收藏工具" [ref=e167]: ☆
+        - link "🗄️ SQL 格式化 SQL 语句美化与压缩 收藏工具" [ref=e168] [cursor=pointer]:
+          - /url: /tools/format/sql
+          - generic [ref=e169]: 🗄️
+          - generic [ref=e170]:
+            - heading "SQL 格式化" [level=4] [ref=e171]
+            - paragraph [ref=e172]: SQL 语句美化与压缩
+          - button "收藏工具" [ref=e173]: ☆
+        - link "🎨 CSS 格式化 CSS 代码美化与压缩 收藏工具" [ref=e174] [cursor=pointer]:
+          - /url: /tools/format/css
+          - generic [ref=e175]: 🎨
+          - generic [ref=e176]:
+            - heading "CSS 格式化" [level=4] [ref=e177]
+            - paragraph [ref=e178]: CSS 代码美化与压缩
+          - button "收藏工具" [ref=e179]: ☆
+        - link "📋 HTML 格式化 HTML 代码美化与压缩 收藏工具" [ref=e180] [cursor=pointer]:
+          - /url: /tools/format/html
+          - generic [ref=e181]: 📋
+          - generic [ref=e182]:
+            - heading "HTML 格式化" [level=4] [ref=e183]
+            - paragraph [ref=e184]: HTML 代码美化与压缩
+          - button "收藏工具" [ref=e185]: ☆
+        - link "📰 XML 格式化 XML 代码美化与压缩 收藏工具" [ref=e186] [cursor=pointer]:
+          - /url: /tools/format/xml
+          - generic [ref=e187]: 📰
+          - generic [ref=e188]:
+            - heading "XML 格式化" [level=4] [ref=e189]
+            - paragraph [ref=e190]: XML 代码美化与压缩
+          - button "收藏工具" [ref=e191]: ☆
+    - generic [ref=e192]:
+      - generic [ref=e193]:
+        - generic [ref=e194]: 🔄
+        - heading "转换工具" [level=3] [ref=e195]
+        - generic [ref=e196]: 6 个工具
+      - generic [ref=e197]:
+        - link "⏰ 时间戳转换 Unix 时间戳与日期互转 收藏工具" [ref=e198] [cursor=pointer]:
+          - /url: /tools/converter/timestamp
+          - generic [ref=e199]: ⏰
+          - generic [ref=e200]:
+            - heading "时间戳转换" [level=4] [ref=e201]
+            - paragraph [ref=e202]: Unix 时间戳与日期互转
+          - button "收藏工具" [ref=e203]: ☆
+        - link "🔢 进制转换 二进制/八进制/十进制/十六进制互转 收藏工具" [ref=e204] [cursor=pointer]:
+          - /url: /tools/converter/base
+          - generic [ref=e205]: 🔢
+          - generic [ref=e206]:
+            - heading "进制转换" [level=4] [ref=e207]
+            - paragraph [ref=e208]: 二进制/八进制/十进制/十六进制互转
+          - button "收藏工具" [ref=e209]: ☆
+        - link "🎯 颜色转换 HEX/RGB/HSL 颜色格式互转 收藏工具" [ref=e210] [cursor=pointer]:
+          - /url: /tools/converter/color
+          - generic [ref=e211]: 🎯
+          - generic [ref=e212]:
+            - heading "颜色转换" [level=4] [ref=e213]
+            - paragraph [ref=e214]: HEX/RGB/HSL 颜色格式互转
+          - button "收藏工具" [ref=e215]: ☆
+        - link "🔤 大小写转换 大小写/驼峰/蛇形/常量命名转换 收藏工具" [ref=e216] [cursor=pointer]:
+          - /url: /tools/converter/case
+          - generic [ref=e217]: 🔤
+          - generic [ref=e218]:
+            - heading "大小写转换" [level=4] [ref=e219]
+            - paragraph [ref=e220]: 大小写/驼峰/蛇形/常量命名转换
+          - button "收藏工具" [ref=e221]: ☆
+        - link "🌍 Unicode 转换 Unicode 与中文互转 收藏工具" [ref=e222] [cursor=pointer]:
+          - /url: /tools/converter/unicode
+          - generic [ref=e223]: 🌍
+          - generic [ref=e224]:
+            - heading "Unicode 转换" [level=4] [ref=e225]
+            - paragraph [ref=e226]: Unicode 与中文互转
+          - button "收藏工具" [ref=e227]: ☆
+        - link "📊 Excel转JSON 将Excel文件(.xlsx/.xls)转换为JSON格式 收藏工具 NEW" [ref=e228] [cursor=pointer]:
+          - /url: /tools/converter/excel2json
+          - generic [ref=e229]: 📊
+          - generic [ref=e230]:
+            - heading "Excel转JSON" [level=4] [ref=e231]
+            - paragraph [ref=e232]: 将Excel文件(.xlsx/.xls)转换为JSON格式
+          - button "收藏工具" [ref=e233]: ☆
+          - generic [ref=e234]: NEW
+    - generic [ref=e235]:
+      - generic [ref=e236]:
+        - generic [ref=e237]: 🎲
+        - heading "生成器" [level=3] [ref=e238]
+        - generic [ref=e239]: 5 个工具
+      - generic [ref=e240]:
+        - link "🆔 UUID 生成 批量生成 UUID/GUID 收藏工具" [ref=e241] [cursor=pointer]:
+          - /url: /tools/generator/uuid
+          - generic [ref=e242]: 🆔
+          - generic [ref=e243]:
+            - heading "UUID 生成" [level=4] [ref=e244]
+            - paragraph [ref=e245]: 批量生成 UUID/GUID
+          - button "收藏工具" [ref=e246]: ☆
+        - link "🔑 密码生成 高强度随机密码生成 收藏工具" [ref=e247] [cursor=pointer]:
+          - /url: /tools/generator/password
+          - generic [ref=e248]: 🔑
+          - generic [ref=e249]:
+            - heading "密码生成" [level=4] [ref=e250]
+            - paragraph [ref=e251]: 高强度随机密码生成
+          - button "收藏工具" [ref=e252]: ☆
+        - link "🎰 随机数生成 指定范围随机数生成 收藏工具" [ref=e253] [cursor=pointer]:
+          - /url: /tools/generator/random
+          - generic [ref=e254]: 🎰
+          - generic [ref=e255]:
+            - heading "随机数生成" [level=4] [ref=e256]
+            - paragraph [ref=e257]: 指定范围随机数生成
+          - button "收藏工具" [ref=e258]: ☆
+        - link "📝 Lorem Ipsum 占位文本生成 收藏工具" [ref=e259] [cursor=pointer]:
+          - /url: /tools/generator/lorem
+          - generic [ref=e260]: 📝
+          - generic [ref=e261]:
+            - heading "Lorem Ipsum" [level=4] [ref=e262]
+            - paragraph [ref=e263]: 占位文本生成
+          - button "收藏工具" [ref=e264]: ☆
+        - link "📱 二维码生成 文本/链接转二维码图片 收藏工具 NEW" [ref=e265] [cursor=pointer]:
+          - /url: /tools/generator/qrcode
+          - generic [ref=e266]: 📱
+          - generic [ref=e267]:
+            - heading "二维码生成" [level=4] [ref=e268]
+            - paragraph [ref=e269]: 文本/链接转二维码图片
+          - button "收藏工具" [ref=e270]: ☆
+          - generic [ref=e271]: NEW
+    - generic [ref=e272]:
+      - generic [ref=e273]:
+        - generic [ref=e274]: 📄
+        - heading "文本处理" [level=3] [ref=e275]
+        - generic [ref=e276]: 5 个工具
+      - generic [ref=e277]:
+        - link "🔍 文本对比 两段文本差异对比（Diff） 收藏工具 NEW" [ref=e278] [cursor=pointer]:
+          - /url: /tools/text/diff
+          - generic [ref=e279]: 🔍
+          - generic [ref=e280]:
+            - heading "文本对比" [level=4] [ref=e281]
+            - paragraph [ref=e282]: 两段文本差异对比（Diff）
+          - button "收藏工具" [ref=e283]: ☆
+          - generic [ref=e284]: NEW
+        - link "🧪 正则测试 正则表达式在线测试 收藏工具" [ref=e285] [cursor=pointer]:
+          - /url: /tools/text/regex
+          - generic [ref=e286]: 🧪
+          - generic [ref=e287]:
+            - heading "正则测试" [level=4] [ref=e288]
+            - paragraph [ref=e289]: 正则表达式在线测试
+          - button "收藏工具" [ref=e290]: ☆
+        - link "📊 字数统计 字符/单词/行数统计 收藏工具" [ref=e291] [cursor=pointer]:
+          - /url: /tools/text/count
+          - generic [ref=e292]: 📊
+          - generic [ref=e293]:
+            - heading "字数统计" [level=4] [ref=e294]
+            - paragraph [ref=e295]: 字符/单词/行数统计
+          - button "收藏工具" [ref=e296]: ☆
+        - link "🔄 文本去重 文本行去重排序 收藏工具" [ref=e297] [cursor=pointer]:
+          - /url: /tools/text/dedup
+          - generic [ref=e298]: 🔄
+          - generic [ref=e299]:
+            - heading "文本去重" [level=4] [ref=e300]
+            - paragraph [ref=e301]: 文本行去重排序
+          - button "收藏工具" [ref=e302]: ☆
+        - link "📟 Base64 编解码 Base64 编码与解码 收藏工具" [ref=e303] [cursor=pointer]:
+          - /url: /tools/text/base64
+          - generic [ref=e304]: 📟
+          - generic [ref=e305]:
+            - heading "Base64 编解码" [level=4] [ref=e306]
+            - paragraph [ref=e307]: Base64 编码与解码
+          - button "收藏工具" [ref=e308]: ☆
+    - generic [ref=e309]:
+      - generic [ref=e310]:
+        - generic [ref=e311]: 🌐
+        - heading "网络工具" [level=3] [ref=e312]
+        - generic [ref=e313]: 4 个工具
+      - generic [ref=e314]:
+        - link "🌍 IP 信息查询 IP 地址归属地查询 收藏工具" [ref=e315] [cursor=pointer]:
+          - /url: /tools/network/ip
+          - generic [ref=e316]: 🌍
+          - generic [ref=e317]:
+            - heading "IP 信息查询" [level=4] [ref=e318]
+            - paragraph [ref=e319]: IP 地址归属地查询
+          - button "收藏工具" [ref=e320]: ☆
+        - link "🔍 User-Agent 解析 浏览器 UA 字符串解析 收藏工具" [ref=e321] [cursor=pointer]:
+          - /url: /tools/network/ua
+          - generic [ref=e322]: 🔍
+          - generic [ref=e323]:
+            - heading "User-Agent 解析" [level=4] [ref=e324]
+            - paragraph [ref=e325]: 浏览器 UA 字符串解析
+          - button "收藏工具" [ref=e326]: ☆
+        - link "📡 HTTP 状态码 HTTP 状态码参考大全 收藏工具" [ref=e327] [cursor=pointer]:
+          - /url: /tools/network/http-status
+          - generic [ref=e328]: 📡
+          - generic [ref=e329]:
+            - heading "HTTP 状态码" [level=4] [ref=e330]
+            - paragraph [ref=e331]: HTTP 状态码参考大全
+          - button "收藏工具" [ref=e332]: ☆
+        - link "🔗 URL 编解码 URL 编码与解码 收藏工具" [ref=e333] [cursor=pointer]:
+          - /url: /tools/network/url
+          - generic [ref=e334]: 🔗
+          - generic [ref=e335]:
+            - heading "URL 编解码" [level=4] [ref=e336]
+            - paragraph [ref=e337]: URL 编码与解码
+          - button "收藏工具" [ref=e338]: ☆
+    - generic [ref=e339]:
+      - generic [ref=e340]:
+        - generic [ref=e341]: 💻
+        - heading "开发者工具" [level=3] [ref=e342]
+        - generic [ref=e343]: 4 个工具
+      - generic [ref=e344]:
+        - link "⏱️ Cron 表达式 Cron 表达式解析与生成 收藏工具" [ref=e345] [cursor=pointer]:
+          - /url: /tools/devtools/cron
+          - generic [ref=e346]: ⏱️
+          - generic [ref=e347]:
+            - heading "Cron 表达式" [level=4] [ref=e348]
+            - paragraph [ref=e349]: Cron 表达式解析与生成
+          - button "收藏工具" [ref=e350]: ☆
+        - link "📚 Git 命令速查 常用 Git 命令速查表 收藏工具" [ref=e351] [cursor=pointer]:
+          - /url: /tools/devtools/git
+          - generic [ref=e352]: 📚
+          - generic [ref=e353]:
+            - heading "Git 命令速查" [level=4] [ref=e354]
+            - paragraph [ref=e355]: 常用 Git 命令速查表
+          - button "收藏工具" [ref=e356]: ☆
+        - link "📁 MIME 类型 文件扩展名与 MIME 类型对照 收藏工具" [ref=e357] [cursor=pointer]:
+          - /url: /tools/devtools/mime
+          - generic [ref=e358]: 📁
+          - generic [ref=e359]:
+            - heading "MIME 类型" [level=4] [ref=e360]
+            - paragraph [ref=e361]: 文件扩展名与 MIME 类型对照
+          - button "收藏工具" [ref=e362]: ☆
+        - link "🎫 JWT 调试器 JWT Token 解析与字段分析（不验证签名） 收藏工具 NEW" [ref=e363] [cursor=pointer]:
+          - /url: /tools/devtools/jwt
+          - generic [ref=e364]: 🎫
+          - generic [ref=e365]:
+            - heading "JWT 调试器" [level=4] [ref=e366]
+            - paragraph [ref=e367]: JWT Token 解析与字段分析（不验证签名）
+          - button "收藏工具" [ref=e368]: ☆
+          - generic [ref=e369]: NEW
+    - generic [ref=e370]:
+      - generic [ref=e371]:
+        - generic [ref=e372]: 📟
+        - heading "编码解码" [level=3] [ref=e373]
+        - generic [ref=e374]: 3 个工具
+      - generic [ref=e375]:
+        - link "🔗 URL 编解码 URL Encode / Decode 收藏工具" [ref=e376] [cursor=pointer]:
+          - /url: /tools/encode/url
+          - generic [ref=e377]: 🔗
+          - generic [ref=e378]:
+            - heading "URL 编解码" [level=4] [ref=e379]
+            - paragraph [ref=e380]: URL Encode / Decode
+          - button "收藏工具" [ref=e381]: ☆
+        - link "📄 HTML 实体 HTML 实体编码与解码 收藏工具" [ref=e382] [cursor=pointer]:
+          - /url: /tools/encode/html
+          - generic [ref=e383]: 📄
+          - generic [ref=e384]:
+            - heading "HTML 实体" [level=4] [ref=e385]
+            - paragraph [ref=e386]: HTML 实体编码与解码
+          - button "收藏工具" [ref=e387]: ☆
+        - link "📻 摩尔斯电码 摩尔斯电码编解码 收藏工具 NEW" [ref=e388] [cursor=pointer]:
+          - /url: /tools/encode/morse
+          - generic [ref=e389]: 📻
+          - generic [ref=e390]:
+            - heading "摩尔斯电码" [level=4] [ref=e391]
+            - paragraph [ref=e392]: 摩尔斯电码编解码
+          - button "收藏工具" [ref=e393]: ☆
+          - generic [ref=e394]: NEW
+  - contentinfo [ref=e395]:
+    - generic [ref=e396]:
+      - generic [ref=e397]:
+        - text: ⚡ DevTools Station
+        - paragraph [ref=e398]: 为开发者打造的一站式在线工具箱
+      - generic [ref=e399]:
+        - generic [ref=e400]:
+          - heading "产品" [level=4] [ref=e401]
+          - link "全部工具" [ref=e402] [cursor=pointer]:
+            - /url: /#tools
+          - link "API 文档" [ref=e403] [cursor=pointer]:
+            - /url: /doc.html
+        - generic [ref=e404]:
+          - heading "资源" [level=4] [ref=e405]
+          - link "使用指南" [ref=e406] [cursor=pointer]:
+            - /url: /guide
+          - link "更新日志" [ref=e407] [cursor=pointer]:
+            - /url: /changelog
+        - generic [ref=e408]:
+          - heading "关于" [level=4] [ref=e409]
+          - link "关于我们" [ref=e410] [cursor=pointer]:
+            - /url: /about
+          - link "反馈建议" [ref=e411] [cursor=pointer]:
+            - /url: /feedback
+    - paragraph [ref=e413]: © 2024 DevTools Station. Built with ❤️ for developers.

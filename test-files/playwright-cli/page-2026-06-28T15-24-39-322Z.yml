@@ -1,0 +1,182 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - button "Login" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+          - generic [ref=e16]: Login
+        - button "🌙" [ref=e18] [cursor=pointer]
+        - generic [ref=e19]:
+          - button "🇺🇸 English" [active] [ref=e20] [cursor=pointer]
+          - generic [ref=e146]:
+            - generic [ref=e147] [cursor=pointer]:
+              - generic [ref=e148]: 🇨🇳
+              - generic [ref=e149]: 中文
+              - img [ref=e151]
+            - generic [ref=e153] [cursor=pointer]:
+              - generic [ref=e154]: 🇺🇸
+              - generic [ref=e155]: English
+              - img [ref=e157]
+            - generic [ref=e159] [cursor=pointer]:
+              - generic [ref=e160]: 🇯🇵
+              - generic [ref=e161]: 日本語
+              - img [ref=e163]
+            - generic [ref=e165] [cursor=pointer]:
+              - generic [ref=e166]: 🇰🇷
+              - generic [ref=e167]: 한국어
+              - img [ref=e169]
+        - link "🏠 Home" [ref=e21] [cursor=pointer]:
+          - /url: /
+  - generic [ref=e23]:
+    - link "Home" [ref=e24] [cursor=pointer]:
+      - /url: /
+    - text: /
+    - link "Converters" [ref=e25] [cursor=pointer]:
+      - /url: /#tools
+    - text: / Excel to JSON
+  - main [ref=e26]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e29]: 📊
+        - generic [ref=e30]:
+          - heading "Excel to JSON" [level=1] [ref=e31]
+          - paragraph [ref=e32]: Convert Excel files (.xlsx/.xls) to JSON format
+          - generic [ref=e33]: NEW
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - generic [ref=e36]: 📖 How to Use
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - generic [ref=e39]: "1"
+              - generic [ref=e40]: Download the template to get a standard Excel file, fill in your data
+            - generic [ref=e41]:
+              - generic [ref=e42]: "2"
+              - generic [ref=e43]: Upload your prepared Excel file (supports .xlsx or .xls)
+            - generic [ref=e44]:
+              - generic [ref=e45]: "3"
+              - generic [ref=e46]: Choose conversion mode (Array / Objects), click Execute to see the JSON result
+        - generic [ref=e47]:
+          - generic [ref=e48]: 💡 No Excel file yet? Download a template to try
+          - link "📥 Download Template" [ref=e49] [cursor=pointer]:
+            - /url: /api/tools/convert/excel2json/template
+        - generic [ref=e50]:
+          - generic [ref=e51]: Select Excel File
+          - generic [ref=e53] [cursor=pointer]:
+            - generic [ref=e54]: 📁
+            - generic [ref=e55]: Click to select Excel file
+            - generic [ref=e56]: Supports .xlsx / .xls format
+        - generic [ref=e58]:
+          - generic [ref=e59]: Conversion Mode
+          - combobox [ref=e60] [cursor=pointer]:
+            - option "JSON Array (all rows)" [selected]
+            - option "JSON Object (each row)"
+        - generic [ref=e61]:
+          - button "⚡ Execute" [ref=e62] [cursor=pointer]
+          - button "🗑 Clear" [ref=e63] [cursor=pointer]
+    - complementary [ref=e64]:
+      - generic [ref=e65]:
+        - heading "Similar Tools" [level=3] [ref=e66]
+        - list [ref=e67]:
+          - listitem [ref=e68]:
+            - link "⏰ Timestamp Converter" [ref=e69] [cursor=pointer]:
+              - /url: /tools/converter/timestamp
+              - generic [ref=e70]: ⏰
+              - generic [ref=e71]: Timestamp Converter
+          - listitem [ref=e72]:
+            - link "🔢 Radix Converter" [ref=e73] [cursor=pointer]:
+              - /url: /tools/converter/base
+              - generic [ref=e74]: 🔢
+              - generic [ref=e75]: Radix Converter
+          - listitem [ref=e76]:
+            - link "🎯 Color Converter" [ref=e77] [cursor=pointer]:
+              - /url: /tools/converter/color
+              - generic [ref=e78]: 🎯
+              - generic [ref=e79]: Color Converter
+          - listitem [ref=e80]:
+            - link "🔤 Case Converter" [ref=e81] [cursor=pointer]:
+              - /url: /tools/converter/case
+              - generic [ref=e82]: 🔤
+              - generic [ref=e83]: Case Converter
+          - listitem [ref=e84]:
+            - link "🌍 Unicode Converter" [ref=e85] [cursor=pointer]:
+              - /url: /tools/converter/unicode
+              - generic [ref=e86]: 🌍
+              - generic [ref=e87]: Unicode Converter
+          - listitem [ref=e88]:
+            - link "📊 Excel to JSON" [ref=e89] [cursor=pointer]:
+              - /url: /tools/converter/excel2json
+              - generic [ref=e90]: 📊
+              - generic [ref=e91]: Excel to JSON
+      - generic [ref=e92]:
+        - heading "Category Navigation" [level=3] [ref=e93]
+        - list [ref=e94]:
+          - listitem [ref=e95]:
+            - link "🔐 Crypto" [ref=e96] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e97]: 🔐
+              - generic [ref=e98]: Crypto
+          - listitem [ref=e99]:
+            - link "📝 Formatters" [ref=e100] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e101]: 📝
+              - generic [ref=e102]: Formatters
+          - listitem [ref=e103]:
+            - link "🔄 Converters" [ref=e104] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e105]: 🔄
+              - generic [ref=e106]: Converters
+          - listitem [ref=e107]:
+            - link "🎲 Generators" [ref=e108] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e109]: 🎲
+              - generic [ref=e110]: Generators
+          - listitem [ref=e111]:
+            - link "📄 Text Processing" [ref=e112] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e113]: 📄
+              - generic [ref=e114]: Text Processing
+          - listitem [ref=e115]:
+            - link "🌐 Network Tools" [ref=e116] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e117]: 🌐
+              - generic [ref=e118]: Network Tools
+          - listitem [ref=e119]:
+            - link "💻 Dev Tools" [ref=e120] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e121]: 💻
+              - generic [ref=e122]: Dev Tools
+          - listitem [ref=e123]:
+            - link "📟 Encoders" [ref=e124] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e125]: 📟
+              - generic [ref=e126]: Encoders
+  - contentinfo [ref=e127]:
+    - generic [ref=e128]:
+      - generic [ref=e129]:
+        - text: ⚡ DevTools Station
+        - paragraph [ref=e130]: An all-in-one online toolbox built for developers
+      - generic [ref=e131]:
+        - generic [ref=e132]:
+          - heading "Product" [level=4] [ref=e133]
+          - link "All Tools" [ref=e134] [cursor=pointer]:
+            - /url: /#tools
+          - link "API Docs" [ref=e135] [cursor=pointer]:
+            - /url: /api
+        - generic [ref=e136]:
+          - heading "Resources" [level=4] [ref=e137]
+          - link "Guide" [ref=e138] [cursor=pointer]:
+            - /url: /guide
+          - link "Changelog" [ref=e139] [cursor=pointer]:
+            - /url: /changelog
+        - generic [ref=e140]:
+          - heading "About" [level=4] [ref=e141]
+          - link "About Us" [ref=e142] [cursor=pointer]:
+            - /url: /about
+          - link "Feedback" [ref=e143] [cursor=pointer]:
+            - /url: /feedback
+    - paragraph [ref=e145]: © 2024 DevTools Station. Built with ❤️ for developers.

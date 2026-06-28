@@ -1,0 +1,156 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - button "登录" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+          - generic [ref=e16]: 登录
+        - button "🌙" [ref=e18] [cursor=pointer]
+        - generic [ref=e19]:
+          - button "🇨🇳 中文" [active] [ref=e20] [cursor=pointer]
+          - generic [ref=e121]:
+            - generic [ref=e122] [cursor=pointer]:
+              - generic [ref=e123]: 🇨🇳
+              - generic [ref=e124]: 中文
+              - img [ref=e126]
+            - generic [ref=e128] [cursor=pointer]:
+              - generic [ref=e129]: 🇺🇸
+              - generic [ref=e130]: English
+              - img [ref=e132]
+            - generic [ref=e134] [cursor=pointer]:
+              - generic [ref=e135]: 🇯🇵
+              - generic [ref=e136]: 日本語
+              - img [ref=e138]
+            - generic [ref=e140] [cursor=pointer]:
+              - generic [ref=e141]: 🇰🇷
+              - generic [ref=e142]: 한국어
+              - img [ref=e144]
+        - link "🏠 首页" [ref=e21] [cursor=pointer]:
+          - /url: /
+  - generic [ref=e23]:
+    - link "首页" [ref=e24] [cursor=pointer]:
+      - /url: /
+    - text: /
+    - link "加密解密" [ref=e25] [cursor=pointer]:
+      - /url: /#tools
+    - text: / MD5 加密
+  - main [ref=e26]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e29]: 🔑
+        - generic [ref=e30]:
+          - heading "MD5 加密" [level=1] [ref=e31]
+          - paragraph [ref=e32]: 计算字符串的 MD5 哈希值
+          - generic [ref=e33]: 🔥 热门
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - generic [ref=e36]: 输入文本
+          - textbox "请输入要计算 MD5 的文本..." [ref=e37]
+        - generic [ref=e38]:
+          - text: "💡 示例:"
+          - code [ref=e39] [cursor=pointer]: Hello World
+        - generic [ref=e40]:
+          - button "⚡ 执行" [ref=e41] [cursor=pointer]
+          - button "🗑 清空" [ref=e42] [cursor=pointer]
+    - complementary [ref=e43]:
+      - generic [ref=e44]:
+        - heading "同类工具" [level=3] [ref=e45]
+        - list [ref=e46]:
+          - listitem [ref=e47]:
+            - link "🔑 MD5 加密" [ref=e48] [cursor=pointer]:
+              - /url: /tools/crypto/md5
+              - generic [ref=e49]: 🔑
+              - generic [ref=e50]: MD5 加密
+          - listitem [ref=e51]:
+            - link "🔒 SHA 系列" [ref=e52] [cursor=pointer]:
+              - /url: /tools/crypto/sha
+              - generic [ref=e53]: 🔒
+              - generic [ref=e54]: SHA 系列
+          - listitem [ref=e55]:
+            - link "🛡️ AES 加解密" [ref=e56] [cursor=pointer]:
+              - /url: /tools/crypto/aes
+              - generic [ref=e57]: 🛡️
+              - generic [ref=e58]: AES 加解密
+          - listitem [ref=e59]:
+            - link "🔐 Bcrypt 密码" [ref=e60] [cursor=pointer]:
+              - /url: /tools/crypto/bcrypt
+              - generic [ref=e61]: 🔐
+              - generic [ref=e62]: Bcrypt 密码
+          - listitem [ref=e63]:
+            - link "✍️ HMAC 签名" [ref=e64] [cursor=pointer]:
+              - /url: /tools/crypto/hmac
+              - generic [ref=e65]: ✍️
+              - generic [ref=e66]: HMAC 签名
+      - generic [ref=e67]:
+        - heading "分类导航" [level=3] [ref=e68]
+        - list [ref=e69]:
+          - listitem [ref=e70]:
+            - link "🔐 加密解密" [ref=e71] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e72]: 🔐
+              - generic [ref=e73]: 加密解密
+          - listitem [ref=e74]:
+            - link "📝 格式化工具" [ref=e75] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e76]: 📝
+              - generic [ref=e77]: 格式化工具
+          - listitem [ref=e78]:
+            - link "🔄 转换工具" [ref=e79] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e80]: 🔄
+              - generic [ref=e81]: 转换工具
+          - listitem [ref=e82]:
+            - link "🎲 生成器" [ref=e83] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e84]: 🎲
+              - generic [ref=e85]: 生成器
+          - listitem [ref=e86]:
+            - link "📄 文本处理" [ref=e87] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e88]: 📄
+              - generic [ref=e89]: 文本处理
+          - listitem [ref=e90]:
+            - link "🌐 网络工具" [ref=e91] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e92]: 🌐
+              - generic [ref=e93]: 网络工具
+          - listitem [ref=e94]:
+            - link "💻 开发者工具" [ref=e95] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e96]: 💻
+              - generic [ref=e97]: 开发者工具
+          - listitem [ref=e98]:
+            - link "📟 编码解码" [ref=e99] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e100]: 📟
+              - generic [ref=e101]: 编码解码
+  - contentinfo [ref=e102]:
+    - generic [ref=e103]:
+      - generic [ref=e104]:
+        - text: ⚡ DevTools Station
+        - paragraph [ref=e105]: 为开发者打造的一站式在线工具箱
+      - generic [ref=e106]:
+        - generic [ref=e107]:
+          - heading "产品" [level=4] [ref=e108]
+          - link "全部工具" [ref=e109] [cursor=pointer]:
+            - /url: /#tools
+          - link "API 文档" [ref=e110] [cursor=pointer]:
+            - /url: /api
+        - generic [ref=e111]:
+          - heading "资源" [level=4] [ref=e112]
+          - link "使用指南" [ref=e113] [cursor=pointer]:
+            - /url: /guide
+          - link "更新日志" [ref=e114] [cursor=pointer]:
+            - /url: /changelog
+        - generic [ref=e115]:
+          - heading "关于" [level=4] [ref=e116]
+          - link "关于我们" [ref=e117] [cursor=pointer]:
+            - /url: /about
+          - link "反馈建议" [ref=e118] [cursor=pointer]:
+            - /url: /feedback
+    - paragraph [ref=e120]: © 2024 DevTools Station. Built with ❤️ for developers.

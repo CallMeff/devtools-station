@@ -1,0 +1,111 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - button "登录" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+          - generic [ref=e16]: 登录
+        - button "☀️" [ref=e18] [cursor=pointer]
+        - button "🇨🇳 中文" [ref=e20] [cursor=pointer]
+        - link "🏠 首页" [ref=e21] [cursor=pointer]:
+          - /url: /
+  - main [ref=e22]:
+    - heading "📖 使用指南" [level=1] [ref=e23]
+    - paragraph [ref=e24]: 快速了解 DevTools Station 的用法和技巧。
+    - generic [ref=e25]:
+      - heading "🔍 搜索工具" [level=2] [ref=e26]
+      - paragraph [ref=e27]: 在首页顶部的搜索框中输入关键词即可快速找到工具。搜索支持：
+      - list [ref=e28]:
+        - listitem [ref=e29]:
+          - strong [ref=e30]: "中文搜索:"
+          - text: 输入「加密」找到所有加解密工具
+        - listitem [ref=e31]:
+          - strong [ref=e32]: "拼音搜索:"
+          - text: 输入「md5」或「json」即可定位
+        - listitem [ref=e33]:
+          - strong [ref=e34]: "快捷键:"
+          - text: "按 Ctrl+K (Mac: ⌘K) 快速聚焦搜索框"
+          - code [ref=e35]: Ctrl+K
+          - text: "(Mac:"
+          - code [ref=e36]: ⌘K
+          - text: ) 快速聚焦搜索框
+    - generic [ref=e37]:
+      - heading "🛠️ 使用工具" [level=2] [ref=e38]
+      - paragraph [ref=e39]: 所有工具的使用方式基本一致：
+      - list [ref=e40]:
+        - listitem [ref=e41]: 点击工具卡片进入工具页面
+        - listitem [ref=e42]: 在输入框中输入文本或参数
+        - listitem [ref=e43]: 选择需要的选项（如有）
+        - listitem [ref=e44]:
+          - text: 点击 ⚡ 执行 按钮或按 Ctrl+Enter
+          - strong [ref=e45]: ⚡ 执行
+          - text: 按钮或按
+          - code [ref=e46]: Ctrl+Enter
+        - listitem [ref=e47]:
+          - text: 查看结果，点击 📋 复制 复制到剪贴板
+          - strong [ref=e48]: 📋 复制
+          - text: 复制到剪贴板
+      - generic [ref=e49]:
+        - strong [ref=e50]: "💡 提示:"
+        - text: 大部分工具提供了示例输入，点击示例文本可自动填充到输入框。
+    - generic [ref=e51]:
+      - heading "📂 工具分类" [level=2] [ref=e52]
+      - list [ref=e53]:
+        - listitem [ref=e54]:
+          - strong [ref=e55]: "🔐 加密解密:"
+          - text: MD5、SHA、AES、Bcrypt、HMAC 等
+        - listitem [ref=e56]:
+          - strong [ref=e57]: "📝 格式化工具:"
+          - text: JSON、SQL、CSS、HTML、XML 格式化
+        - listitem [ref=e58]:
+          - strong [ref=e59]: "🔄 转换工具:"
+          - text: 时间戳、进制、颜色、大小写、Unicode 转换
+        - listitem [ref=e60]:
+          - strong [ref=e61]: "🎲 生成器:"
+          - text: UUID、密码、随机数、Lorem Ipsum、二维码
+        - listitem [ref=e62]:
+          - strong [ref=e63]: "📄 文本处理:"
+          - text: 文本对比、正则测试、字数统计、去重、Base64
+        - listitem [ref=e64]:
+          - strong [ref=e65]: "🌐 网络工具:"
+          - text: IP 查询、UA 解析、HTTP 状态码、URL 编解码
+        - listitem [ref=e66]:
+          - strong [ref=e67]: "💻 开发者工具:"
+          - text: Cron 表达式、Git 命令、MIME 类型
+        - listitem [ref=e68]:
+          - strong [ref=e69]: "📟 编码解码:"
+          - text: URL 编码、HTML 实体、摩尔斯电码
+    - generic [ref=e70]:
+      - heading "⌨️ 键盘快捷键" [level=2] [ref=e71]
+      - list [ref=e72]:
+        - listitem [ref=e73]:
+          - code [ref=e74]: Ctrl+K
+          - text: Ctrl+K / ⌘K - 聚焦搜索框
+          - code [ref=e75]: ⌘K
+          - text: "- 聚焦搜索框"
+        - listitem [ref=e76]:
+          - code [ref=e77]: Ctrl+Enter
+          - text: Ctrl+Enter / ⌘Enter - 执行当前工具
+          - code [ref=e78]: ⌘Enter
+          - text: "- 执行当前工具"
+        - listitem [ref=e79]:
+          - code [ref=e80]: Esc
+          - text: Esc - 关闭搜索下拉
+    - generic [ref=e81]:
+      - heading "🔌 API 调用" [level=2] [ref=e82]
+      - paragraph [ref=e83]:
+        - text: 所有工具都提供 RESTful API，可通过 HTTP 请求直接调用。查看 /doc.html 获取完整 API 文档。
+        - code [ref=e84]: /doc.html
+        - text: 获取完整 API 文档。
+      - paragraph [ref=e85]: 示例：
+      - generic [ref=e86]: curl -X POST http://localhost:8088/api/tools/crypto/hash \ -d "input=Hello World&algorithm=md5"
+  - contentinfo [ref=e87]:
+    - generic [ref=e89]:
+      - text: ⚡ DevTools Station
+      - paragraph [ref=e90]: 为开发者打造的一站式在线工具箱
+    - paragraph [ref=e92]: © 2024 DevTools Station. Built with ❤️ for developers.

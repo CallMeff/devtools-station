@@ -1,0 +1,141 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - button "Login" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+          - generic [ref=e16]: Login
+        - button "🌙" [ref=e18] [cursor=pointer]
+        - button "🇺🇸 English" [ref=e20] [cursor=pointer]
+        - link "🏠 Home" [ref=e21] [cursor=pointer]:
+          - /url: /
+  - generic [ref=e23]:
+    - link "Home" [ref=e24] [cursor=pointer]:
+      - /url: /
+    - text: /
+    - link "Generators" [ref=e25] [cursor=pointer]:
+      - /url: /#tools
+    - text: / 二维码生成
+  - main [ref=e26]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e29]: 📱
+        - generic [ref=e30]:
+          - heading "二维码生成" [level=1] [ref=e31]
+          - paragraph [ref=e32]: 文本/链接转二维码图片
+          - generic [ref=e33]: NEW
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - generic [ref=e36]: Text / Link
+          - textbox "Enter text or link to generate QR code..." [ref=e37]
+        - generic [ref=e39]:
+          - generic [ref=e40]: Size
+          - combobox [ref=e41] [cursor=pointer]:
+            - option "200x200"
+            - option "300x300" [selected]
+            - option "400x400"
+        - generic [ref=e42]:
+          - button "⚡ Execute" [ref=e43] [cursor=pointer]
+          - button "🗑 Clear" [ref=e44] [cursor=pointer]
+    - complementary [ref=e45]:
+      - generic [ref=e46]:
+        - heading "Similar Tools" [level=3] [ref=e47]
+        - list [ref=e48]:
+          - listitem [ref=e49]:
+            - link "🆔 UUID Generator" [ref=e50] [cursor=pointer]:
+              - /url: /tools/generator/uuid
+              - generic [ref=e51]: 🆔
+              - generic [ref=e52]: UUID Generator
+          - listitem [ref=e53]:
+            - link "🔑 Password Generator" [ref=e54] [cursor=pointer]:
+              - /url: /tools/generator/password
+              - generic [ref=e55]: 🔑
+              - generic [ref=e56]: Password Generator
+          - listitem [ref=e57]:
+            - link "🎰 Random Number" [ref=e58] [cursor=pointer]:
+              - /url: /tools/generator/random
+              - generic [ref=e59]: 🎰
+              - generic [ref=e60]: Random Number
+          - listitem [ref=e61]:
+            - link "📝 Lorem Ipsum" [ref=e62] [cursor=pointer]:
+              - /url: /tools/generator/lorem
+              - generic [ref=e63]: 📝
+              - generic [ref=e64]: Lorem Ipsum
+          - listitem [ref=e65]:
+            - link "📱 QR Code Generator" [ref=e66] [cursor=pointer]:
+              - /url: /tools/generator/qrcode
+              - generic [ref=e67]: 📱
+              - generic [ref=e68]: QR Code Generator
+      - generic [ref=e69]:
+        - heading "Category Navigation" [level=3] [ref=e70]
+        - list [ref=e71]:
+          - listitem [ref=e72]:
+            - link "🔐 Crypto" [ref=e73] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e74]: 🔐
+              - generic [ref=e75]: Crypto
+          - listitem [ref=e76]:
+            - link "📝 Formatters" [ref=e77] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e78]: 📝
+              - generic [ref=e79]: Formatters
+          - listitem [ref=e80]:
+            - link "🔄 Converters" [ref=e81] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e82]: 🔄
+              - generic [ref=e83]: Converters
+          - listitem [ref=e84]:
+            - link "🎲 Generators" [ref=e85] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e86]: 🎲
+              - generic [ref=e87]: Generators
+          - listitem [ref=e88]:
+            - link "📄 Text Processing" [ref=e89] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e90]: 📄
+              - generic [ref=e91]: Text Processing
+          - listitem [ref=e92]:
+            - link "🌐 Network Tools" [ref=e93] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e94]: 🌐
+              - generic [ref=e95]: Network Tools
+          - listitem [ref=e96]:
+            - link "💻 Dev Tools" [ref=e97] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e98]: 💻
+              - generic [ref=e99]: Dev Tools
+          - listitem [ref=e100]:
+            - link "📟 Encoders" [ref=e101] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e102]: 📟
+              - generic [ref=e103]: Encoders
+  - contentinfo [ref=e104]:
+    - generic [ref=e105]:
+      - generic [ref=e106]:
+        - text: ⚡ DevTools Station
+        - paragraph [ref=e107]: An all-in-one online toolbox built for developers
+      - generic [ref=e108]:
+        - generic [ref=e109]:
+          - heading "Product" [level=4] [ref=e110]
+          - link "All Tools" [ref=e111] [cursor=pointer]:
+            - /url: /#tools
+          - link "API Docs" [ref=e112] [cursor=pointer]:
+            - /url: /api
+        - generic [ref=e113]:
+          - heading "Resources" [level=4] [ref=e114]
+          - link "Guide" [ref=e115] [cursor=pointer]:
+            - /url: /guide
+          - link "Changelog" [ref=e116] [cursor=pointer]:
+            - /url: /changelog
+        - generic [ref=e117]:
+          - heading "About" [level=4] [ref=e118]
+          - link "About Us" [ref=e119] [cursor=pointer]:
+            - /url: /about
+          - link "Feedback" [ref=e120] [cursor=pointer]:
+            - /url: /feedback
+    - paragraph [ref=e122]: © 2024 DevTools Station. Built with ❤️ for developers.

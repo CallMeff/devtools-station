@@ -54,17 +54,6 @@ dist/
 # ====== CodeBuddy ======
 .codebuddy/
 
-# ====== Test Artifacts ======
-.playwright-cli/
-/*.png
-/*.yml
-/*.yaml
-test-data.xlsx
-/about.html
-/changelog.html
-/feedback.html
-/guide.html
-/profile.html
-/tool.html
+# ====== Temp ======
 /server.log
 /server_err.log

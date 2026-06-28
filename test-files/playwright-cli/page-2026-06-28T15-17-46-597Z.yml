@@ -1,0 +1,164 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - button "登录" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+          - generic [ref=e16]: 登录
+        - button "🌙" [ref=e18] [cursor=pointer]
+        - button "🇨🇳 中文" [ref=e20] [cursor=pointer]
+        - link "🏠 首页" [ref=e21] [cursor=pointer]:
+          - /url: /
+  - generic [ref=e23]:
+    - link "首页" [ref=e24] [cursor=pointer]:
+      - /url: /
+    - text: /
+    - link "转换工具" [ref=e25] [cursor=pointer]:
+      - /url: /#tools
+    - text: / Excel转JSON
+  - main [ref=e26]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e29]: 📊
+        - generic [ref=e30]:
+          - heading "Excel转JSON" [level=1] [ref=e31]
+          - paragraph [ref=e32]: Excel文件(.xlsx/.xls)转换为JSON格式
+          - generic [ref=e33]: NEW
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - generic [ref=e36]: 📖 使用说明
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - generic [ref=e39]: "1"
+              - generic [ref=e40]: 下载模板获得标准格式的 Excel 文件，按模板填写你的数据
+            - generic [ref=e41]:
+              - generic [ref=e42]: "2"
+              - generic [ref=e43]: 上传你准备好的 Excel 文件（支持 .xlsx 或 .xls 格式）
+            - generic [ref=e44]:
+              - generic [ref=e45]: "3"
+              - generic [ref=e46]: 选择转换模式（数组 / 对象），点击执行即可看到 JSON 结果
+        - generic [ref=e47]:
+          - generic [ref=e48]: 💡 还没有 Excel 文件？可以先下载模板试试
+          - link "📥 下载模板" [ref=e49] [cursor=pointer]:
+            - /url: /api/tools/convert/excel2json/template
+        - generic [ref=e50]:
+          - generic [ref=e51]: 选择 Excel 文件
+          - generic [ref=e53] [cursor=pointer]:
+            - generic [ref=e54]: 📁
+            - generic [ref=e55]: 点击选择 Excel 文件
+            - generic [ref=e56]: 支持 .xlsx / .xls 格式
+        - generic [ref=e58]:
+          - generic [ref=e59]: 转换模式
+          - combobox [ref=e60] [cursor=pointer]:
+            - option "JSON 数组（所有行）" [selected]
+            - option "JSON 对象（每行一个）"
+        - generic [ref=e61]:
+          - button "⚡ 执行" [ref=e62] [cursor=pointer]
+          - button "🗑 清空" [ref=e63] [cursor=pointer]
+    - complementary [ref=e64]:
+      - generic [ref=e65]:
+        - heading "同类工具" [level=3] [ref=e66]
+        - list [ref=e67]:
+          - listitem [ref=e68]:
+            - link "⏰ 时间戳转换" [ref=e69] [cursor=pointer]:
+              - /url: /tools/converter/timestamp
+              - generic [ref=e70]: ⏰
+              - generic [ref=e71]: 时间戳转换
+          - listitem [ref=e72]:
+            - link "🔢 进制转换" [ref=e73] [cursor=pointer]:
+              - /url: /tools/converter/base
+              - generic [ref=e74]: 🔢
+              - generic [ref=e75]: 进制转换
+          - listitem [ref=e76]:
+            - link "🎯 颜色转换" [ref=e77] [cursor=pointer]:
+              - /url: /tools/converter/color
+              - generic [ref=e78]: 🎯
+              - generic [ref=e79]: 颜色转换
+          - listitem [ref=e80]:
+            - link "🔤 大小写转换" [ref=e81] [cursor=pointer]:
+              - /url: /tools/converter/case
+              - generic [ref=e82]: 🔤
+              - generic [ref=e83]: 大小写转换
+          - listitem [ref=e84]:
+            - link "🌍 Unicode 转换" [ref=e85] [cursor=pointer]:
+              - /url: /tools/converter/unicode
+              - generic [ref=e86]: 🌍
+              - generic [ref=e87]: Unicode 转换
+          - listitem [ref=e88]:
+            - link "📊 Excel转JSON" [ref=e89] [cursor=pointer]:
+              - /url: /tools/converter/excel2json
+              - generic [ref=e90]: 📊
+              - generic [ref=e91]: Excel转JSON
+      - generic [ref=e92]:
+        - heading "分类导航" [level=3] [ref=e93]
+        - list [ref=e94]:
+          - listitem [ref=e95]:
+            - link "🔐 加密解密" [ref=e96] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e97]: 🔐
+              - generic [ref=e98]: 加密解密
+          - listitem [ref=e99]:
+            - link "📝 格式化工具" [ref=e100] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e101]: 📝
+              - generic [ref=e102]: 格式化工具
+          - listitem [ref=e103]:
+            - link "🔄 转换工具" [ref=e104] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e105]: 🔄
+              - generic [ref=e106]: 转换工具
+          - listitem [ref=e107]:
+            - link "🎲 生成器" [ref=e108] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e109]: 🎲
+              - generic [ref=e110]: 生成器
+          - listitem [ref=e111]:
+            - link "📄 文本处理" [ref=e112] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e113]: 📄
+              - generic [ref=e114]: 文本处理
+          - listitem [ref=e115]:
+            - link "🌐 网络工具" [ref=e116] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e117]: 🌐
+              - generic [ref=e118]: 网络工具
+          - listitem [ref=e119]:
+            - link "💻 开发者工具" [ref=e120] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e121]: 💻
+              - generic [ref=e122]: 开发者工具
+          - listitem [ref=e123]:
+            - link "📟 编码解码" [ref=e124] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e125]: 📟
+              - generic [ref=e126]: 编码解码
+  - contentinfo [ref=e127]:
+    - generic [ref=e128]:
+      - generic [ref=e129]:
+        - text: ⚡ DevTools Station
+        - paragraph [ref=e130]: 为开发者打造的一站式在线工具箱
+      - generic [ref=e131]:
+        - generic [ref=e132]:
+          - heading "产品" [level=4] [ref=e133]
+          - link "全部工具" [ref=e134] [cursor=pointer]:
+            - /url: /#tools
+          - link "API 文档" [ref=e135] [cursor=pointer]:
+            - /url: /api
+        - generic [ref=e136]:
+          - heading "资源" [level=4] [ref=e137]
+          - link "使用指南" [ref=e138] [cursor=pointer]:
+            - /url: /guide
+          - link "更新日志" [ref=e139] [cursor=pointer]:
+            - /url: /changelog
+        - generic [ref=e140]:
+          - heading "关于" [level=4] [ref=e141]
+          - link "关于我们" [ref=e142] [cursor=pointer]:
+            - /url: /about
+          - link "反馈建议" [ref=e143] [cursor=pointer]:
+            - /url: /feedback
+    - paragraph [ref=e145]: © 2024 DevTools Station. Built with ❤️ for developers.

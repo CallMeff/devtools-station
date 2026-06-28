@@ -1,0 +1,42 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - button "T testuser789" [ref=e13] [cursor=pointer]:
+          - generic [ref=e14]: T
+          - generic [ref=e15]: testuser789
+          - img [ref=e16]
+        - button "☀️" [ref=e19] [cursor=pointer]
+        - button "🇺🇸 English" [ref=e21] [cursor=pointer]
+        - link "🏠 Home" [ref=e22] [cursor=pointer]:
+          - /url: /
+  - main [ref=e23]:
+    - heading "💬 Feedback" [level=1] [ref=e24]
+    - paragraph [ref=e25]: We value your opinions and suggestions. Please tell us what you think.
+    - generic [ref=e26]:
+      - heading "Submit Feedback" [level=2] [ref=e27]
+      - paragraph [ref=e28]: Whether it's a bug report, feature suggestion, or user experience, feel free to share.
+      - generic [ref=e29]:
+        - generic [ref=e30]: Feedback Type
+        - combobox [ref=e31]:
+          - option "💡 Feature Suggestion" [selected]
+          - option "🐛 Bug Report"
+          - option "😊 User Experience"
+          - option "📝 Other"
+      - generic [ref=e32]:
+        - generic [ref=e33]: Title
+        - textbox "Briefly describe your feedback..." [ref=e34]
+      - generic [ref=e35]:
+        - generic [ref=e36]: Details
+        - textbox "Please describe your suggestion or issue in detail..." [ref=e37]
+      - button "📤 Submit Feedback" [ref=e38] [cursor=pointer]
+  - contentinfo [ref=e39]:
+    - generic [ref=e41]:
+      - text: ⚡ DevTools Station
+      - paragraph [ref=e42]: An all-in-one online toolbox built for developers
+    - paragraph [ref=e44]: © 2024 DevTools Station. Built with ❤️ for developers.

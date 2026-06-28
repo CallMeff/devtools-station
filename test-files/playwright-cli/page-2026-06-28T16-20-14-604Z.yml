@@ -1,0 +1,102 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - button "登录" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+          - generic [ref=e16]: 登录
+        - button "🌙" [ref=e18] [cursor=pointer]
+        - button "🇨🇳 中文" [ref=e20] [cursor=pointer]
+        - link "🏠 首页" [ref=e21] [cursor=pointer]:
+          - /url: /
+  - main [ref=e22]:
+    - heading "📚 API 文档" [level=1] [ref=e23]
+    - paragraph [ref=e24]: DevTools Station 提供 RESTful API，可用于集成开发或自动化工作流
+    - generic [ref=e25]:
+      - heading "🔐 认证接口" [level=2] [ref=e26]
+      - generic [ref=e27]:
+        - generic [ref=e28]: POST
+        - generic [ref=e29]: /api/auth/register
+        - paragraph [ref=e30]: "用户注册：{ \"username\": \"...\", \"password\": \"...\", \"email\": \"...\" }"
+      - generic [ref=e31]:
+        - generic [ref=e32]: POST
+        - generic [ref=e33]: /api/auth/login
+        - paragraph [ref=e34]: "用户登录：{ \"username\": \"...\", \"password\": \"...\" }，返回 Token"
+      - generic [ref=e35]:
+        - generic [ref=e36]: GET
+        - generic [ref=e37]: /api/auth/me
+        - paragraph [ref=e38]: "获取当前用户信息（需 Header: X-Auth-Token）"
+      - generic [ref=e39]:
+        - generic [ref=e40]: POST
+        - generic [ref=e41]: /api/auth/change-password
+        - paragraph [ref=e42]: "修改密码：{ \"oldPassword\": \"...\", \"newPassword\": \"...\" }"
+      - generic [ref=e43]:
+        - generic [ref=e44]: POST
+        - generic [ref=e45]: /api/auth/reset-password
+        - paragraph [ref=e46]: "重置密码：{ \"email\": \"...\", \"verifyCode\": \"...\", \"newPassword\": \"...\" }"
+    - generic [ref=e47]:
+      - heading "🔐 加密解密" [level=2] [ref=e48]
+      - generic [ref=e49]:
+        - generic [ref=e50]: POST
+        - generic [ref=e51]: /api/tools/crypto/hash
+        - paragraph [ref=e52]: 哈希计算：input=文本 & algorithm=md5|sha1|sha256|sha512
+      - generic [ref=e53]:
+        - generic [ref=e54]: POST
+        - generic [ref=e55]: /api/tools/crypto/aes
+        - paragraph [ref=e56]: AES 加解密：input=文本 & key=密钥 & mode=encrypt|decrypt
+      - generic [ref=e57]:
+        - generic [ref=e58]: POST
+        - generic [ref=e59]: /api/tools/crypto/bcrypt
+        - paragraph [ref=e60]: Bcrypt 操作：input=密码 & mode=hash|verify & hash=已存hash
+      - generic [ref=e61]:
+        - generic [ref=e62]: POST
+        - generic [ref=e63]: /api/tools/crypto/hmac
+        - paragraph [ref=e64]: HMAC 签名：input=消息 & key=密钥 & algorithm=HmacSHA256|...
+    - generic [ref=e65]:
+      - heading "📝 格式化工具" [level=2] [ref=e66]
+      - generic [ref=e67]:
+        - generic [ref=e68]: POST
+        - generic [ref=e69]: /api/tools/format/json
+        - paragraph [ref=e70]: JSON 格式化：input=JSON文本 & mode=format|minify|validate
+      - generic [ref=e71]:
+        - generic [ref=e72]: POST
+        - generic [ref=e73]: /api/tools/format/sql
+        - paragraph [ref=e74]: SQL 格式化：input=SQL语句 & mode=format|minify
+      - generic [ref=e75]:
+        - generic [ref=e76]: POST
+        - generic [ref=e77]: /api/tools/format/xml
+        - paragraph [ref=e78]: XML 格式化：input=XML文本 & mode=format|minify
+    - generic [ref=e79]:
+      - heading "🔄 转换工具" [level=2] [ref=e80]
+      - generic [ref=e81]:
+        - generic [ref=e82]: POST
+        - generic [ref=e83]: /api/tools/convert/timestamp
+        - paragraph [ref=e84]: 时间戳转换：input=时间戳或日期字符串 & mode=auto
+      - generic [ref=e85]:
+        - generic [ref=e86]: POST
+        - generic [ref=e87]: /api/tools/convert/excel2json
+        - paragraph [ref=e88]: Excel转JSON：multipart/form-data, file=Excel文件 & mode=array|objects
+    - generic [ref=e89]:
+      - heading "💻 开发工具" [level=2] [ref=e90]
+      - generic [ref=e91]:
+        - generic [ref=e92]: POST
+        - generic [ref=e93]: /api/tools/dev/jwt
+        - paragraph [ref=e94]: JWT 解析：input=JWT Token 字符串（不验证签名）
+      - generic [ref=e95]:
+        - generic [ref=e96]: POST
+        - generic [ref=e97]: /api/tools/dev/cron
+        - paragraph [ref=e98]: Cron 表达式：expression=Cron表达式字符串
+    - generic [ref=e99]:
+      - heading "📋 统一响应格式" [level=2] [ref=e100]
+      - generic [ref=e102]: "{ \"code\": 200, \"message\": \"success\", \"data\": { ... } }"
+      - paragraph [ref=e103]: code=200 成功 | code=400 参数错误 | code=401 未登录 | code=500 服务器错误
+  - contentinfo [ref=e104]:
+    - generic [ref=e106]:
+      - text: ⚡ DevTools Station
+      - paragraph [ref=e107]: 为开发者打造的一站式在线工具箱
+    - paragraph [ref=e109]: © 2024 DevTools Station. Built with ❤️ for developers.

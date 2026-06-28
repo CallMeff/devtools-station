@@ -1,0 +1,449 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - img
+        - textbox "Search tools... (pinyin, English)" [ref=e11]
+        - generic: ⌘K
+      - generic [ref=e12]:
+        - button "Login" [ref=e14] [cursor=pointer]:
+          - img [ref=e15]
+          - generic [ref=e18]: Login
+        - button "🌙" [ref=e20] [cursor=pointer]
+        - button "🇺🇸 English" [ref=e22] [cursor=pointer]
+        - link "API Docs" [ref=e23] [cursor=pointer]:
+          - /url: /doc.html
+  - generic [ref=e24]:
+    - generic [ref=e25]:
+      - generic [ref=e28]: 40+ useful tools
+      - heading "Developer Toolbox" [level=1] [ref=e29]
+      - paragraph [ref=e30]:
+        - text: An all-in-one collection of developer tools covering encryption, formatting, conversion, generation, text processing and more.
+        - text: No installation required, just open and use. Make development more efficient.
+      - generic [ref=e31]:
+        - link "Get Started" [ref=e32] [cursor=pointer]:
+          - /url: "#tools"
+          - text: Get Started
+          - img [ref=e33]
+        - link "View API" [ref=e35] [cursor=pointer]:
+          - /url: /doc.html
+    - generic [ref=e37]:
+      - generic [ref=e42]: DevTools Station
+      - code [ref=e45]: "// 🛠️ All-in-one Dev Toolset import { DevTools } from '@devtools/station'; const tools = [ '🔐 Encrypt', '📝 Format', '🔄 Convert', '⚡ Generate', '📄 Text', '🌐 Network', '💻 Dev Tools', ]; await DevTools.launch({ tools });"
+  - text: ★
+  - generic [ref=e46]:
+    - generic [ref=e47]:
+      - heading "🔥 Hot Tools" [level=2] [ref=e48]
+      - paragraph [ref=e49]: Most used dev tools to boost your productivity
+    - generic [ref=e50]:
+      - link "🔑 MD5 Hash Compute MD5 hash of a string 收藏工具" [ref=e51] [cursor=pointer]:
+        - /url: /tools/crypto/md5
+        - generic [ref=e52]: 🔑
+        - generic [ref=e53]:
+          - heading "MD5 Hash" [level=3] [ref=e54]
+          - paragraph [ref=e55]: Compute MD5 hash of a string
+        - button "收藏工具" [ref=e56]: ☆
+        - img [ref=e57]
+      - link "🔒 SHA Series SHA-1 / SHA-256 / SHA-512 hash computation 收藏工具" [ref=e59] [cursor=pointer]:
+        - /url: /tools/crypto/sha
+        - generic [ref=e60]: 🔒
+        - generic [ref=e61]:
+          - heading "SHA Series" [level=3] [ref=e62]
+          - paragraph [ref=e63]: SHA-1 / SHA-256 / SHA-512 hash computation
+        - button "收藏工具" [ref=e64]: ☆
+        - img [ref=e65]
+      - link "✨ JSON Formatter JSON beautify/minify/validate 收藏工具" [ref=e67] [cursor=pointer]:
+        - /url: /tools/format/json
+        - generic [ref=e68]: ✨
+        - generic [ref=e69]:
+          - heading "JSON Formatter" [level=3] [ref=e70]
+          - paragraph [ref=e71]: JSON beautify/minify/validate
+        - button "收藏工具" [ref=e72]: ☆
+        - img [ref=e73]
+      - link "🗄️ SQL Formatter SQL statement beautify and minify 收藏工具" [ref=e75] [cursor=pointer]:
+        - /url: /tools/format/sql
+        - generic [ref=e76]: 🗄️
+        - generic [ref=e77]:
+          - heading "SQL Formatter" [level=3] [ref=e78]
+          - paragraph [ref=e79]: SQL statement beautify and minify
+        - button "收藏工具" [ref=e80]: ☆
+        - img [ref=e81]
+      - link "⏰ Timestamp Converter Convert between Unix timestamp and date 收藏工具" [ref=e83] [cursor=pointer]:
+        - /url: /tools/converter/timestamp
+        - generic [ref=e84]: ⏰
+        - generic [ref=e85]:
+          - heading "Timestamp Converter" [level=3] [ref=e86]
+          - paragraph [ref=e87]: Convert between Unix timestamp and date
+        - button "收藏工具" [ref=e88]: ☆
+        - img [ref=e89]
+      - link "🆔 UUID Generator Batch generate UUID/GUID 收藏工具" [ref=e91] [cursor=pointer]:
+        - /url: /tools/generator/uuid
+        - generic [ref=e92]: 🆔
+        - generic [ref=e93]:
+          - heading "UUID Generator" [level=3] [ref=e94]
+          - paragraph [ref=e95]: Batch generate UUID/GUID
+        - button "收藏工具" [ref=e96]: ☆
+        - img [ref=e97]
+      - link "🔑 Password Generator Generate strong random passwords 收藏工具" [ref=e99] [cursor=pointer]:
+        - /url: /tools/generator/password
+        - generic [ref=e100]: 🔑
+        - generic [ref=e101]:
+          - heading "Password Generator" [level=3] [ref=e102]
+          - paragraph [ref=e103]: Generate strong random passwords
+        - button "收藏工具" [ref=e104]: ☆
+        - img [ref=e105]
+      - link "📟 Base64 Codec Base64 encoding and decoding 收藏工具" [ref=e107] [cursor=pointer]:
+        - /url: /tools/text/base64
+        - generic [ref=e108]: 📟
+        - generic [ref=e109]:
+          - heading "Base64 Codec" [level=3] [ref=e110]
+          - paragraph [ref=e111]: Base64 encoding and decoding
+        - button "收藏工具" [ref=e112]: ☆
+        - img [ref=e113]
+  - generic [ref=e115]:
+    - generic [ref=e116]:
+      - heading "🛠️ All Tools" [level=2] [ref=e117]
+      - paragraph [ref=e118]: Browse all tools by category, click to use
+    - generic [ref=e119]:
+      - generic [ref=e120]:
+        - generic [ref=e121]: 🔐
+        - heading "Crypto" [level=3] [ref=e122]
+        - generic [ref=e123]: 5 个工具
+      - generic [ref=e124]:
+        - link "🔑 MD5 Hash Compute MD5 hash of a string 收藏工具" [ref=e125] [cursor=pointer]:
+          - /url: /tools/crypto/md5
+          - generic [ref=e126]: 🔑
+          - generic [ref=e127]:
+            - heading "MD5 Hash" [level=4] [ref=e128]
+            - paragraph [ref=e129]: Compute MD5 hash of a string
+          - button "收藏工具" [ref=e130]: ☆
+        - link "🔒 SHA Series SHA-1 / SHA-256 / SHA-512 hash computation 收藏工具" [ref=e131] [cursor=pointer]:
+          - /url: /tools/crypto/sha
+          - generic [ref=e132]: 🔒
+          - generic [ref=e133]:
+            - heading "SHA Series" [level=4] [ref=e134]
+            - paragraph [ref=e135]: SHA-1 / SHA-256 / SHA-512 hash computation
+          - button "收藏工具" [ref=e136]: ☆
+        - link "🛡️ AES Encrypt/Decrypt AES symmetric encryption/decryption, supports CBC/ECB modes 收藏工具 NEW" [ref=e137] [cursor=pointer]:
+          - /url: /tools/crypto/aes
+          - generic [ref=e138]: 🛡️
+          - generic [ref=e139]:
+            - heading "AES Encrypt/Decrypt" [level=4] [ref=e140]
+            - paragraph [ref=e141]: AES symmetric encryption/decryption, supports CBC/ECB modes
+          - button "收藏工具" [ref=e142]: ☆
+          - generic [ref=e143]: NEW
+        - link "🔐 Bcrypt Password Bcrypt password hash generation and verification 收藏工具" [ref=e144] [cursor=pointer]:
+          - /url: /tools/crypto/bcrypt
+          - generic [ref=e145]: 🔐
+          - generic [ref=e146]:
+            - heading "Bcrypt Password" [level=4] [ref=e147]
+            - paragraph [ref=e148]: Bcrypt password hash generation and verification
+          - button "收藏工具" [ref=e149]: ☆
+        - link "✍️ HMAC Signature HMAC-SHA256 message authentication code generation 收藏工具" [ref=e150] [cursor=pointer]:
+          - /url: /tools/crypto/hmac
+          - generic [ref=e151]: ✍️
+          - generic [ref=e152]:
+            - heading "HMAC Signature" [level=4] [ref=e153]
+            - paragraph [ref=e154]: HMAC-SHA256 message authentication code generation
+          - button "收藏工具" [ref=e155]: ☆
+    - generic [ref=e156]:
+      - generic [ref=e157]:
+        - generic [ref=e158]: 📝
+        - heading "Formatters" [level=3] [ref=e159]
+        - generic [ref=e160]: 5 个工具
+      - generic [ref=e161]:
+        - link "✨ JSON Formatter JSON beautify/minify/validate 收藏工具" [ref=e162] [cursor=pointer]:
+          - /url: /tools/format/json
+          - generic [ref=e163]: ✨
+          - generic [ref=e164]:
+            - heading "JSON Formatter" [level=4] [ref=e165]
+            - paragraph [ref=e166]: JSON beautify/minify/validate
+          - button "收藏工具" [ref=e167]: ☆
+        - link "🗄️ SQL Formatter SQL statement beautify and minify 收藏工具" [ref=e168] [cursor=pointer]:
+          - /url: /tools/format/sql
+          - generic [ref=e169]: 🗄️
+          - generic [ref=e170]:
+            - heading "SQL Formatter" [level=4] [ref=e171]
+            - paragraph [ref=e172]: SQL statement beautify and minify
+          - button "收藏工具" [ref=e173]: ☆
+        - link "🎨 CSS Formatter CSS code beautify and minify 收藏工具" [ref=e174] [cursor=pointer]:
+          - /url: /tools/format/css
+          - generic [ref=e175]: 🎨
+          - generic [ref=e176]:
+            - heading "CSS Formatter" [level=4] [ref=e177]
+            - paragraph [ref=e178]: CSS code beautify and minify
+          - button "收藏工具" [ref=e179]: ☆
+        - link "📋 HTML Formatter HTML code beautify and minify 收藏工具" [ref=e180] [cursor=pointer]:
+          - /url: /tools/format/html
+          - generic [ref=e181]: 📋
+          - generic [ref=e182]:
+            - heading "HTML Formatter" [level=4] [ref=e183]
+            - paragraph [ref=e184]: HTML code beautify and minify
+          - button "收藏工具" [ref=e185]: ☆
+        - link "📰 XML Formatter XML code beautify and minify 收藏工具" [ref=e186] [cursor=pointer]:
+          - /url: /tools/format/xml
+          - generic [ref=e187]: 📰
+          - generic [ref=e188]:
+            - heading "XML Formatter" [level=4] [ref=e189]
+            - paragraph [ref=e190]: XML code beautify and minify
+          - button "收藏工具" [ref=e191]: ☆
+    - generic [ref=e192]:
+      - generic [ref=e193]:
+        - generic [ref=e194]: 🔄
+        - heading "Converters" [level=3] [ref=e195]
+        - generic [ref=e196]: 6 个工具
+      - generic [ref=e197]:
+        - link "⏰ Timestamp Converter Convert between Unix timestamp and date 收藏工具" [ref=e198] [cursor=pointer]:
+          - /url: /tools/converter/timestamp
+          - generic [ref=e199]: ⏰
+          - generic [ref=e200]:
+            - heading "Timestamp Converter" [level=4] [ref=e201]
+            - paragraph [ref=e202]: Convert between Unix timestamp and date
+          - button "收藏工具" [ref=e203]: ☆
+        - link "🔢 Radix Converter Convert between binary/octal/decimal/hexadecimal 收藏工具" [ref=e204] [cursor=pointer]:
+          - /url: /tools/converter/base
+          - generic [ref=e205]: 🔢
+          - generic [ref=e206]:
+            - heading "Radix Converter" [level=4] [ref=e207]
+            - paragraph [ref=e208]: Convert between binary/octal/decimal/hexadecimal
+          - button "收藏工具" [ref=e209]: ☆
+        - link "🎯 Color Converter Convert between HEX/RGB/HSL color formats 收藏工具" [ref=e210] [cursor=pointer]:
+          - /url: /tools/converter/color
+          - generic [ref=e211]: 🎯
+          - generic [ref=e212]:
+            - heading "Color Converter" [level=4] [ref=e213]
+            - paragraph [ref=e214]: Convert between HEX/RGB/HSL color formats
+          - button "收藏工具" [ref=e215]: ☆
+        - link "🔤 Case Converter Convert between lower/upper/camel/snake/constant case 收藏工具" [ref=e216] [cursor=pointer]:
+          - /url: /tools/converter/case
+          - generic [ref=e217]: 🔤
+          - generic [ref=e218]:
+            - heading "Case Converter" [level=4] [ref=e219]
+            - paragraph [ref=e220]: Convert between lower/upper/camel/snake/constant case
+          - button "收藏工具" [ref=e221]: ☆
+        - link "🌍 Unicode Converter Convert between Unicode and Chinese characters 收藏工具" [ref=e222] [cursor=pointer]:
+          - /url: /tools/converter/unicode
+          - generic [ref=e223]: 🌍
+          - generic [ref=e224]:
+            - heading "Unicode Converter" [level=4] [ref=e225]
+            - paragraph [ref=e226]: Convert between Unicode and Chinese characters
+          - button "收藏工具" [ref=e227]: ☆
+        - link "📊 Excel to JSON Convert Excel files (.xlsx/.xls) to JSON format 收藏工具 NEW" [ref=e228] [cursor=pointer]:
+          - /url: /tools/converter/excel2json
+          - generic [ref=e229]: 📊
+          - generic [ref=e230]:
+            - heading "Excel to JSON" [level=4] [ref=e231]
+            - paragraph [ref=e232]: Convert Excel files (.xlsx/.xls) to JSON format
+          - button "收藏工具" [ref=e233]: ☆
+          - generic [ref=e234]: NEW
+    - generic [ref=e235]:
+      - generic [ref=e236]:
+        - generic [ref=e237]: 🎲
+        - heading "Generators" [level=3] [ref=e238]
+        - generic [ref=e239]: 5 个工具
+      - generic [ref=e240]:
+        - link "🆔 UUID Generator Batch generate UUID/GUID 收藏工具" [ref=e241] [cursor=pointer]:
+          - /url: /tools/generator/uuid
+          - generic [ref=e242]: 🆔
+          - generic [ref=e243]:
+            - heading "UUID Generator" [level=4] [ref=e244]
+            - paragraph [ref=e245]: Batch generate UUID/GUID
+          - button "收藏工具" [ref=e246]: ☆
+        - link "🔑 Password Generator Generate strong random passwords 收藏工具" [ref=e247] [cursor=pointer]:
+          - /url: /tools/generator/password
+          - generic [ref=e248]: 🔑
+          - generic [ref=e249]:
+            - heading "Password Generator" [level=4] [ref=e250]
+            - paragraph [ref=e251]: Generate strong random passwords
+          - button "收藏工具" [ref=e252]: ☆
+        - link "🎰 Random Number Generate random numbers within a range 收藏工具" [ref=e253] [cursor=pointer]:
+          - /url: /tools/generator/random
+          - generic [ref=e254]: 🎰
+          - generic [ref=e255]:
+            - heading "Random Number" [level=4] [ref=e256]
+            - paragraph [ref=e257]: Generate random numbers within a range
+          - button "收藏工具" [ref=e258]: ☆
+        - link "📝 Lorem Ipsum Placeholder text generator 收藏工具" [ref=e259] [cursor=pointer]:
+          - /url: /tools/generator/lorem
+          - generic [ref=e260]: 📝
+          - generic [ref=e261]:
+            - heading "Lorem Ipsum" [level=4] [ref=e262]
+            - paragraph [ref=e263]: Placeholder text generator
+          - button "收藏工具" [ref=e264]: ☆
+        - link "📱 QR Code Generator Convert text/link to QR code image 收藏工具 NEW" [ref=e265] [cursor=pointer]:
+          - /url: /tools/generator/qrcode
+          - generic [ref=e266]: 📱
+          - generic [ref=e267]:
+            - heading "QR Code Generator" [level=4] [ref=e268]
+            - paragraph [ref=e269]: Convert text/link to QR code image
+          - button "收藏工具" [ref=e270]: ☆
+          - generic [ref=e271]: NEW
+    - generic [ref=e272]:
+      - generic [ref=e273]:
+        - generic [ref=e274]: 📄
+        - heading "Text Processing" [level=3] [ref=e275]
+        - generic [ref=e276]: 5 个工具
+      - generic [ref=e277]:
+        - link "🔍 Text Diff Compare two texts and show differences (Diff) 收藏工具 NEW" [ref=e278] [cursor=pointer]:
+          - /url: /tools/text/diff
+          - generic [ref=e279]: 🔍
+          - generic [ref=e280]:
+            - heading "Text Diff" [level=4] [ref=e281]
+            - paragraph [ref=e282]: Compare two texts and show differences (Diff)
+          - button "收藏工具" [ref=e283]: ☆
+          - generic [ref=e284]: NEW
+        - link "🧪 Regex Tester Online regular expression testing 收藏工具" [ref=e285] [cursor=pointer]:
+          - /url: /tools/text/regex
+          - generic [ref=e286]: 🧪
+          - generic [ref=e287]:
+            - heading "Regex Tester" [level=4] [ref=e288]
+            - paragraph [ref=e289]: Online regular expression testing
+          - button "收藏工具" [ref=e290]: ☆
+        - link "📊 Word Count Count characters/words/lines 收藏工具" [ref=e291] [cursor=pointer]:
+          - /url: /tools/text/count
+          - generic [ref=e292]: 📊
+          - generic [ref=e293]:
+            - heading "Word Count" [level=4] [ref=e294]
+            - paragraph [ref=e295]: Count characters/words/lines
+          - button "收藏工具" [ref=e296]: ☆
+        - link "🔄 Text Dedup Deduplicate and sort text lines 收藏工具" [ref=e297] [cursor=pointer]:
+          - /url: /tools/text/dedup
+          - generic [ref=e298]: 🔄
+          - generic [ref=e299]:
+            - heading "Text Dedup" [level=4] [ref=e300]
+            - paragraph [ref=e301]: Deduplicate and sort text lines
+          - button "收藏工具" [ref=e302]: ☆
+        - link "📟 Base64 Codec Base64 encoding and decoding 收藏工具" [ref=e303] [cursor=pointer]:
+          - /url: /tools/text/base64
+          - generic [ref=e304]: 📟
+          - generic [ref=e305]:
+            - heading "Base64 Codec" [level=4] [ref=e306]
+            - paragraph [ref=e307]: Base64 encoding and decoding
+          - button "收藏工具" [ref=e308]: ☆
+    - generic [ref=e309]:
+      - generic [ref=e310]:
+        - generic [ref=e311]: 🌐
+        - heading "Network Tools" [level=3] [ref=e312]
+        - generic [ref=e313]: 4 个工具
+      - generic [ref=e314]:
+        - link "🌍 IP Lookup IP address geolocation lookup 收藏工具" [ref=e315] [cursor=pointer]:
+          - /url: /tools/network/ip
+          - generic [ref=e316]: 🌍
+          - generic [ref=e317]:
+            - heading "IP Lookup" [level=4] [ref=e318]
+            - paragraph [ref=e319]: IP address geolocation lookup
+          - button "收藏工具" [ref=e320]: ☆
+        - link "🔍 User-Agent Parser Parse browser User-Agent string 收藏工具" [ref=e321] [cursor=pointer]:
+          - /url: /tools/network/ua
+          - generic [ref=e322]: 🔍
+          - generic [ref=e323]:
+            - heading "User-Agent Parser" [level=4] [ref=e324]
+            - paragraph [ref=e325]: Parse browser User-Agent string
+          - button "收藏工具" [ref=e326]: ☆
+        - link "📡 HTTP Status Codes HTTP status code reference guide 收藏工具" [ref=e327] [cursor=pointer]:
+          - /url: /tools/network/http-status
+          - generic [ref=e328]: 📡
+          - generic [ref=e329]:
+            - heading "HTTP Status Codes" [level=4] [ref=e330]
+            - paragraph [ref=e331]: HTTP status code reference guide
+          - button "收藏工具" [ref=e332]: ☆
+        - link "🔗 URL Codec URL encoding and decoding 收藏工具" [ref=e333] [cursor=pointer]:
+          - /url: /tools/network/url
+          - generic [ref=e334]: 🔗
+          - generic [ref=e335]:
+            - heading "URL Codec" [level=4] [ref=e336]
+            - paragraph [ref=e337]: URL encoding and decoding
+          - button "收藏工具" [ref=e338]: ☆
+    - generic [ref=e339]:
+      - generic [ref=e340]:
+        - generic [ref=e341]: 💻
+        - heading "Dev Tools" [level=3] [ref=e342]
+        - generic [ref=e343]: 4 个工具
+      - generic [ref=e344]:
+        - link "⏱️ Cron Expression Cron expression parser and generator 收藏工具" [ref=e345] [cursor=pointer]:
+          - /url: /tools/devtools/cron
+          - generic [ref=e346]: ⏱️
+          - generic [ref=e347]:
+            - heading "Cron Expression" [level=4] [ref=e348]
+            - paragraph [ref=e349]: Cron expression parser and generator
+          - button "收藏工具" [ref=e350]: ☆
+        - link "📚 Git Cheat Sheet Common Git commands quick reference 收藏工具" [ref=e351] [cursor=pointer]:
+          - /url: /tools/devtools/git
+          - generic [ref=e352]: 📚
+          - generic [ref=e353]:
+            - heading "Git Cheat Sheet" [level=4] [ref=e354]
+            - paragraph [ref=e355]: Common Git commands quick reference
+          - button "收藏工具" [ref=e356]: ☆
+        - link "📁 MIME Types File extensions and MIME type lookup 收藏工具" [ref=e357] [cursor=pointer]:
+          - /url: /tools/devtools/mime
+          - generic [ref=e358]: 📁
+          - generic [ref=e359]:
+            - heading "MIME Types" [level=4] [ref=e360]
+            - paragraph [ref=e361]: File extensions and MIME type lookup
+          - button "收藏工具" [ref=e362]: ☆
+        - link "🎫 JWT 调试器 JWT Token 解析与字段分析（不验证签名） 收藏工具 NEW" [ref=e363] [cursor=pointer]:
+          - /url: /tools/devtools/jwt
+          - generic [ref=e364]: 🎫
+          - generic [ref=e365]:
+            - heading "JWT 调试器" [level=4] [ref=e366]
+            - paragraph [ref=e367]: JWT Token 解析与字段分析（不验证签名）
+          - button "收藏工具" [ref=e368]: ☆
+          - generic [ref=e369]: NEW
+    - generic [ref=e370]:
+      - generic [ref=e371]:
+        - generic [ref=e372]: 📟
+        - heading "Encoders" [level=3] [ref=e373]
+        - generic [ref=e374]: 3 个工具
+      - generic [ref=e375]:
+        - link "🔗 URL Codec URL Encode / Decode 收藏工具" [ref=e376] [cursor=pointer]:
+          - /url: /tools/encode/url
+          - generic [ref=e377]: 🔗
+          - generic [ref=e378]:
+            - heading "URL Codec" [level=4] [ref=e379]
+            - paragraph [ref=e380]: URL Encode / Decode
+          - button "收藏工具" [ref=e381]: ☆
+        - link "📄 HTML Entities HTML entity encoding and decoding 收藏工具" [ref=e382] [cursor=pointer]:
+          - /url: /tools/encode/html
+          - generic [ref=e383]: 📄
+          - generic [ref=e384]:
+            - heading "HTML Entities" [level=4] [ref=e385]
+            - paragraph [ref=e386]: HTML entity encoding and decoding
+          - button "收藏工具" [ref=e387]: ☆
+        - link "📻 Morse Code Morse code encoding and decoding 收藏工具 NEW" [ref=e388] [cursor=pointer]:
+          - /url: /tools/encode/morse
+          - generic [ref=e389]: 📻
+          - generic [ref=e390]:
+            - heading "Morse Code" [level=4] [ref=e391]
+            - paragraph [ref=e392]: Morse code encoding and decoding
+          - button "收藏工具" [ref=e393]: ☆
+          - generic [ref=e394]: NEW
+  - contentinfo [ref=e395]:
+    - generic [ref=e396]:
+      - generic [ref=e397]:
+        - text: ⚡ DevTools Station
+        - paragraph [ref=e398]: An all-in-one online toolbox built for developers
+      - generic [ref=e399]:
+        - generic [ref=e400]:
+          - heading "Product" [level=4] [ref=e401]
+          - link "All Tools" [ref=e402] [cursor=pointer]:
+            - /url: /#tools
+          - link "API Docs" [ref=e403] [cursor=pointer]:
+            - /url: /doc.html
+        - generic [ref=e404]:
+          - heading "Resources" [level=4] [ref=e405]
+          - link "Guide" [ref=e406] [cursor=pointer]:
+            - /url: /guide
+          - link "Changelog" [ref=e407] [cursor=pointer]:
+            - /url: /changelog
+        - generic [ref=e408]:
+          - heading "About" [level=4] [ref=e409]
+          - link "About Us" [ref=e410] [cursor=pointer]:
+            - /url: /about
+          - link "Feedback" [ref=e411] [cursor=pointer]:
+            - /url: /feedback
+    - paragraph [ref=e413]: © 2024 DevTools Station. Built with ❤️ for developers.

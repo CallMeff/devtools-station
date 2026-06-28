@@ -1,0 +1,390 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - img
+        - textbox "Search tools... (pinyin, English)" [ref=e471]
+        - generic: ⌘K
+      - generic [ref=e12]:
+        - button "T testuser789" [ref=e473] [cursor=pointer]:
+          - generic [ref=e474]: T
+          - generic [ref=e475]: testuser789
+          - img [ref=e476]
+        - button "☀️" [ref=e444] [cursor=pointer]
+        - button "🇺🇸 English" [ref=e478] [cursor=pointer]
+        - link "API Docs" [ref=e479] [cursor=pointer]:
+          - /url: /doc.html
+  - generic [ref=e24]:
+    - generic [ref=e25]:
+      - generic [ref=e28]: 40+ useful tools
+      - heading "Developer Toolbox" [level=1] [ref=e480]
+      - paragraph [ref=e30]:
+        - text: An all-in-one collection of developer tools covering encryption, formatting, conversion, generation, text processing and more.
+        - text: No installation required, just open and use. Make development more efficient.
+      - generic [ref=e31]:
+        - link "Get Started" [ref=e481] [cursor=pointer]:
+          - /url: "#tools"
+          - text: Get Started
+          - img [ref=e33]
+        - link "View API" [ref=e482] [cursor=pointer]:
+          - /url: /doc.html
+    - generic [ref=e37]:
+      - generic [ref=e42]: DevTools Station
+      - code [ref=e45]: "// 🛠️ All-in-one Dev Toolset import { DevTools } from '@devtools/station'; const tools = [ '🔐 Encrypt', '📝 Format', '🔄 Convert', '⚡ Generate', '📄 Text', '🌐 Network', '💻 Dev Tools', ]; await DevTools.launch({ tools });"
+  - generic [ref=e46]:
+    - generic [ref=e47]:
+      - heading "🔥 Hot Tools" [level=2] [ref=e483]
+      - paragraph [ref=e49]: Most used dev tools to boost your productivity
+    - generic [ref=e50]:
+      - link "🔑 MD5 Hash Compute MD5 hash of a string" [ref=e484] [cursor=pointer]:
+        - /url: /tools/crypto/md5
+        - generic [ref=e52]: 🔑
+        - generic [ref=e53]:
+          - heading "MD5 Hash" [level=3] [ref=e485]
+          - paragraph [ref=e55]: Compute MD5 hash of a string
+        - img [ref=e56]
+      - link "🔒 SHA Series SHA-1 / SHA-256 / SHA-512 hash computation" [ref=e486] [cursor=pointer]:
+        - /url: /tools/crypto/sha
+        - generic [ref=e59]: 🔒
+        - generic [ref=e60]:
+          - heading "SHA Series" [level=3] [ref=e487]
+          - paragraph [ref=e62]: SHA-1 / SHA-256 / SHA-512 hash computation
+        - img [ref=e63]
+      - link "✨ JSON Formatter JSON beautify/minify/validate" [ref=e488] [cursor=pointer]:
+        - /url: /tools/format/json
+        - generic [ref=e66]: ✨
+        - generic [ref=e67]:
+          - heading "JSON Formatter" [level=3] [ref=e489]
+          - paragraph [ref=e69]: JSON beautify/minify/validate
+        - img [ref=e70]
+      - link "🗄️ SQL Formatter SQL statement beautify and minify" [ref=e490] [cursor=pointer]:
+        - /url: /tools/format/sql
+        - generic [ref=e73]: 🗄️
+        - generic [ref=e74]:
+          - heading "SQL Formatter" [level=3] [ref=e491]
+          - paragraph [ref=e76]: SQL statement beautify and minify
+        - img [ref=e77]
+      - link "⏰ Timestamp Converter Convert between Unix timestamp and date" [ref=e492] [cursor=pointer]:
+        - /url: /tools/converter/timestamp
+        - generic [ref=e80]: ⏰
+        - generic [ref=e81]:
+          - heading "Timestamp Converter" [level=3] [ref=e493]
+          - paragraph [ref=e83]: Convert between Unix timestamp and date
+        - img [ref=e84]
+      - link "🆔 UUID Generator Batch generate UUID/GUID" [ref=e494] [cursor=pointer]:
+        - /url: /tools/generator/uuid
+        - generic [ref=e87]: 🆔
+        - generic [ref=e88]:
+          - heading "UUID Generator" [level=3] [ref=e495]
+          - paragraph [ref=e90]: Batch generate UUID/GUID
+        - img [ref=e91]
+      - link "🔑 Password Generator Generate strong random passwords" [ref=e496] [cursor=pointer]:
+        - /url: /tools/generator/password
+        - generic [ref=e94]: 🔑
+        - generic [ref=e95]:
+          - heading "Password Generator" [level=3] [ref=e497]
+          - paragraph [ref=e97]: Generate strong random passwords
+        - img [ref=e98]
+      - link "📟 Base64 Codec Base64 encoding and decoding" [ref=e498] [cursor=pointer]:
+        - /url: /tools/text/base64
+        - generic [ref=e101]: 📟
+        - generic [ref=e102]:
+          - heading "Base64 Codec" [level=3] [ref=e499]
+          - paragraph [ref=e104]: Base64 encoding and decoding
+        - img [ref=e105]
+  - generic [ref=e107]:
+    - generic [ref=e108]:
+      - heading "🛠️ All Tools" [level=2] [ref=e500]
+      - paragraph [ref=e110]: Browse all tools by category, click to use
+    - generic [ref=e111]:
+      - generic [ref=e112]:
+        - generic [ref=e113]: 🔐
+        - heading "加密解密" [level=3] [ref=e114]
+        - generic [ref=e115]: 5 个工具
+      - generic [ref=e116]:
+        - link "🔑 MD5 Hash Compute MD5 hash of a string" [ref=e501] [cursor=pointer]:
+          - /url: /tools/crypto/md5
+          - generic [ref=e118]: 🔑
+          - generic [ref=e119]:
+            - heading "MD5 Hash" [level=4] [ref=e502]
+            - paragraph [ref=e121]: Compute MD5 hash of a string
+        - link "🔒 SHA Series SHA-1 / SHA-256 / SHA-512 hash computation" [ref=e503] [cursor=pointer]:
+          - /url: /tools/crypto/sha
+          - generic [ref=e123]: 🔒
+          - generic [ref=e124]:
+            - heading "SHA Series" [level=4] [ref=e504]
+            - paragraph [ref=e126]: SHA-1 / SHA-256 / SHA-512 hash computation
+        - link "🛡️ AES Encrypt/Decrypt AES symmetric encryption/decryption, supports CBC/ECB modes NEW" [ref=e505] [cursor=pointer]:
+          - /url: /tools/crypto/aes
+          - generic [ref=e128]: 🛡️
+          - generic [ref=e129]:
+            - heading "AES Encrypt/Decrypt" [level=4] [ref=e506]
+            - paragraph [ref=e131]: AES symmetric encryption/decryption, supports CBC/ECB modes
+          - generic [ref=e132]: NEW
+        - link "🔐 Bcrypt Password Bcrypt password hash generation and verification" [ref=e507] [cursor=pointer]:
+          - /url: /tools/crypto/bcrypt
+          - generic [ref=e134]: 🔐
+          - generic [ref=e135]:
+            - heading "Bcrypt Password" [level=4] [ref=e508]
+            - paragraph [ref=e137]: Bcrypt password hash generation and verification
+        - link "✍️ HMAC Signature HMAC-SHA256 message authentication code generation" [ref=e509] [cursor=pointer]:
+          - /url: /tools/crypto/hmac
+          - generic [ref=e139]: ✍️
+          - generic [ref=e140]:
+            - heading "HMAC Signature" [level=4] [ref=e510]
+            - paragraph [ref=e142]: HMAC-SHA256 message authentication code generation
+    - generic [ref=e143]:
+      - generic [ref=e144]:
+        - generic [ref=e145]: 📝
+        - heading "格式化工具" [level=3] [ref=e146]
+        - generic [ref=e147]: 5 个工具
+      - generic [ref=e148]:
+        - link "✨ JSON Formatter JSON beautify/minify/validate" [ref=e511] [cursor=pointer]:
+          - /url: /tools/format/json
+          - generic [ref=e150]: ✨
+          - generic [ref=e151]:
+            - heading "JSON Formatter" [level=4] [ref=e512]
+            - paragraph [ref=e153]: JSON beautify/minify/validate
+        - link "🗄️ SQL Formatter SQL statement beautify and minify" [ref=e513] [cursor=pointer]:
+          - /url: /tools/format/sql
+          - generic [ref=e155]: 🗄️
+          - generic [ref=e156]:
+            - heading "SQL Formatter" [level=4] [ref=e514]
+            - paragraph [ref=e158]: SQL statement beautify and minify
+        - link "🎨 CSS Formatter CSS code beautify and minify" [ref=e515] [cursor=pointer]:
+          - /url: /tools/format/css
+          - generic [ref=e160]: 🎨
+          - generic [ref=e161]:
+            - heading "CSS Formatter" [level=4] [ref=e516]
+            - paragraph [ref=e163]: CSS code beautify and minify
+        - link "📋 HTML Formatter HTML code beautify and minify" [ref=e517] [cursor=pointer]:
+          - /url: /tools/format/html
+          - generic [ref=e165]: 📋
+          - generic [ref=e166]:
+            - heading "HTML Formatter" [level=4] [ref=e518]
+            - paragraph [ref=e168]: HTML code beautify and minify
+        - link "📰 XML Formatter XML code beautify and minify" [ref=e519] [cursor=pointer]:
+          - /url: /tools/format/xml
+          - generic [ref=e170]: 📰
+          - generic [ref=e171]:
+            - heading "XML Formatter" [level=4] [ref=e520]
+            - paragraph [ref=e173]: XML code beautify and minify
+    - generic [ref=e174]:
+      - generic [ref=e175]:
+        - generic [ref=e176]: 🔄
+        - heading "转换工具" [level=3] [ref=e177]
+        - generic [ref=e178]: 5 个工具
+      - generic [ref=e179]:
+        - link "⏰ Timestamp Converter Convert between Unix timestamp and date" [ref=e521] [cursor=pointer]:
+          - /url: /tools/converter/timestamp
+          - generic [ref=e181]: ⏰
+          - generic [ref=e182]:
+            - heading "Timestamp Converter" [level=4] [ref=e522]
+            - paragraph [ref=e184]: Convert between Unix timestamp and date
+        - link "🔢 Radix Converter Convert between binary/octal/decimal/hexadecimal" [ref=e523] [cursor=pointer]:
+          - /url: /tools/converter/base
+          - generic [ref=e186]: 🔢
+          - generic [ref=e187]:
+            - heading "Radix Converter" [level=4] [ref=e524]
+            - paragraph [ref=e189]: Convert between binary/octal/decimal/hexadecimal
+        - link "🎯 Color Converter Convert between HEX/RGB/HSL color formats" [ref=e525] [cursor=pointer]:
+          - /url: /tools/converter/color
+          - generic [ref=e191]: 🎯
+          - generic [ref=e192]:
+            - heading "Color Converter" [level=4] [ref=e526]
+            - paragraph [ref=e194]: Convert between HEX/RGB/HSL color formats
+        - link "🔤 Case Converter Convert between lower/upper/camel/snake/constant case" [ref=e527] [cursor=pointer]:
+          - /url: /tools/converter/case
+          - generic [ref=e196]: 🔤
+          - generic [ref=e197]:
+            - heading "Case Converter" [level=4] [ref=e528]
+            - paragraph [ref=e199]: Convert between lower/upper/camel/snake/constant case
+        - link "🌍 Unicode Converter Convert between Unicode and Chinese characters" [ref=e529] [cursor=pointer]:
+          - /url: /tools/converter/unicode
+          - generic [ref=e201]: 🌍
+          - generic [ref=e202]:
+            - heading "Unicode Converter" [level=4] [ref=e530]
+            - paragraph [ref=e204]: Convert between Unicode and Chinese characters
+    - generic [ref=e205]:
+      - generic [ref=e206]:
+        - generic [ref=e207]: 🎲
+        - heading "生成器" [level=3] [ref=e208]
+        - generic [ref=e209]: 5 个工具
+      - generic [ref=e210]:
+        - link "🆔 UUID Generator Batch generate UUID/GUID" [ref=e531] [cursor=pointer]:
+          - /url: /tools/generator/uuid
+          - generic [ref=e212]: 🆔
+          - generic [ref=e213]:
+            - heading "UUID Generator" [level=4] [ref=e532]
+            - paragraph [ref=e215]: Batch generate UUID/GUID
+        - link "🔑 Password Generator Generate strong random passwords" [ref=e533] [cursor=pointer]:
+          - /url: /tools/generator/password
+          - generic [ref=e217]: 🔑
+          - generic [ref=e218]:
+            - heading "Password Generator" [level=4] [ref=e534]
+            - paragraph [ref=e220]: Generate strong random passwords
+        - link "🎰 Random Number Generate random numbers within a range" [ref=e535] [cursor=pointer]:
+          - /url: /tools/generator/random
+          - generic [ref=e222]: 🎰
+          - generic [ref=e223]:
+            - heading "Random Number" [level=4] [ref=e536]
+            - paragraph [ref=e225]: Generate random numbers within a range
+        - link "📝 Lorem Ipsum Placeholder text generator" [ref=e537] [cursor=pointer]:
+          - /url: /tools/generator/lorem
+          - generic [ref=e227]: 📝
+          - generic [ref=e228]:
+            - heading "Lorem Ipsum" [level=4] [ref=e229]
+            - paragraph [ref=e230]: Placeholder text generator
+        - link "📱 QR Code Generator Convert text/link to QR code image NEW" [ref=e538] [cursor=pointer]:
+          - /url: /tools/generator/qrcode
+          - generic [ref=e232]: 📱
+          - generic [ref=e233]:
+            - heading "QR Code Generator" [level=4] [ref=e539]
+            - paragraph [ref=e235]: Convert text/link to QR code image
+          - generic [ref=e236]: NEW
+    - generic [ref=e237]:
+      - generic [ref=e238]:
+        - generic [ref=e239]: 📄
+        - heading "文本处理" [level=3] [ref=e240]
+        - generic [ref=e241]: 5 个工具
+      - generic [ref=e242]:
+        - link "🔍 Text Diff Compare two texts and show differences (Diff) NEW" [ref=e540] [cursor=pointer]:
+          - /url: /tools/text/diff
+          - generic [ref=e244]: 🔍
+          - generic [ref=e245]:
+            - heading "Text Diff" [level=4] [ref=e541]
+            - paragraph [ref=e247]: Compare two texts and show differences (Diff)
+          - generic [ref=e248]: NEW
+        - link "🧪 Regex Tester Online regular expression testing" [ref=e542] [cursor=pointer]:
+          - /url: /tools/text/regex
+          - generic [ref=e250]: 🧪
+          - generic [ref=e251]:
+            - heading "Regex Tester" [level=4] [ref=e543]
+            - paragraph [ref=e253]: Online regular expression testing
+        - link "📊 Word Count Count characters/words/lines" [ref=e544] [cursor=pointer]:
+          - /url: /tools/text/count
+          - generic [ref=e255]: 📊
+          - generic [ref=e256]:
+            - heading "Word Count" [level=4] [ref=e545]
+            - paragraph [ref=e258]: Count characters/words/lines
+        - link "🔄 Text Dedup Deduplicate and sort text lines" [ref=e546] [cursor=pointer]:
+          - /url: /tools/text/dedup
+          - generic [ref=e260]: 🔄
+          - generic [ref=e261]:
+            - heading "Text Dedup" [level=4] [ref=e547]
+            - paragraph [ref=e263]: Deduplicate and sort text lines
+        - link "📟 Base64 Codec Base64 encoding and decoding" [ref=e548] [cursor=pointer]:
+          - /url: /tools/text/base64
+          - generic [ref=e265]: 📟
+          - generic [ref=e266]:
+            - heading "Base64 Codec" [level=4] [ref=e549]
+            - paragraph [ref=e268]: Base64 encoding and decoding
+    - generic [ref=e269]:
+      - generic [ref=e270]:
+        - generic [ref=e271]: 🌐
+        - heading "网络工具" [level=3] [ref=e272]
+        - generic [ref=e273]: 4 个工具
+      - generic [ref=e274]:
+        - link "🌍 IP Lookup IP address geolocation lookup" [ref=e550] [cursor=pointer]:
+          - /url: /tools/network/ip
+          - generic [ref=e276]: 🌍
+          - generic [ref=e277]:
+            - heading "IP Lookup" [level=4] [ref=e551]
+            - paragraph [ref=e279]: IP address geolocation lookup
+        - link "🔍 User-Agent Parser Parse browser User-Agent string" [ref=e552] [cursor=pointer]:
+          - /url: /tools/network/ua
+          - generic [ref=e281]: 🔍
+          - generic [ref=e282]:
+            - heading "User-Agent Parser" [level=4] [ref=e553]
+            - paragraph [ref=e284]: Parse browser User-Agent string
+        - link "📡 HTTP 状态码 HTTP 状态码参考大全" [ref=e285] [cursor=pointer]:
+          - /url: /tools/network/http-status
+          - generic [ref=e286]: 📡
+          - generic [ref=e287]:
+            - heading "HTTP 状态码" [level=4] [ref=e288]
+            - paragraph [ref=e289]: HTTP 状态码参考大全
+        - link "🔗 URL Codec URL encoding and decoding" [ref=e554] [cursor=pointer]:
+          - /url: /tools/network/url
+          - generic [ref=e291]: 🔗
+          - generic [ref=e292]:
+            - heading "URL Codec" [level=4] [ref=e555]
+            - paragraph [ref=e294]: URL encoding and decoding
+    - generic [ref=e295]:
+      - generic [ref=e296]:
+        - generic [ref=e297]: 💻
+        - heading "开发者工具" [level=3] [ref=e298]
+        - generic [ref=e299]: 3 个工具
+      - generic [ref=e300]:
+        - link "⏱️ Cron Expression Cron expression parser and generator" [ref=e556] [cursor=pointer]:
+          - /url: /tools/devtools/cron
+          - generic [ref=e302]: ⏱️
+          - generic [ref=e303]:
+            - heading "Cron Expression" [level=4] [ref=e557]
+            - paragraph [ref=e305]: Cron expression parser and generator
+        - link "📚 Git Cheat Sheet Common Git commands quick reference" [ref=e558] [cursor=pointer]:
+          - /url: /tools/devtools/git
+          - generic [ref=e307]: 📚
+          - generic [ref=e308]:
+            - heading "Git Cheat Sheet" [level=4] [ref=e559]
+            - paragraph [ref=e310]: Common Git commands quick reference
+        - link "📁 MIME Types File extensions and MIME type lookup" [ref=e560] [cursor=pointer]:
+          - /url: /tools/devtools/mime
+          - generic [ref=e312]: 📁
+          - generic [ref=e313]:
+            - heading "MIME Types" [level=4] [ref=e561]
+            - paragraph [ref=e315]: File extensions and MIME type lookup
+    - generic [ref=e316]:
+      - generic [ref=e317]:
+        - generic [ref=e318]: 📟
+        - heading "编码解码" [level=3] [ref=e319]
+        - generic [ref=e320]: 3 个工具
+      - generic [ref=e321]:
+        - link "🔗 URL Codec URL encoding and decoding" [ref=e562] [cursor=pointer]:
+          - /url: /tools/encode/url
+          - generic [ref=e323]: 🔗
+          - generic [ref=e324]:
+            - heading "URL Codec" [level=4] [ref=e563]
+            - paragraph [ref=e326]: URL encoding and decoding
+        - link "📄 HTML Formatter HTML code beautify and minify" [ref=e564] [cursor=pointer]:
+          - /url: /tools/encode/html
+          - generic [ref=e328]: 📄
+          - generic [ref=e329]:
+            - heading "HTML Formatter" [level=4] [ref=e565]
+            - paragraph [ref=e331]: HTML code beautify and minify
+        - link "📻 Morse Code Morse code encoding and decoding NEW" [ref=e566] [cursor=pointer]:
+          - /url: /tools/encode/morse
+          - generic [ref=e333]: 📻
+          - generic [ref=e334]:
+            - heading "Morse Code" [level=4] [ref=e567]
+            - paragraph [ref=e336]: Morse code encoding and decoding
+          - generic [ref=e337]: NEW
+  - contentinfo [ref=e338]:
+    - generic [ref=e339]:
+      - generic [ref=e340]:
+        - text: ⚡ DevTools Station
+        - paragraph [ref=e341]: An all-in-one online toolbox built for developers
+      - generic [ref=e342]:
+        - generic [ref=e343]:
+          - heading "Product" [level=4] [ref=e568]
+          - link "All Tools" [ref=e569] [cursor=pointer]:
+            - /url: /#tools
+          - link "API Docs" [ref=e570] [cursor=pointer]:
+            - /url: /doc.html
+        - generic [ref=e347]:
+          - heading "Resources" [level=4] [ref=e571]
+          - link "Guide" [ref=e572] [cursor=pointer]:
+            - /url: /guide
+          - link "Changelog" [ref=e573] [cursor=pointer]:
+            - /url: /changelog
+        - generic [ref=e351]:
+          - heading "About" [level=4] [ref=e574]
+          - link "About Us" [ref=e575] [cursor=pointer]:
+            - /url: /about
+          - link "Feedback" [ref=e576] [cursor=pointer]:
+            - /url: /feedback
+    - paragraph [ref=e356]: © 2024 DevTools Station. Built with ❤️ for developers.

@@ -1,0 +1,86 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - button "登录" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+          - generic [ref=e16]: 登录
+        - button "☀️" [ref=e18] [cursor=pointer]
+        - button "🇨🇳 中文" [ref=e20] [cursor=pointer]
+        - link "🏠 首页" [ref=e21] [cursor=pointer]:
+          - /url: /
+  - main [ref=e22]:
+    - heading "关于 DevTools Station" [level=1] [ref=e23]
+    - paragraph [ref=e24]: 为开发者打造的一站式在线工具箱，无需安装，打开即用。
+    - generic [ref=e25]:
+      - heading "🚀 我们的使命" [level=2] [ref=e26]
+      - paragraph [ref=e27]: 在日常开发中，我们经常需要使用各种小工具——加密一段文本、格式化 JSON、生成 UUID、转换时间戳……这些需求看似简单，但每次都要去搜索、找在线工具，既浪费时间又担心数据安全。
+      - paragraph [ref=e28]:
+        - text: DevTools Station 就是为了解决这个问题而生的。我们提供 36 个 常用开发工具，涵盖 8 大分类，所有操作都在本地浏览器内完成，无需安装任何软件。
+        - strong [ref=e29]: 36 个
+        - text: 常用开发工具，涵盖 8 大分类，所有操作都在本地浏览器内完成，无需安装任何软件。
+    - generic [ref=e30]:
+      - heading "✨ 核心特性" [level=2] [ref=e31]
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]: 🔒
+          - heading "数据安全" [level=3] [ref=e35]
+          - paragraph [ref=e36]: 所有数据处理在本地/服务端完成，不上传第三方
+        - generic [ref=e37]:
+          - generic [ref=e38]: ⚡
+          - heading "快速高效" [level=3] [ref=e39]
+          - paragraph [ref=e40]: 纯后端计算，响应速度极快
+        - generic [ref=e41]:
+          - generic [ref=e42]: 🎨
+          - heading "简洁美观" [level=3] [ref=e43]
+          - paragraph [ref=e44]: 现代化 UI 设计，支持暗色主题
+        - generic [ref=e45]:
+          - generic [ref=e46]: 📱
+          - heading "响应式布局" [level=3] [ref=e47]
+          - paragraph [ref=e48]: 支持桌面和移动端访问
+        - generic [ref=e49]:
+          - generic [ref=e50]: 🔍
+          - heading "智能搜索" [level=3] [ref=e51]
+          - paragraph [ref=e52]: 支持拼音、英文快捷搜索工具
+        - generic [ref=e53]:
+          - generic [ref=e54]: 📖
+          - heading "API 文档" [level=3] [ref=e55]
+          - paragraph [ref=e56]: 提供 RESTful API，方便集成调用
+    - generic [ref=e57]:
+      - heading "🛠️ 技术栈" [level=2] [ref=e58]
+      - list [ref=e59]:
+        - listitem [ref=e60]:
+          - strong [ref=e61]: "后端框架:"
+          - text: "后端框架: Spring Boot 3.2 + Java 17"
+        - listitem [ref=e62]:
+          - strong [ref=e63]: "模板引擎:"
+          - text: "模板引擎: Thymeleaf"
+        - listitem [ref=e64]:
+          - strong [ref=e65]: "数据库:"
+          - text: "数据库: H2 (开发) / MySQL (生产)"
+        - listitem [ref=e66]:
+          - strong [ref=e67]: "ORM:"
+          - text: "ORM: MyBatis Plus 3.5"
+        - listitem [ref=e68]:
+          - strong [ref=e69]: "工具库:"
+          - text: "工具库: Hutool 5.8"
+        - listitem [ref=e70]:
+          - strong [ref=e71]: "API 文档:"
+          - text: "API 文档: Knife4j (Swagger)"
+    - generic [ref=e72]:
+      - heading "📬 联系我们" [level=2] [ref=e73]
+      - paragraph [ref=e74]:
+        - text: 如有任何问题、建议或反馈，欢迎通过 反馈建议 页面提交，或提交 GitHub Issue。
+        - link "反馈建议" [ref=e75] [cursor=pointer]:
+          - /url: /feedback
+        - text: 页面提交，或提交 GitHub Issue。
+  - contentinfo [ref=e76]:
+    - generic [ref=e78]:
+      - text: ⚡ DevTools Station
+      - paragraph [ref=e79]: 为开发者打造的一站式在线工具箱
+    - paragraph [ref=e81]: © 2024 DevTools Station. Built with ❤️ for developers.

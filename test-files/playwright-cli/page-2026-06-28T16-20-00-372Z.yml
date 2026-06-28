@@ -1,0 +1,159 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - button "登录" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+          - generic [ref=e16]: 登录
+        - button "🌙" [ref=e18] [cursor=pointer]
+        - button "🇨🇳 中文" [ref=e20] [cursor=pointer]
+        - link "🏠 首页" [ref=e21] [cursor=pointer]:
+          - /url: /
+  - generic [ref=e23]:
+    - link "首页" [ref=e24] [cursor=pointer]:
+      - /url: /
+    - text: /
+    - link "转换工具" [ref=e25] [cursor=pointer]:
+      - /url: /#tools
+    - text: / JSON 转 YAML
+  - main [ref=e26]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e29]: 🔄
+        - generic [ref=e30]:
+          - heading "JSON 转 YAML" [level=1] [ref=e31]
+          - paragraph [ref=e32]: JSON 与 YAML 格式互转
+          - generic [ref=e33]: NEW
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - generic [ref=e36]: 输入文本
+          - textbox "请输入 JSON 或 YAML 格式的文本..." [ref=e37]: "{\"name\":\"DevTools\",\"version\":\"1.0\",\"features\":[\"crypto\",\"format\",\"convert\"]}"
+        - generic [ref=e39]:
+          - generic [ref=e40]: 转换方向
+          - combobox [ref=e41] [cursor=pointer]:
+            - option "JSON → YAML" [selected]
+            - option "YAML → JSON"
+        - generic [ref=e42]:
+          - text: "💡 示例:"
+          - code [ref=e43] [cursor=pointer]: "{\"name\":\"DevTools\",\"version\":\"1.0\",\"features\":[\"crypto\",\"format\",\"convert\"]}"
+        - generic [ref=e44]:
+          - button "⚡ 执行" [ref=e45] [cursor=pointer]
+          - button "🗑 清空" [ref=e46] [cursor=pointer]
+      - generic [ref=e133]:
+        - generic [ref=e134]:
+          - heading "结果" [level=3] [ref=e135]
+          - button "📋 复制" [ref=e136] [cursor=pointer]
+          - button "🗑 清除" [ref=e137] [cursor=pointer]
+        - generic [ref=e139]: "name: DevTools version: '1.0' features: - crypto - format - convert"
+    - complementary [ref=e47]:
+      - generic [ref=e48]:
+        - heading "同类工具" [level=3] [ref=e49]
+        - list [ref=e50]:
+          - listitem [ref=e51]:
+            - link "⏰ 时间戳转换" [ref=e52] [cursor=pointer]:
+              - /url: /tools/converter/timestamp
+              - generic [ref=e53]: ⏰
+              - generic [ref=e54]: 时间戳转换
+          - listitem [ref=e55]:
+            - link "🔢 进制转换" [ref=e56] [cursor=pointer]:
+              - /url: /tools/converter/base
+              - generic [ref=e57]: 🔢
+              - generic [ref=e58]: 进制转换
+          - listitem [ref=e59]:
+            - link "🎯 颜色转换" [ref=e60] [cursor=pointer]:
+              - /url: /tools/converter/color
+              - generic [ref=e61]: 🎯
+              - generic [ref=e62]: 颜色转换
+          - listitem [ref=e63]:
+            - link "🔤 大小写转换" [ref=e64] [cursor=pointer]:
+              - /url: /tools/converter/case
+              - generic [ref=e65]: 🔤
+              - generic [ref=e66]: 大小写转换
+          - listitem [ref=e67]:
+            - link "🌍 Unicode 转换" [ref=e68] [cursor=pointer]:
+              - /url: /tools/converter/unicode
+              - generic [ref=e69]: 🌍
+              - generic [ref=e70]: Unicode 转换
+          - listitem [ref=e71]:
+            - link "📊 Excel转JSON" [ref=e72] [cursor=pointer]:
+              - /url: /tools/converter/excel2json
+              - generic [ref=e73]: 📊
+              - generic [ref=e74]: Excel转JSON
+          - listitem [ref=e75]:
+            - link "🔄 JSON 转 YAML" [ref=e76] [cursor=pointer]:
+              - /url: /tools/converter/json-yaml
+              - generic [ref=e77]: 🔄
+              - generic [ref=e78]: JSON 转 YAML
+      - generic [ref=e79]:
+        - heading "分类导航" [level=3] [ref=e80]
+        - list [ref=e81]:
+          - listitem [ref=e82]:
+            - link "🔐 加密解密" [ref=e83] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e84]: 🔐
+              - generic [ref=e85]: 加密解密
+          - listitem [ref=e86]:
+            - link "📝 格式化工具" [ref=e87] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e88]: 📝
+              - generic [ref=e89]: 格式化工具
+          - listitem [ref=e90]:
+            - link "🔄 转换工具" [ref=e91] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e92]: 🔄
+              - generic [ref=e93]: 转换工具
+          - listitem [ref=e94]:
+            - link "🎲 生成器" [ref=e95] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e96]: 🎲
+              - generic [ref=e97]: 生成器
+          - listitem [ref=e98]:
+            - link "📄 文本处理" [ref=e99] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e100]: 📄
+              - generic [ref=e101]: 文本处理
+          - listitem [ref=e102]:
+            - link "🌐 网络工具" [ref=e103] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e104]: 🌐
+              - generic [ref=e105]: 网络工具
+          - listitem [ref=e106]:
+            - link "💻 开发者工具" [ref=e107] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e108]: 💻
+              - generic [ref=e109]: 开发者工具
+          - listitem [ref=e110]:
+            - link "📟 编码解码" [ref=e111] [cursor=pointer]:
+              - /url: /#tools
+              - generic [ref=e112]: 📟
+              - generic [ref=e113]: 编码解码
+  - contentinfo [ref=e114]:
+    - generic [ref=e115]:
+      - generic [ref=e116]:
+        - text: ⚡ DevTools Station
+        - paragraph [ref=e117]: 为开发者打造的一站式在线工具箱
+      - generic [ref=e118]:
+        - generic [ref=e119]:
+          - heading "产品" [level=4] [ref=e120]
+          - link "全部工具" [ref=e121] [cursor=pointer]:
+            - /url: /#tools
+          - link "API 文档" [ref=e122] [cursor=pointer]:
+            - /url: /api
+        - generic [ref=e123]:
+          - heading "资源" [level=4] [ref=e124]
+          - link "使用指南" [ref=e125] [cursor=pointer]:
+            - /url: /guide
+          - link "更新日志" [ref=e126] [cursor=pointer]:
+            - /url: /changelog
+        - generic [ref=e127]:
+          - heading "关于" [level=4] [ref=e128]
+          - link "关于我们" [ref=e129] [cursor=pointer]:
+            - /url: /about
+          - link "反馈建议" [ref=e130] [cursor=pointer]:
+            - /url: /feedback
+    - paragraph [ref=e132]: © 2024 DevTools Station. Built with ❤️ for developers.

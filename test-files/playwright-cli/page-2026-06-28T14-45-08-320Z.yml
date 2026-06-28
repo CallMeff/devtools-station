@@ -1,0 +1,85 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - button "登录" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+          - generic [ref=e16]: 登录
+        - button "☀️" [ref=e18] [cursor=pointer]
+        - button "🇨🇳 中文" [ref=e20] [cursor=pointer]
+        - link "🏠 首页" [ref=e21] [cursor=pointer]:
+          - /url: /
+  - main [ref=e22]:
+    - heading "📋 更新日志" [level=1] [ref=e23]
+    - paragraph [ref=e24]: DevTools Station 各版本的更新内容记录。
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - generic [ref=e27]: v1.1.0 2024-06-19
+        - list [ref=e28]:
+          - listitem [ref=e29]:
+            - generic [ref=e30]: 新增
+            - text: 统一工具页面框架，所有 36 个工具均可正常使用
+          - listitem [ref=e31]:
+            - generic [ref=e32]: 新增
+            - text: HMAC 签名工具
+          - listitem [ref=e33]:
+            - generic [ref=e34]: 新增
+            - text: HTML/XML 格式化工具
+          - listitem [ref=e35]:
+            - generic [ref=e36]: 新增
+            - text: Unicode 转换工具
+          - listitem [ref=e37]:
+            - generic [ref=e38]: 新增
+            - text: 二维码生成工具
+          - listitem [ref=e39]:
+            - generic [ref=e40]: 新增
+            - text: 编码解码分类（URL编码/HTML实体/摩尔斯电码）
+          - listitem [ref=e41]:
+            - generic [ref=e42]: 新增
+            - text: 关于我们、使用指南、反馈建议、更新日志页面
+          - listitem [ref=e43]:
+            - generic [ref=e44]: 修复
+            - text: 所有工具页面路由与实际功能匹配
+          - listitem [ref=e45]:
+            - generic [ref=e46]: 优化
+            - text: 支持 Ctrl+Enter 快捷键执行工具
+          - listitem [ref=e47]:
+            - generic [ref=e48]: 优化
+            - text: 工具页面展示同类工具侧边栏
+      - generic [ref=e49]:
+        - generic [ref=e50]: v1.0.0 2024-06-15
+        - list [ref=e51]:
+          - listitem [ref=e52]:
+            - generic [ref=e53]: 新增
+            - text: 项目初始化，Spring Boot 3.2 架构
+          - listitem [ref=e54]:
+            - generic [ref=e55]: 新增
+            - text: 8 大工具分类，36 个开发常用工具
+          - listitem [ref=e56]:
+            - generic [ref=e57]: 新增
+            - text: 首页展示热门工具和分类导航
+          - listitem [ref=e58]:
+            - generic [ref=e59]: 新增
+            - text: 智能搜索，支持拼音和关键词匹配
+          - listitem [ref=e60]:
+            - generic [ref=e61]: 新增
+            - text: 暗色主题支持
+          - listitem [ref=e62]:
+            - generic [ref=e63]: 新增
+            - text: Knife4j API 文档
+          - listitem [ref=e64]:
+            - generic [ref=e65]: 新增
+            - text: H2 内存数据库（开发模式）
+          - listitem [ref=e66]:
+            - generic [ref=e67]: 优化
+            - text: 响应式布局适配移动端
+  - contentinfo [ref=e68]:
+    - generic [ref=e70]:
+      - text: ⚡ DevTools Station
+      - paragraph [ref=e71]: 为开发者打造的一站式在线工具箱
+    - paragraph [ref=e73]: © 2024 DevTools Station. Built with ❤️ for developers.

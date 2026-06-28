@@ -1,0 +1,29 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "DevTools STATION" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e8]: DevTools
+        - generic [ref=e9]: STATION
+      - generic [ref=e10]:
+        - button "登录" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+          - generic [ref=e16]: 登录
+        - button "🌙" [ref=e18] [cursor=pointer]
+        - button "🇨🇳 中文" [ref=e20] [cursor=pointer]
+        - link "🏠 首页" [ref=e21] [cursor=pointer]:
+          - /url: /
+  - main [ref=e22]:
+    - heading "💬 反馈建议" [level=1] [ref=e23]
+    - paragraph [ref=e24]: 我们非常重视你的意见和建议，请告诉我们你的想法。
+    - generic [ref=e44]:
+      - generic [ref=e45]: ✅
+      - heading "感谢你的反馈！" [level=2] [ref=e46]
+      - paragraph [ref=e47]: 我们会认真对待每一条建议。
+      - button "📝 再写一条" [ref=e48] [cursor=pointer]
+  - contentinfo [ref=e38]:
+    - generic [ref=e40]:
+      - text: ⚡ DevTools Station
+      - paragraph [ref=e41]: 为开发者打造的一站式在线工具箱
+    - paragraph [ref=e43]: © 2024 DevTools Station. Built with ❤️ for developers.
