@@ -1,0 +1,153 @@
+/**
+ * DevTools Station - 三主题切换系统
+ * 支持：暗黑(dark) / 明亮(light) / 二次元(anime)
+ */
+(function() {
+    'use strict';
+
+    var THEME_KEY = 'devtools-theme';
+    var themes = [
+        { id: 'dark',  name: '暗黑',    desc: '护眼深邃 · 专业暗色',     icon: '🌙' },
+        { id: 'light', name: '明亮',    desc: '清爽简洁 · 经典白昼',    icon: '☀️' },
+        { id: 'anime', name: '二次元',  desc: '樱花甜心 · 动漫风格',    icon: '🌸' }
+    ];
+
+    function getTheme() {
+        var saved = localStorage.getItem(THEME_KEY);
+        if (saved && themes.some(function(t) { return t.id === saved; })) {
+            return saved;
+        }
+        return 'dark';
+    }
+
+    function setTheme(id) {
+        // 同步更新 <html> 和 <body> 的主题类
+        [document.documentElement, document.body].forEach(function(el) {
+            el.className = el.className.replace(/theme-\w+/g, '').trim();
+            el.classList.add('theme-' + id);
+        });
+        localStorage.setItem(THEME_KEY, id);
+        updateActive(id);
+
+        // 同步主题到后端（已登录用户）
+        if (window.DevAuth && window.DevAuth.isLoggedIn()) {
+            window.DevAuth.saveSettings({ theme: id });
+        }
+    }
+
+    function updateActive(id) {
+        var options = document.querySelectorAll('.theme-option');
+        options.forEach(function(opt) {
+            opt.classList.toggle('active', opt.getAttribute('data-theme') === id);
+        });
+        var btn = document.getElementById('themeSwitcherBtn');
+        if (btn) {
+            var theme = themes.find(function(t) { return t.id === id; });
+            if (theme) btn.textContent = theme.icon;
+        }
+    }
+
+    function buildSwitcher(container) {
+        var current = getTheme();
+        var currentTheme = themes.find(function(t) { return t.id === current; }) || themes[0];
+
+        container.className = 'theme-switcher';
+        container.innerHTML =
+            '<button class="theme-switcher-btn" id="themeSwitcherBtn" title="切换主题">' +
+                currentTheme.icon +
+            '</button>' +
+            '<div class="theme-dropdown" id="themeDropdown">' +
+                themes.map(function(t) {
+                    return '<div class="theme-option' + (t.id === current ? ' active' : '') + '" data-theme="' + t.id + '">' +
+                        '<div class="theme-preview theme-preview-' + t.id + '"></div>' +
+                        '<div class="theme-option-info">' +
+                            '<div class="theme-option-name">' + t.icon + ' ' + t.name + '</div>' +
+                            '<div class="theme-option-desc">' + t.desc + '</div>' +
+                        '</div>' +
+                        '<div class="theme-option-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>' +
+                    '</div>';
+                }).join('') +
+            '</div>' +
+            '<div class="theme-dropdown-backdrop" id="themeBackdrop"></div>';
+
+        // 事件绑定
+        var btn   = document.getElementById('themeSwitcherBtn');
+        var drop  = document.getElementById('themeDropdown');
+        var back  = document.getElementById('themeBackdrop');
+
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var open = drop.classList.contains('active');
+            drop.classList.toggle('active', !open);
+            back.classList.toggle('active', !open);
+        });
+
+        back.addEventListener('click', function() {
+            drop.classList.remove('active');
+            back.classList.remove('active');
+        });
+
+        drop.addEventListener('click', function(e) {
+            var opt = e.target.closest('.theme-option');
+            if (!opt) return;
+            var id = opt.getAttribute('data-theme');
+            setTheme(id);
+            drop.classList.remove('active');
+            back.classList.remove('active');
+        });
+    }
+
+    // 初始化
+    function init() {
+        var current = getTheme();
+        // 确保 body 有主题 class（兼容旧的 class="dark"）
+        if (!document.body.className.match(/theme-\w+/)) {
+            if (document.body.classList.contains('dark') || document.body.classList.contains('light')) {
+                // 迁移旧格式
+                var old = document.body.classList.contains('light') ? 'light' : 'dark';
+                document.body.classList.remove('dark', 'light');
+                document.body.classList.add('theme-' + old);
+                localStorage.setItem(THEME_KEY, old);
+                current = old;
+            } else {
+                document.body.classList.add('theme-' + current);
+            }
+        } else {
+            // 已有 theme- class（服务端硬编码），用 localStorage 的值覆盖它
+            var match = document.body.className.match(/theme-(\w+)/);
+            if (match && match[1] !== current) {
+                // body 的类与 localStorage 不一致 → 以 localStorage 为准
+                document.body.className = document.body.className
+                    .replace(/theme-\w+/g, '')
+                    .trim();
+                document.body.classList.add('theme-' + current);
+            }
+        }
+
+        // 确保 <html> 也同步主题类（与防闪烁内联脚本保持一致）
+        var htmlMatch = document.documentElement.className.match(/theme-(\w+)/);
+        if (!htmlMatch || htmlMatch[1] !== current) {
+            document.documentElement.className = document.documentElement.className
+                .replace(/theme-\w+/g, '')
+                .trim();
+            document.documentElement.classList.add('theme-' + current);
+        }
+
+        // 查找所有 .theme-switcher 容器并构建 UI
+        var containers = document.querySelectorAll('.theme-switcher');
+        containers.forEach(buildSwitcher);
+    }
+
+    // 暴露 API
+    window.DevTheme = {
+        get: getTheme,
+        set: setTheme,
+        themes: themes
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();

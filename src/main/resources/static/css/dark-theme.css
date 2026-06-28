@@ -1,0 +1,117 @@
+/* ============================================
+   DevTools Station - 暗色主题 (默认)
+   参考 cursor.com 暗黑风格
+   ============================================ */
+
+:root {
+    /* 背景层级 */
+    --bg-primary: #0a0a0b;
+    --bg-secondary: #111113;
+    --bg-tertiary: #1a1a1e;
+
+    /* 文字 */
+    --text-primary: #fafafa;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+
+    /* 组件 */
+    --card-bg: #141416;
+    --card-shadow: rgba(0, 0, 0, 0.3);
+    --input-bg: #1a1a1e;
+    --output-bg: #111113;
+    --icon-bg: #1e1e24;
+    --hover-bg: rgba(255, 255, 255, 0.04);
+    --kbd-bg: rgba(255, 255, 255, 0.06);
+    --badge-bg: rgba(99, 102, 241, 0.1);
+
+    /* 边框 */
+    --border-color: rgba(255, 255, 255, 0.06);
+
+    /* 导航 */
+    --nav-bg: rgba(10, 10, 11, 0.8);
+
+    /* 代码区 */
+    --code-bg: #0d0d10;
+    --code-header-bg: #16161a;
+
+    /* 强调色 - 蓝紫渐变 */
+    --accent-color: #6366f1;
+    --accent-shadow: rgba(99, 102, 241, 0.15);
+    --accent-hover: #818cf8;
+
+    /* Footer */
+    --footer-bg: #0a0a0b;
+}
+
+/* 全局背景 */
+body.dark {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* 亮色主题变量 (通过 JS 切换) */
+body.light {
+    --bg-primary: #fafafa;
+    --bg-secondary: #f4f4f5;
+    --bg-tertiary: #e4e4e7;
+
+    --text-primary: #18181b;
+    --text-secondary: #52525b;
+    --text-muted: #a1a1aa;
+
+    --card-bg: #ffffff;
+    --card-shadow: rgba(0, 0, 0, 0.06);
+    --input-bg: #f4f4f5;
+    --output-bg: #fafafa;
+    --icon-bg: #f0f0f5;
+    --hover-bg: rgba(0, 0, 0, 0.04);
+    --kbd-bg: rgba(0, 0, 0, 0.06);
+    --badge-bg: rgba(99, 102, 241, 0.08);
+
+    --border-color: rgba(0, 0, 0, 0.08);
+
+    --nav-bg: rgba(250, 250, 250, 0.85);
+
+    --code-bg: #f0f0f5;
+    --code-header-bg: #e4e4e7;
+
+    --footer-bg: #fafafa;
+}
+
+body.light .code-comment { color: #9ca3af; }
+body.light .code-keyword { color: #7c3aed; }
+body.light .code-string { color: #059669; }
+body.light .code-method { color: #2563eb; }
+
+/* 滚动条 */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+body.light ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+body.light ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+/* 选中文本颜色 */
+::selection {
+    background: rgba(99, 102, 241, 0.3);
+    color: #fff;
+}

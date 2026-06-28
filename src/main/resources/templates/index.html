@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevTools Station - 开发者在线工具箱</title>
+    <meta name="description" content="一站式开发者在线工具箱，提供加解密、格式化、转换、生成等40+开发常用工具">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <!-- 防闪烁：在 CSS 加载前立即应用保存的主题 -->
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/themes.css">
+    <script src="/js/auth.js" defer></script>
+</head>
+<body class="theme-dark">
+    <!-- 顶部导航 -->
+    <header class="navbar">
+        <div class="nav-inner">
+            <a href="/" class="logo">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect width="28" height="28" rx="6" fill="url(#logo-grad)"/>
+                    <path d="M7 9h3l4 10-4-10h3l4 10-4-10h3l4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+                </svg>
+                <span class="logo-text">DevTools</span>
+                <span class="logo-badge">STATION</span>
+            </a>
+            <div class="nav-search" id="navSearch">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" id="searchInput" placeholder="搜索工具... (支持拼音、英文)" autocomplete="off">
+                <kbd class="search-kbd">⌘K</kbd>
+                <div class="search-dropdown" id="searchDropdown"></div>
+            </div>
+            <div class="nav-actions">
+                <div class="theme-switcher"></div>
+                <div class="lang-switcher"></div>
+                <a href="/doc.html" class="btn-ghost" target="_blank">API 文档</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero 区域 -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                <span th:text="'共 ' + ${totalTools} + ' 个实用工具'">40+ 个实用工具</span>
+            </div>
+            <h1 class="hero-title">
+                开发者<span class="gradient-text">在线工具箱</span>
+            </h1>
+            <p class="hero-subtitle">
+                一站式开发工具集合，涵盖加解密、格式化、转换器、生成器、文本处理等常用功能。
+                <br>无需安装，打开即用，让开发更高效。
+            </p>
+            <div class="hero-actions">
+                <a href="#tools" class="btn-primary">
+                    开始使用
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+                </a>
+                <a href="/doc.html" class="btn-ghost" target="_blank">查看 API</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="code-preview">
+                <div class="code-header">
+                    <span class="code-dot red"></span>
+                    <span class="code-dot yellow"></span>
+                    <span class="code-dot green"></span>
+                    <span class="code-title">DevTools Station</span>
+                </div>
+                <div class="code-body">
+                    <pre><code><span class="code-comment">// 🛠️ 一站式开发工具集</span>
+<span class="code-keyword">import</span> { DevTools } <span class="code-keyword">from</span> <span class="code-string">'@devtools/station'</span>;
+
+<span class="code-keyword">const</span> tools = [
+  <span class="code-string">'🔐 加解密'</span>,   <span class="code-string">'📝 格式化'</span>,
+  <span class="code-string">'🔄 转换器'</span>,   <span class="code-string">'⚡ 生成器'</span>,
+  <span class="code-string">'📄 文本处理'</span>, <span class="code-string">'🌐 网络工具'</span>,
+  <span class="code-string">'💻 开发工具'</span>,
+];
+
+<span class="code-keyword">await</span> DevTools.<span class="code-method">launch</span>({ tools });</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 热门工具 -->
+    <section class="section" th:if="${not #lists.isEmpty(hotTools)}">
+        <div class="section-header">
+            <h2 class="section-title">🔥 热门工具</h2>
+            <p class="section-desc">最常用的开发工具，助你事半功倍</p>
+        </div>
+        <div class="hot-tools-grid">
+            <a th:each="tool : ${hotTools}" th:href="@{${tool.route}}"
+               class="hot-tool-card">
+                <span class="tool-icon" th:text="${tool.icon}">🔑</span>
+                <div class="tool-info">
+                    <h3 th:text="${tool.name}">工具名称</h3>
+                    <p th:text="${tool.description}">工具描述</p>
+                </div>
+                <svg class="card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- 工具分类 -->
+    <section class="section" id="tools">
+        <div class="section-header">
+            <h2 class="section-title">🛠️ 全部工具</h2>
+            <p class="section-desc">按分类浏览所有工具，点击即可使用</p>
+        </div>
+        <div th:each="cat : ${categories}" class="category-section">
+            <div class="category-header">
+                <span class="category-icon" th:text="${cat.icon}">🔐</span>
+                <h3 class="category-name" th:text="${cat.name}">分类名称</h3>
+                <span class="category-count" th:text="${#maps.containsKey(toolMap, cat.id) ? #lists.size(toolMap.get(cat.id)) : 0} + ' 个工具'">0 个工具</span>
+            </div>
+            <div class="tools-grid">
+                <a th:each="tool : ${toolMap.get(cat.id)}"
+                   th:if="${toolMap.containsKey(cat.id)}"
+                   th:href="@{${tool.route}}"
+                   class="tool-card">
+                    <span class="tool-card-icon" th:text="${tool.icon}">🔑</span>
+                    <div class="tool-card-body">
+                        <h4 class="tool-card-name" th:text="${tool.name}">工具名称</h4>
+                        <p class="tool-card-desc" th:text="${tool.description}">描述</p>
+                    </div>
+                    <span th:if="${tool.isNew == 1}" class="tag-new">NEW</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 底部 -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="footer-logo">⚡ DevTools Station</span>
+                <p>为开发者打造的一站式在线工具箱</p>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h4>产品</h4>
+                    <a href="/#tools">全部工具</a>
+                    <a href="/doc.html">API 文档</a>
+                </div>
+                <div class="footer-col">
+                    <h4>资源</h4>
+                    <a href="/guide">使用指南</a>
+                    <a href="/changelog">更新日志</a>
+                </div>
+                <div class="footer-col">
+                    <h4>关于</h4>
+                    <a href="/about">关于我们</a>
+                    <a href="/feedback">反馈建议</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 DevTools Station. Built with ❤️ for developers.</p>
+        </div>
+    </footer>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使用指南 - DevTools Station</title>
+    <!-- 防闪烁：在 CSS 加载前立即应用保存的主题 -->
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/themes.css">
+    <script src="/js/auth.js" defer></script>
+    <style>
+        .page-container { max-width:800px; margin:0 auto; padding:60px 24px; }
+        .page-container h1 { font-size:32px; font-weight:700; color:var(--text-primary); margin-bottom:12px; }
+        .page-container .subtitle { color:var(--text-secondary); font-size:16px; margin-bottom:40px; }
+        .section { margin-bottom:40px; }
+        .section h2 { font-size:22px; color:var(--text-primary); margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid var(--border-color); }
+        .section p, .section li { color:var(--text-secondary); font-size:15px; line-height:1.8; }
+        .section ul { padding-left:20px; }
+        .section code { background:var(--badge-bg); color:var(--accent-light); padding:2px 6px; border-radius:4px; font-size:13px; }
+        .tip { background:var(--badge-bg); border-left:3px solid var(--accent-color); padding:12px 16px; border-radius:0 8px 8px 0; margin:12px 0; }
+        .tip strong { color:var(--accent-light); }
+    </style>
+</head>
+<body class="theme-dark">
+    <header class="navbar">
+        <div class="nav-inner">
+            <a href="/" class="logo">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect width="28" height="28" rx="6" fill="url(#logo-grad)"/>
+                    <path d="M7 9h3l4 10-4-10h3l4 10-4-10h3l4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+                </svg>
+                <span class="logo-text">DevTools</span>
+                <span class="logo-badge">STATION</span>
+            </a>
+            <div class="nav-actions">
+                <div class="theme-switcher"></div>
+                <div class="lang-switcher"></div>
+                <a href="/" class="btn-ghost">🏠 首页</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <h1>📖 使用指南</h1>
+        <p class="subtitle">快速了解 DevTools Station 的用法和技巧。</p>
+
+        <div class="section">
+            <h2>🔍 搜索工具</h2>
+            <p>在首页顶部的搜索框中输入关键词即可快速找到工具。搜索支持：</p>
+            <ul>
+                <li><strong>中文搜索:</strong> 输入「加密」找到所有加解密工具</li>
+                <li><strong>拼音搜索:</strong> 输入「md5」或「json」即可定位</li>
+                <li><strong>快捷键:</strong> 按 <code>Ctrl+K</code> (Mac: <code>⌘K</code>) 快速聚焦搜索框</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🛠️ 使用工具</h2>
+            <p>所有工具的使用方式基本一致：</p>
+            <ol style="color:#9ca3af;font-size:15px;line-height:2;padding-left:20px;">
+                <li>点击工具卡片进入工具页面</li>
+                <li>在输入框中输入文本或参数</li>
+                <li>选择需要的选项（如有）</li>
+                <li>点击 <strong style="color:#a5b4fc;">⚡ 执行</strong> 按钮或按 <code>Ctrl+Enter</code></li>
+                <li>查看结果，点击 <strong style="color:#a5b4fc;">📋 复制</strong> 复制到剪贴板</li>
+            </ol>
+            <div class="tip">
+                <strong>💡 提示:</strong> 大部分工具提供了示例输入，点击示例文本可自动填充到输入框。
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📂 工具分类</h2>
+            <ul>
+                <li><strong>🔐 加密解密:</strong> MD5、SHA、AES、Bcrypt、HMAC 等</li>
+                <li><strong>📝 格式化工具:</strong> JSON、SQL、CSS、HTML、XML 格式化</li>
+                <li><strong>🔄 转换工具:</strong> 时间戳、进制、颜色、大小写、Unicode 转换</li>
+                <li><strong>🎲 生成器:</strong> UUID、密码、随机数、Lorem Ipsum、二维码</li>
+                <li><strong>📄 文本处理:</strong> 文本对比、正则测试、字数统计、去重、Base64</li>
+                <li><strong>🌐 网络工具:</strong> IP 查询、UA 解析、HTTP 状态码、URL 编解码</li>
+                <li><strong>💻 开发者工具:</strong> Cron 表达式、Git 命令、MIME 类型</li>
+                <li><strong>📟 编码解码:</strong> URL 编码、HTML 实体、摩尔斯电码</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>⌨️ 键盘快捷键</h2>
+            <ul>
+                <li><code>Ctrl+K</code> / <code>⌘K</code> - 聚焦搜索框</li>
+                <li><code>Ctrl+Enter</code> / <code>⌘Enter</code> - 执行当前工具</li>
+                <li><code>Esc</code> - 关闭搜索下拉</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🔌 API 调用</h2>
+            <p>所有工具都提供 RESTful API，可通过 HTTP 请求直接调用。查看 <code>/doc.html</code> 获取完整 API 文档。</p>
+            <p>示例：</p>
+            <pre style="background:var(--input-bg);padding:16px;border-radius:8px;color:var(--tag-feature-color);font-family:monospace;font-size:14px;">curl -X POST http://localhost:8088/api/tools/crypto/hash \
+  -d "input=Hello World&algorithm=md5"</pre>
+        </div>
+    </main>
+
+    <footer class="footer" style="margin-top:60px;">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="footer-logo">⚡ DevTools Station</span>
+                <p>为开发者打造的一站式在线工具箱</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 DevTools Station. Built with ❤️ for developers.</p>
+        </div>
+    </footer>
+
+    <script src="/js/theme.js"></script>
+</body>
+</html>

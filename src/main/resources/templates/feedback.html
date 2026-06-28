@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反馈建议 - DevTools Station</title>
+    <!-- 防闪烁：在 CSS 加载前立即应用保存的主题 -->
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/themes.css">
+    <script src="/js/auth.js" defer></script>
+    <style>
+        .page-container { max-width:700px; margin:0 auto; padding:60px 24px; }
+        .page-container h1 { font-size:32px; font-weight:700; color:var(--text-primary); margin-bottom:12px; }
+        .page-container .subtitle { color:var(--text-secondary); font-size:16px; margin-bottom:40px; }
+        .feedback-card { background:var(--surface-bg); border:1px solid var(--surface-border); border-radius:12px; padding:32px; }
+        .feedback-card h2 { font-size:20px; color:var(--text-primary); margin-bottom:8px; }
+        .feedback-card p { color:var(--text-secondary); font-size:14px; margin-bottom:24px; }
+        .form-group { margin-bottom:20px; }
+        .form-group label { display:block; font-size:14px; font-weight:600; color:var(--text-primary); margin-bottom:6px; }
+        .form-group input, .form-group textarea, .form-group select {
+            width:100%; padding:10px 14px; background:var(--input-bg);
+            border:1px solid var(--input-border); border-radius:8px;
+            color:var(--text-primary); font-size:14px; transition:border-color 0.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline:none; border-color:var(--accent-color); box-shadow:0 0 0 3px var(--accent-shadow);
+        }
+        .form-group textarea { min-height:120px; resize:vertical; }
+        .submit-btn {
+            display:inline-flex;align-items:center;gap:8px;
+            padding:12px 28px; background:linear-gradient(135deg,#6366f1,#8b5cf6);
+            color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:600;
+            cursor:pointer; transition:transform 0.15s,box-shadow 0.15s;
+        }
+        .submit-btn:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(99,102,241,0.4); }
+        .success-msg { display:none; text-align:center; padding:40px; }
+        .success-msg .icon { font-size:48px; margin-bottom:16px; }
+        .success-msg h2 { color:#86efac; margin-bottom:8px; }
+    </style>
+</head>
+<body class="theme-dark">
+    <header class="navbar">
+        <div class="nav-inner">
+            <a href="/" class="logo">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect width="28" height="28" rx="6" fill="url(#logo-grad)"/>
+                    <path d="M7 9h3l4 10-4-10h3l4 10-4-10h3l4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+                </svg>
+                <span class="logo-text">DevTools</span>
+                <span class="logo-badge">STATION</span>
+            </a>
+            <div class="nav-actions">
+                <div class="theme-switcher"></div>
+                <div class="lang-switcher"></div>
+                <a href="/" class="btn-ghost">🏠 首页</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <h1>💬 反馈建议</h1>
+        <p class="subtitle">我们非常重视你的意见和建议，请告诉我们你的想法。</p>
+
+        <div class="feedback-card" id="feedbackForm">
+            <h2>提交反馈</h2>
+            <p>无论是 Bug 报告、功能建议还是使用体验，欢迎随时提出。</p>
+            <div class="form-group">
+                <label>反馈类型</label>
+                <select id="fbType">
+                    <option value="suggestion">💡 功能建议</option>
+                    <option value="bug">🐛 Bug 报告</option>
+                    <option value="experience">😊 使用体验</option>
+                    <option value="other">📝 其他</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>标题</label>
+                <input type="text" id="fbTitle" placeholder="简短描述你的反馈...">
+            </div>
+            <div class="form-group">
+                <label>详细描述</label>
+                <textarea id="fbContent" placeholder="请详细描述你的建议或遇到的问题..."></textarea>
+            </div>
+            <button class="submit-btn" onclick="submitFeedback()">📤 提交反馈</button>
+        </div>
+
+        <div class="feedback-card success-msg" id="successMsg">
+            <div class="icon">✅</div>
+            <h2>感谢你的反馈！</h2>
+            <p style="color:#9ca3af;">我们会认真对待每一条建议。</p>
+            <button class="submit-btn" style="margin-top:20px;" onclick="resetForm()">📝 再写一条</button>
+        </div>
+    </main>
+
+    <footer class="footer" style="margin-top:60px;">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="footer-logo">⚡ DevTools Station</span>
+                <p>为开发者打造的一站式在线工具箱</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 DevTools Station. Built with ❤️ for developers.</p>
+        </div>
+    </footer>
+
+    <script src="/js/theme.js"></script>
+    <script>
+        function submitFeedback() {
+            var type = document.getElementById('fbType').value;
+            var title = document.getElementById('fbTitle').value;
+            var content = document.getElementById('fbContent').value;
+            if (!title || !content) {
+                alert('请填写标题和详细描述');
+                return;
+            }
+            console.log('Feedback:', {type:type, title:title, content:content});
+            document.getElementById('feedbackForm').style.display = 'none';
+            document.getElementById('successMsg').style.display = 'block';
+        }
+        function resetForm() {
+            document.getElementById('feedbackForm').style.display = 'block';
+            document.getElementById('successMsg').style.display = 'none';
+            document.getElementById('fbTitle').value = '';
+            document.getElementById('fbContent').value = '';
+        }
+    </script>
+</body>
+</html>
