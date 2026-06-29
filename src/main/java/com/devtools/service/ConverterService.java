@@ -124,7 +124,7 @@ public class ConverterService {
             String output = switch (style) {
                 case "upper" -> input.toUpperCase();
                 case "lower" -> input.toLowerCase();
-                case "camel" -> StrUtil.toCamelCase(input);
+                case "camel" -> toCamelCase(input);
                 case "snake" -> toSnakeCase(input);
                 case "kebab" -> toKebabCase(input);
                 case "constant" -> toConstantCase(input);
@@ -147,38 +147,37 @@ public class ConverterService {
         try {
             input = input.trim();
             if (input.startsWith("#")) {
-                // HEX -> RGB
-                String hex = input.replace("#", "");
-                int r = Integer.parseInt(hex.substring(0, 2), 16);
-                int g = Integer.parseInt(hex.substring(2, 4), 16);
-                int b = Integer.parseInt(hex.substring(4, 6), 16);
-                result.put("hex", input);
-                result.put("rgb", String.format("rgb(%d, %d, %d)", r, g, b));
-                result.put("rgba", String.format("rgba(%d, %d, %d, 1)", r, g, b));
-            } else if (input.contains("rgb")) {
-                // RGB -> HEX
-                String nums = input.replaceAll("[^0-9,]", "");
-                String[] parts = nums.split(",");
-                int r = Integer.parseInt(parts[0].trim());
-                int g = Integer.parseInt(parts[1].trim());
-                int b = Integer.parseInt(parts[2].trim());
-                result.put("rgb", String.format("rgb(%d, %d, %d)", r, g, b));
-                result.put("hex", String.format("#%02X%02X%02X", r, g, b));
+                int[] rgb = parseHexColor(input);
+                putColorFormats(result, rgb[0], rgb[1], rgb[2]);
+            } else if (input.toLowerCase().startsWith("rgb")) {
+                int[] rgb = parseRgbColor(input);
+                putColorFormats(result, rgb[0], rgb[1], rgb[2]);
+            } else if (input.toLowerCase().startsWith("hsl")) {
+                int[] rgb = hslToRgb(input);
+                putColorFormats(result, rgb[0], rgb[1], rgb[2]);
             }
         } catch (Exception e) {
-            result.put("error", "颜色格式错误，支持 #RRGGBB 或 rgb(r,g,b)");
+            result.put("error", "颜色格式错误，支持 #RGB、#RRGGBB、rgb(r,g,b) 或 hsl(h,s%,l%)");
         }
         return result;
     }
 
+    private String toCamelCase(String input) {
+        List<String> words = splitWords(input);
+        if (words.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder(words.get(0).toLowerCase());
+        for (int i = 1; i < words.size(); i++) {
+            sb.append(StrUtil.upperFirst(words.get(i).toLowerCase()));
+        }
+        return sb.toString();
+    }
+
     private String toSnakeCase(String input) {
-        return StrUtil.toUnderlineCase(input);
+        return String.join("_", splitWords(input)).toLowerCase();
     }
 
     private String toKebabCase(String input) {
-        return input.replaceAll("([a-z])([A-Z])", "$1-$2")
-                .replaceAll("[_\\s]+", "-")
-                .toLowerCase();
+        return String.join("-", splitWords(input)).toLowerCase();
     }
 
     private String toConstantCase(String input) {
@@ -186,8 +185,127 @@ public class ConverterService {
     }
 
     private String toPascalCase(String input) {
-        String camel = StrUtil.toCamelCase(input);
-        return StrUtil.upperFirst(camel);
+        StringBuilder sb = new StringBuilder();
+        for (String word : splitWords(input)) {
+            sb.append(StrUtil.upperFirst(word.toLowerCase()));
+        }
+        return sb.toString();
+    }
+
+    private List<String> splitWords(String input) {
+        if (input == null) return Collections.emptyList();
+        String normalized = input
+                .replaceAll("([a-z0-9])([A-Z])", "$1 $2")
+                .replaceAll("([A-Z]+)([A-Z][a-z])", "$1 $2")
+                .replaceAll("[^\\p{IsAlphabetic}\\p{IsDigit}]+", " ")
+                .trim();
+        if (normalized.isEmpty()) return Collections.emptyList();
+        return Arrays.asList(normalized.split("\\s+"));
+    }
+
+    private int[] parseHexColor(String input) {
+        String hex = input.replace("#", "").trim();
+        if (hex.length() == 3) {
+            hex = "" + hex.charAt(0) + hex.charAt(0)
+                    + hex.charAt(1) + hex.charAt(1)
+                    + hex.charAt(2) + hex.charAt(2);
+        }
+        if (!hex.matches("[0-9a-fA-F]{6}")) {
+            throw new IllegalArgumentException("Invalid HEX color");
+        }
+        return new int[]{
+                Integer.parseInt(hex.substring(0, 2), 16),
+                Integer.parseInt(hex.substring(2, 4), 16),
+                Integer.parseInt(hex.substring(4, 6), 16)
+        };
+    }
+
+    private int[] parseRgbColor(String input) {
+        String[] parts = input.replaceAll("(?i)rgba?\\(", "")
+                .replace(")", "")
+                .split(",");
+        if (parts.length < 3) {
+            throw new IllegalArgumentException("Invalid RGB color");
+        }
+        return new int[]{
+                clampColor(Integer.parseInt(parts[0].trim())),
+                clampColor(Integer.parseInt(parts[1].trim())),
+                clampColor(Integer.parseInt(parts[2].trim()))
+        };
+    }
+
+    private int[] hslToRgb(String input) {
+        String[] parts = input.replaceAll("(?i)hsla?\\(", "")
+                .replace(")", "")
+                .replace("%", "")
+                .split(",");
+        if (parts.length < 3) {
+            throw new IllegalArgumentException("Invalid HSL color");
+        }
+        double h = Double.parseDouble(parts[0].trim()) % 360;
+        if (h < 0) h += 360;
+        double s = Double.parseDouble(parts[1].trim()) / 100.0;
+        double l = Double.parseDouble(parts[2].trim()) / 100.0;
+
+        double c = (1 - Math.abs(2 * l - 1)) * s;
+        double x = c * (1 - Math.abs((h / 60.0) % 2 - 1));
+        double m = l - c / 2;
+        double r1, g1, b1;
+        if (h < 60) {
+            r1 = c; g1 = x; b1 = 0;
+        } else if (h < 120) {
+            r1 = x; g1 = c; b1 = 0;
+        } else if (h < 180) {
+            r1 = 0; g1 = c; b1 = x;
+        } else if (h < 240) {
+            r1 = 0; g1 = x; b1 = c;
+        } else if (h < 300) {
+            r1 = x; g1 = 0; b1 = c;
+        } else {
+            r1 = c; g1 = 0; b1 = x;
+        }
+        return new int[]{
+                clampColor((int) Math.round((r1 + m) * 255)),
+                clampColor((int) Math.round((g1 + m) * 255)),
+                clampColor((int) Math.round((b1 + m) * 255))
+        };
+    }
+
+    private void putColorFormats(Map<String, Object> result, int r, int g, int b) {
+        result.put("hex", String.format("#%02X%02X%02X", r, g, b));
+        result.put("rgb", String.format("rgb(%d, %d, %d)", r, g, b));
+        result.put("rgba", String.format("rgba(%d, %d, %d, 1)", r, g, b));
+        result.put("hsl", rgbToHsl(r, g, b));
+    }
+
+    private String rgbToHsl(int r, int g, int b) {
+        double rd = r / 255.0;
+        double gd = g / 255.0;
+        double bd = b / 255.0;
+        double max = Math.max(rd, Math.max(gd, bd));
+        double min = Math.min(rd, Math.min(gd, bd));
+        double h;
+        double s;
+        double l = (max + min) / 2.0;
+        if (max == min) {
+            h = 0;
+            s = 0;
+        } else {
+            double d = max - min;
+            s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min);
+            if (max == rd) {
+                h = ((gd - bd) / d + (gd < bd ? 6 : 0)) * 60;
+            } else if (max == gd) {
+                h = ((bd - rd) / d + 2) * 60;
+            } else {
+                h = ((rd - gd) / d + 4) * 60;
+            }
+        }
+        return String.format("hsl(%d, %d%%, %d%%)", Math.round(h), Math.round(s * 100), Math.round(l * 100));
+    }
+
+    private int clampColor(int value) {
+        return Math.max(0, Math.min(255, value));
     }
 
     /**

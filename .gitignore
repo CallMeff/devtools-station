@@ -1,0 +1,18 @@
+# Build output
+target/
+
+# Logs
+*.log
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp scripts
+find_jdk.ps1
+install_jdk17.ps1
+git_output.txt

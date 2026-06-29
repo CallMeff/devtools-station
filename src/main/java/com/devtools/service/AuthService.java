@@ -69,7 +69,9 @@ public class AuthService {
     /**
      * 发送注册验证码到邮箱
      */
-    public void sendRegisterCode(String email) {
+    public String sendRegisterCode(String email) {
+        email = email == null ? null : email.trim();
+
         // 校验邮箱格式
         if (email == null || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
             throw new RuntimeException("邮箱格式不正确");
@@ -82,13 +84,15 @@ public class AuthService {
             throw new RuntimeException("该邮箱已被注册");
         }
 
-        emailService.sendRegisterCode(email);
+        return emailService.sendRegisterCode(email);
     }
 
     /**
      * 发送重置密码验证码到邮箱
      */
-    public void sendResetCode(String email) {
+    public String sendResetCode(String email) {
+        email = email == null ? null : email.trim();
+
         // 校验邮箱格式
         if (email == null || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
             throw new RuntimeException("邮箱格式不正确");
@@ -101,7 +105,7 @@ public class AuthService {
             throw new RuntimeException("该邮箱未注册，请先注册账号");
         }
 
-        emailService.sendResetCode(email);
+        return emailService.sendResetCode(email);
     }
 
     /**
@@ -158,12 +162,17 @@ public class AuthService {
     /**
      * 注册
      */
-    public Map<String, Object> register(String username, String password, String email) {
+    public Map<String, Object> register(String username, String password, String email, String verifyCode) {
+        if (password == null || password.length() < passwordMinLength) {
+            throw new RuntimeException("密码至少" + passwordMinLength + "位");
+        }
+
         // 校验邮箱不能为空
         if (email == null || email.trim().isEmpty()) {
             throw new RuntimeException("邮箱不能为空");
         }
         email = email.trim();
+        verifyCode = verifyCode == null ? "" : verifyCode.trim();
 
         // 校验邮箱格式
         if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
@@ -182,6 +191,13 @@ public class AuthService {
                 .eq(User::getEmail, email));
         if (emailCount > 0) {
             throw new RuntimeException("该邮箱已被注册");
+        }
+
+        if (!verifyCode.matches("^\\d{6}$")) {
+            throw new RuntimeException("验证码为6位数字");
+        }
+        if (!emailService.verifyRegisterCode(email, verifyCode)) {
+            throw new RuntimeException("验证码错误或已过期");
         }
 
         // 密码加密
@@ -217,8 +233,13 @@ public class AuthService {
      * 登录
      */
     public Map<String, Object> login(String username, String password, String ip, String ua) {
+        String account = username == null ? "" : username.trim();
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>()
-                .eq(User::getUsername, username));
+                .and(wrapper -> wrapper
+                        .eq(User::getUsername, account)
+                        .or()
+                        .eq(User::getEmail, account))
+                .last("LIMIT 1"));
         if (user == null) {
             throw new RuntimeException("用户名或密码错误");
         }

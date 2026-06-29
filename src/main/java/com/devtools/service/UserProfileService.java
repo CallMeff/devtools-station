@@ -109,7 +109,7 @@ public class UserProfileService {
     /**
      * 发送修改邮箱验证码
      */
-    public void sendChangeEmailCode(String email) {
+    public String sendChangeEmailCode(String email) {
         if (email == null || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
             throw new RuntimeException("邮箱格式不正确");
         }
@@ -121,7 +121,7 @@ public class UserProfileService {
             throw new RuntimeException("该邮箱已被其他账号使用");
         }
 
-        emailService.sendRegisterCode(email);
+        return emailService.sendRegisterCode(email);
     }
 
     /**

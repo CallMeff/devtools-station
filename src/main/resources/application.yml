@@ -32,6 +32,9 @@ spring:
 
 # 应用安全配置
 app:
+  mail:
+    # 开发环境可开启 mock，生产环境不要通过接口返回验证码
+    mock: false
   security:
     # Token AES 密钥（可通过环境变量 APP_TOKEN_SECRET 覆盖）
     token-secret: ${APP_TOKEN_SECRET:DevTools!Station@2026#SecureKey}

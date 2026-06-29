@@ -7,6 +7,7 @@ import com.devtools.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -92,7 +93,7 @@ public class UserController {
      * 发送修改邮箱验证码
      */
     @PostMapping("/send-email-code")
-    public Result<Void> sendEmailCode(
+    public Result<Map<String, Object>> sendEmailCode(
             @RequestHeader(value = "X-Auth-Token", required = false) String token,
             @RequestBody Map<String, String> body) {
         try {
@@ -101,10 +102,19 @@ public class UserController {
             if (email == null || email.trim().isEmpty()) {
                 return Result.error(400, "邮箱不能为空");
             }
-            userProfileService.sendChangeEmailCode(email.trim());
-            return Result.success("验证码已发送至 " + email.trim(), null);
+            String devCode = userProfileService.sendChangeEmailCode(email.trim());
+            return Result.success("验证码已发送至 " + email.trim(), buildCodePayload(devCode));
         } catch (RuntimeException e) {
             return Result.error(400, e.getMessage());
         }
+    }
+
+    private Map<String, Object> buildCodePayload(String devCode) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("mock", devCode != null);
+        if (devCode != null) {
+            data.put("devCode", devCode);
+        }
+        return data;
     }
 }

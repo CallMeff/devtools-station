@@ -179,7 +179,7 @@
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' +
                                 '</div>' +
-                                '<input type="text" id="loginUsername" name="loginUsername" data-i18n-placeholder="auth.username_placeholder" placeholder="请输入用户名" autocomplete="username">' +
+                                '<input type="text" id="loginUsername" name="loginUsername" data-i18n-placeholder="auth.username_placeholder" placeholder="请输入用户名或邮箱" autocomplete="username">' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
@@ -211,6 +211,13 @@
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.6 6.5a2 2 0 0 1-2.8 0L2 7"/></svg>' +
                                 '</div>' +
                                 '<input type="email" id="regEmail" name="regEmail" data-i18n-placeholder="auth.email_reg_placeholder" placeholder="邮箱（必填）" autocomplete="email" required>' +
+                            '</div>' +
+                            '<div class="auth-field auth-field-code">' +
+                                '<div class="auth-field-icon">' +
+                                    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
+                                '</div>' +
+                                '<input type="text" id="regVerifyCode" name="regVerifyCode" data-i18n-placeholder="auth.reg_code_placeholder" placeholder="验证码" maxlength="6" inputmode="numeric" autocomplete="one-time-code">' +
+                                '<button type="button" class="auth-send-code" id="regSendCodeBtn" data-i18n="profile.send_code">发送验证码</button>' +
                             '</div>' +
                             '<div class="auth-field">' +
                                 '<div class="auth-field-icon">' +
@@ -248,7 +255,7 @@
                                 '<div class="auth-field-icon">' +
                                     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
                                 '</div>' +
-                                '<input type="text" id="resetVerifyCode" name="resetVerifyCode" data-i18n-placeholder="auth.reset_code_placeholder" placeholder="验证码" maxlength="6" autocomplete="off">' +
+                                '<input type="text" id="resetVerifyCode" name="resetVerifyCode" data-i18n-placeholder="auth.reset_code_placeholder" placeholder="验证码" maxlength="6" inputmode="numeric" autocomplete="one-time-code">' +
                                 '<button type="button" class="auth-send-code" id="resetSendCodeBtn" data-i18n="profile.send_code">发送验证码</button>' +
                             '</div>' +
                             '<div class="auth-field">' +
@@ -323,6 +330,33 @@
             overlay.querySelector('#authTabLogin').click();
         });
 
+        function startCodeCountdown(btn, timerSetter) {
+            var sec = 60;
+            btn.textContent = __('toast.retry_after', [sec]);
+            var timer = setInterval(function() {
+                sec--;
+                if (sec <= 0) {
+                    clearInterval(timer);
+                    timerSetter(null);
+                    btn.disabled = false;
+                    btn.textContent = __('profile.send_code');
+                } else {
+                    btn.textContent = __('toast.retry_after', [sec]);
+                }
+            }, 1000);
+            timerSetter(timer);
+        }
+
+        function showSendCodeSuccess(res, input, errEl) {
+            if (res.data && res.data.devCode) {
+                input.value = res.data.devCode;
+                errEl.textContent = __('toast.dev_code_filled');
+            } else {
+                errEl.textContent = res.message || __('toast.code_sent');
+            }
+            errEl.style.color = '#4ade80';
+        }
+
         // 登录提交
         overlay.querySelector('#loginSubmit').addEventListener('click', function() {
             var username = overlay.querySelector('#loginUsername').value.trim();
@@ -375,16 +409,20 @@
         overlay.querySelector('#regSubmit').addEventListener('click', function() {
             var username = overlay.querySelector('#regUsername').value.trim();
             var email = overlay.querySelector('#regEmail').value.trim();
+            var verifyCode = overlay.querySelector('#regVerifyCode').value.trim();
             var password = overlay.querySelector('#regPassword').value;
             var password2 = overlay.querySelector('#regPassword2').value;
             var errEl = overlay.querySelector('#regError');
             errEl.textContent = '';
+            errEl.style.color = '';
 
             if (!username) { errEl.textContent = __('validate.username_required'); return; }
             if (username.length < 2 || username.length > 20) { errEl.textContent = __('validate.username_format'); return; }
             if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(username)) { errEl.textContent = __('validate.username_chars'); return; }
             if (!email) { errEl.textContent = __('validate.email_required'); return; }
             if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) { errEl.textContent = __('validate.email_format'); return; }
+            if (!verifyCode) { errEl.textContent = __('validate.code_required'); return; }
+            if (!/^\d{6}$/.test(verifyCode)) { errEl.textContent = __('validate.code_format'); return; }
             if (!password || password.length < getPasswordMinLength()) { errEl.textContent = __('validate.password_min', [getPasswordMinLength()]); return; }
             if (password !== password2) { errEl.textContent = __('validate.password_mismatch'); return; }
 
@@ -392,7 +430,7 @@
             btn.classList.add('loading');
             btn.querySelector('span').textContent = __('toast.registering');
 
-            apiPost('/api/auth/register', { username: username, password: password, email: email })
+            apiPost('/api/auth/register', { username: username, password: password, email: email, verifyCode: verifyCode })
                 .then(function(res) {
                     btn.classList.remove('loading');
                     btn.querySelector('span').textContent = __('auth.btn_register');
@@ -424,6 +462,38 @@
                 });
         });
 
+        // 发送验证码（注册用）
+        overlay.querySelector('#regSendCodeBtn').addEventListener('click', function() {
+            var email = overlay.querySelector('#regEmail').value.trim();
+            var errEl = overlay.querySelector('#regError');
+            errEl.textContent = '';
+            errEl.style.color = '';
+
+            if (!email) { errEl.textContent = __('validate.email_first'); return; }
+            if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)) { errEl.textContent = __('validate.email_format'); return; }
+
+            var btn = overlay.querySelector('#regSendCodeBtn');
+            btn.disabled = true;
+
+            apiPost('/api/auth/send-code', { email: email })
+                .then(function(res) {
+                    if (res.code === 200) {
+                        showSendCodeSuccess(res, overlay.querySelector('#regVerifyCode'), errEl);
+                        if (codeTimer) { clearInterval(codeTimer); }
+                        startCodeCountdown(btn, function(timer) { codeTimer = timer; });
+                    } else {
+                        errEl.style.color = '';
+                        errEl.textContent = res.message || __('toast.code_send_failed');
+                        btn.disabled = false;
+                    }
+                })
+                .catch(function() {
+                    errEl.style.color = '';
+                    errEl.textContent = __('toast.network_error');
+                    btn.disabled = false;
+                });
+        });
+
 
         // 发送验证码（重置密码用）
         overlay.querySelector('#resetSendCodeBtn').addEventListener('click', function() {
@@ -441,20 +511,9 @@
             apiPost('/api/auth/send-reset-code', { email: email })
                 .then(function(res) {
                     if (res.code === 200) {
-                        errEl.textContent = res.message || __('toast.code_sent');
-                        errEl.style.color = '#4ade80';
-                        var sec = 60;
-                        btn.textContent = __('toast.retry_after', [sec]);
-                        resetCodeTimer = setInterval(function() {
-                            sec--;
-                            if (sec <= 0) {
-                                clearInterval(resetCodeTimer);
-                                btn.disabled = false;
-                                btn.textContent = __('profile.send_code');
-                            } else {
-                                btn.textContent = __('toast.retry_after', [sec]);
-                            }
-                        }, 1000);
+                        showSendCodeSuccess(res, overlay.querySelector('#resetVerifyCode'), errEl);
+                        if (resetCodeTimer) { clearInterval(resetCodeTimer); }
+                        startCodeCountdown(btn, function(timer) { resetCodeTimer = timer; });
                     } else {
                         errEl.style.color = '';  // 失败恢复红色
                         errEl.textContent = res.message || __('toast.code_send_failed');

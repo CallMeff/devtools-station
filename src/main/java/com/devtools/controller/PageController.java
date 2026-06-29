@@ -4,6 +4,7 @@ import com.devtools.entity.Category;
 import com.devtools.entity.Tool;
 import com.devtools.service.ToolService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,9 @@ import java.util.stream.Collectors;
 public class PageController {
 
     private final ToolService toolService;
+
+    @Value("${app.security.password-min-length:8}")
+    private int passwordMinLength;
 
     public PageController(ToolService toolService) {
         this.toolService = toolService;
@@ -62,6 +66,7 @@ public class PageController {
     @GetMapping("/profile")
     public String profile(Model model) {
         model.addAttribute("categories", toolService.getCategoriesWithTools());
+        model.addAttribute("passwordMinLength", passwordMinLength);
         return "profile";
     }
 

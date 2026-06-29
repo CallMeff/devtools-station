@@ -38,7 +38,9 @@ public class ApiController {
     }
 
     @GetMapping("/tools/search")
-    public Result<List<Tool>> search(@RequestParam String q) {
-        return Result.success(toolService.searchTools(q));
+    public Result<List<Tool>> search(@RequestParam(required = false) String q,
+                                      @RequestParam(required = false) String keyword) {
+        String term = (q != null && !q.trim().isEmpty()) ? q : keyword;
+        return Result.success(toolService.searchTools(term));
     }
 }

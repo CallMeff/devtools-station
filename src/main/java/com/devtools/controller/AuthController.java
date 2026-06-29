@@ -30,14 +30,14 @@ public class AuthController {
      * 发送注册验证码
      */
     @PostMapping("/send-code")
-    public Result<Void> sendCode(@RequestBody Map<String, String> body) {
+    public Result<Map<String, Object>> sendCode(@RequestBody Map<String, String> body) {
         try {
             String email = body.get("email");
             if (email == null || email.trim().isEmpty()) {
                 return Result.error(400, "邮箱不能为空");
             }
-            authService.sendRegisterCode(email.trim());
-            return Result.success("验证码已发送至 " + email.trim(), null);
+            String devCode = authService.sendRegisterCode(email.trim());
+            return Result.success("验证码已发送至 " + email.trim(), buildCodePayload(devCode));
         } catch (RuntimeException e) {
             return Result.error(400, e.getMessage());
         }
@@ -47,14 +47,14 @@ public class AuthController {
      * 发送重置密码验证码
      */
     @PostMapping("/send-reset-code")
-    public Result<Void> sendResetCode(@RequestBody Map<String, String> body) {
+    public Result<Map<String, Object>> sendResetCode(@RequestBody Map<String, String> body) {
         try {
             String email = body.get("email");
             if (email == null || email.trim().isEmpty()) {
                 return Result.error(400, "邮箱不能为空");
             }
-            authService.sendResetCode(email.trim());
-            return Result.success("验证码已发送至 " + email.trim(), null);
+            String devCode = authService.sendResetCode(email.trim());
+            return Result.success("验证码已发送至 " + email.trim(), buildCodePayload(devCode));
         } catch (RuntimeException e) {
             return Result.error(400, e.getMessage());
         }
@@ -97,6 +97,7 @@ public class AuthController {
             String username = body.get("username");
             String password = body.get("password");
             String email = body.get("email");
+            String verifyCode = body.get("verifyCode");
 
             if (username == null || username.trim().isEmpty()) {
                 return Result.error(400, "用户名不能为空");
@@ -113,9 +114,15 @@ public class AuthController {
             if (email == null || email.trim().isEmpty()) {
                 return Result.error(400, "邮箱不能为空");
             }
+            if (verifyCode == null || verifyCode.trim().isEmpty()) {
+                return Result.error(400, "验证码不能为空");
+            }
+            if (!verifyCode.trim().matches("^\\d{6}$")) {
+                return Result.error(400, "验证码为6位数字");
+            }
 
             Map<String, Object> userInfo = authService.register(
-                    username.trim(), password, email.trim());
+                    username.trim(), password, email.trim(), verifyCode.trim());
             return Result.success("注册成功", userInfo);
         } catch (RuntimeException e) {
             return Result.error(400, e.getMessage());
@@ -132,7 +139,7 @@ public class AuthController {
             String username = body.get("username");
             String password = body.get("password");
 
-            if (username == null || password == null) {
+            if (username == null || username.trim().isEmpty() || password == null || password.isEmpty()) {
                 return Result.error(400, "用户名和密码不能为空");
             }
 
@@ -227,6 +234,15 @@ public class AuthController {
             result.put("username", user.getUsername());
         }
         return Result.success(result);
+    }
+
+    private Map<String, Object> buildCodePayload(String devCode) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("mock", devCode != null);
+        if (devCode != null) {
+            data.put("devCode", devCode);
+        }
+        return data;
     }
 
 }

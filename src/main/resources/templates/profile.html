@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="app-password-min-length" th:content="${passwordMinLength}">
     <title data-i18n="profile.page_title">个人中心 - DevTools Station</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <!-- 防闪烁：在 CSS 加载前立即应用保存的主题 -->
@@ -169,7 +170,7 @@
                     </div>
                     <div class="profile-field">
                         <label data-i18n="profile.new_pwd">新密码</label>
-                        <input type="password" id="editNewPwd" data-i18n-placeholder="profile.new_pwd_placeholder" placeholder="新密码（至少6位）" autocomplete="new-password">
+                        <input type="password" id="editNewPwd" data-i18n-placeholder="profile.new_pwd_placeholder" placeholder="新密码（至少8位）" autocomplete="new-password">
                     </div>
                     <div class="profile-field">
                         <label data-i18n="profile.confirm_pwd">确认新密码</label>
@@ -235,6 +236,11 @@
             var opts = { method: method, headers: headers };
             if (body) opts.body = JSON.stringify(body);
             return fetch(path, opts).then(function(r) { return r.json(); });
+        }
+
+        function getPasswordMinLength() {
+            var meta = document.querySelector('meta[name="app-password-min-length"]');
+            return meta ? parseInt(meta.getAttribute('content')) || 8 : 8;
         }
 
         function loadProfile() {
@@ -321,7 +327,12 @@
             btn.disabled = true;
             api('POST', '/api/user/send-email-code', { email: email }).then(function(res) {
                 if (res.code === 200) {
-                    msgEl.className = 'profile-msg success'; msgEl.textContent = res.message || __('toast.code_sent');
+                    if (res.data && res.data.devCode) {
+                        document.getElementById('editEmailCode').value = res.data.devCode;
+                        msgEl.className = 'profile-msg success'; msgEl.textContent = __('toast.dev_code_filled');
+                    } else {
+                        msgEl.className = 'profile-msg success'; msgEl.textContent = res.message || __('toast.code_sent');
+                    }
                     var sec = 60;
                     btn.textContent = __('toast.retry_after', [sec]);
                     emailCodeTimer = setInterval(function() {
@@ -348,6 +359,7 @@
             msgEl.className = 'profile-msg'; msgEl.textContent = '';
             if (!email) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.email_new_required'); return; }
             if (!code) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.code_required'); return; }
+            if (!/^\d{6}$/.test(code)) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.code_format'); return; }
 
             var btn = document.getElementById('saveEmailBtn');
             btn.disabled = true; btn.textContent = __('toast.changing');
@@ -371,7 +383,7 @@
             msgEl.className = 'profile-msg'; msgEl.textContent = '';
 
             if (!oldPwd) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.old_pwd_required'); return; }
-            if (!newPwd || newPwd.length < 6) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.password_min'); return; }
+            if (!newPwd || newPwd.length < getPasswordMinLength()) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.password_min', [getPasswordMinLength()]); return; }
             if (newPwd !== newPwd2) { msgEl.className = 'profile-msg error'; msgEl.textContent = __('validate.password_mismatch'); return; }
 
             var btn = document.getElementById('savePwdBtn');

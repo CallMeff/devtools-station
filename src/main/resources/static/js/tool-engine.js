@@ -75,7 +75,7 @@
                 { name: 'input', i18n: 'tool_label.input', type: 'textarea', required: true, rows: 4, ph_i18n: 'tool_ph.bcrypt' }
             ],
             extraInputs: [
-                { name: 'hash', i18n: 'tool_opt.bcrypt_hash', type: 'text', placeholder: '$2a$12$...' }
+                { name: 'hash', i18n: 'tool_opt.bcrypt_hash', type: 'text', placeholder: '$2a$12$...', showWhen: { name: 'mode', value: 'verify' } }
             ],
             options: [
                 { name: 'mode', i18n: 'tool_opt.mode', type: 'select', options: [
@@ -293,6 +293,7 @@
                 if (data.hex) parts.push('HEX: ' + data.hex);
                 if (data.rgb) parts.push('RGB: ' + data.rgb);
                 if (data.rgba) parts.push('RGBA: ' + data.rgba);
+                if (data.hsl) parts.push('HSL: ' + data.hsl);
                 return parts.join('\n');
             }
         },
@@ -1163,7 +1164,13 @@
         // 额外输入
         if (config.extraInputs) {
             config.extraInputs.forEach(function(inp) {
-                html += '<div class="input-group">';
+                var conditionalAttrs = '';
+                var conditionalStyle = '';
+                if (inp.showWhen) {
+                    conditionalAttrs = ' data-show-when-name="' + inp.showWhen.name + '" data-show-when-value="' + inp.showWhen.value + '"';
+                    conditionalStyle = ' style="display:none;"';
+                }
+                html += '<div class="input-group"' + conditionalAttrs + conditionalStyle + '>';
                 html += '<label data-i18n="' + inp.i18n + '">' + __(inp.i18n) + '</label>';
                 if (inp.type === 'textarea') {
                     html += '<textarea name="' + inp.name + '" rows="' + (inp.rows || 3) + '" data-i18n-placeholder="' + (inp.ph_i18n || '') + '" placeholder="' + __(inp.ph_i18n || inp.placeholder || '') + '"';
@@ -1214,6 +1221,7 @@
         }
 
         inputSection.innerHTML = html;
+        bindConditionalInputs();
 
         // 只读类型自动加载
         if (config.type === 'readonly' && config.autoLoad) {
@@ -1299,6 +1307,7 @@
             // 收集所有非文件字段：text/textarea/select
             inputSection.querySelectorAll('input[name], textarea[name], select[name]').forEach(function(el) {
                 if (el.type === 'file') return;
+                if (el.disabled) return;
                 formData.append(el.name, el.value);
             });
 
@@ -1341,6 +1350,7 @@
 
         // 收集所有输入
         inputSection.querySelectorAll('[name]').forEach(function(el) {
+            if (el.disabled) return;
             if (el.type === 'checkbox') {
                 params[el.name] = el.checked;
             } else if (el.type !== 'file') {
@@ -1413,6 +1423,33 @@
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
+    }
+
+    function bindConditionalInputs() {
+        var groups = inputSection.querySelectorAll('[data-show-when-name]');
+        if (!groups.length) return;
+
+        function updateGroup(group) {
+            var controlName = group.getAttribute('data-show-when-name');
+            var expectedValue = group.getAttribute('data-show-when-value');
+            var controller = inputSection.querySelector('[name="' + controlName + '"]');
+            var show = controller && controller.value === expectedValue;
+            group.style.display = show ? '' : 'none';
+            group.querySelectorAll('[name]').forEach(function(el) {
+                el.disabled = !show;
+                if (!show) el.value = '';
+            });
+        }
+
+        groups.forEach(function(group) {
+            updateGroup(group);
+            var controlName = group.getAttribute('data-show-when-name');
+            var controller = inputSection.querySelector('[name="' + controlName + '"]');
+            if (controller) {
+                controller.addEventListener('change', function() { updateGroup(group); });
+                controller.addEventListener('input', function() { updateGroup(group); });
+            }
+        });
     }
 
     // 事件委托：data-copy 按钮

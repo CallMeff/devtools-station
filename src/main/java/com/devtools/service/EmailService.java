@@ -4,7 +4,6 @@ import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.devtools.entity.EmailVerification;
 import com.devtools.mapper.EmailVerificationMapper;
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +13,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.function.BiConsumer;
 
 /**
  * 邮件发送服务
@@ -29,6 +29,9 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String from;
 
+    @Value("${app.mail.mock:false}")
+    private boolean mockMail;
+
     /** 验证码有效期（分钟） */
     private static final int CODE_EXPIRE_MINUTES = 5;
     /** 同一邮箱发送间隔（秒） */
@@ -37,23 +40,8 @@ public class EmailService {
     /**
      * 发送注册验证码
      */
-    public void sendRegisterCode(String email) {
-        // 检查发送频率限制
-        checkSendInterval(email, "register");
-
-        String code = RandomUtil.randomNumbers(6);
-
-        // 保存验证码到数据库
-        EmailVerification verification = new EmailVerification();
-        verification.setEmail(email);
-        verification.setCode(code);
-        verification.setPurpose("register");
-        verification.setVerified(0);
-        verification.setExpiresAt(LocalDateTime.now().plusMinutes(CODE_EXPIRE_MINUTES));
-        verificationMapper.insert(verification);
-
-        // 发送邮件
-        sendEmail(email, code);
+    public String sendRegisterCode(String email) {
+        return sendVerificationCode(email, "register", this::sendEmail, "注册");
     }
 
     /**
@@ -94,23 +82,8 @@ public class EmailService {
     /**
      * 发送重置密码验证码
      */
-    public void sendResetCode(String email) {
-        // 检查发送频率限制
-        checkSendInterval(email, "reset-password");
-
-        String code = RandomUtil.randomNumbers(6);
-
-        // 保存验证码到数据库
-        EmailVerification verification = new EmailVerification();
-        verification.setEmail(email);
-        verification.setCode(code);
-        verification.setPurpose("reset-password");
-        verification.setVerified(0);
-        verification.setExpiresAt(LocalDateTime.now().plusMinutes(CODE_EXPIRE_MINUTES));
-        verificationMapper.insert(verification);
-
-        // 发送邮件
-        sendResetEmail(email, code);
+    public String sendResetCode(String email) {
+        return sendVerificationCode(email, "reset-password", this::sendResetEmail, "重置密码");
     }
 
     /**
@@ -164,7 +137,7 @@ public class EmailService {
 
             mailSender.send(message);
             log.info("验证码邮件已发送至: {}", to);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             log.error("邮件发送失败: {}", e.getMessage(), e);
             throw new RuntimeException("邮件发送失败，请稍后重试");
         }
@@ -215,7 +188,7 @@ public class EmailService {
 
             mailSender.send(message);
             log.info("重置密码邮件已发送至: {}", to);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             log.error("重置密码邮件发送失败: {}", e.getMessage(), e);
             throw new RuntimeException("邮件发送失败，请稍后重试");
         }
@@ -271,5 +244,43 @@ public class EmailService {
                 throw new RuntimeException("请 " + waitSeconds + " 秒后再发送验证码");
             }
         }
+    }
+
+    private String sendVerificationCode(String email, String purpose, BiConsumer<String, String> sender, String label) {
+        checkSendInterval(email, purpose);
+
+        String code = RandomUtil.randomNumbers(6);
+        if (mockMail) {
+            saveVerification(email, code, purpose);
+            log.warn("邮件 mock 模式已启用，{}验证码已生成: email={}, code={}", label, maskEmail(email), code);
+            return code;
+        }
+
+        sender.accept(email, code);
+        saveVerification(email, code, purpose);
+        return null;
+    }
+
+    private void saveVerification(String email, String code, String purpose) {
+        EmailVerification verification = new EmailVerification();
+        verification.setEmail(email);
+        verification.setCode(code);
+        verification.setPurpose(purpose);
+        verification.setVerified(0);
+        verification.setExpiresAt(LocalDateTime.now().plusMinutes(CODE_EXPIRE_MINUTES));
+        verificationMapper.insert(verification);
+    }
+
+    private String maskEmail(String email) {
+        if (email == null || !email.contains("@")) {
+            return email;
+        }
+        int at = email.indexOf('@');
+        String name = email.substring(0, at);
+        String domain = email.substring(at);
+        if (name.length() <= 2) {
+            return name.charAt(0) + "***" + domain;
+        }
+        return name.charAt(0) + "***" + name.charAt(name.length() - 1) + domain;
     }
 }
