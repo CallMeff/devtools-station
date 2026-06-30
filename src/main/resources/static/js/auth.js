@@ -1137,7 +1137,7 @@
             clearAuth();
             updateUI();
             if (window.DevFavorites) window.DevFavorites.refresh();
-            showToast('已退出登录');
+            showToast(__('toast.logged_out'));
         },
 
         saveSettings: function(data) {

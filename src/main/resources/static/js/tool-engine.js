@@ -125,17 +125,49 @@
                 ], default: 'format' }
             ],
             exampleInput: '{"name":"DevTools","version":"1.0","features":["crypto","format","convert"]}',
+            outputAsHtml: true,
             formatOutput: function(data) {
                 if (data.error) {
-                    // 后端返回的错误信息（带 errorCode 的客户端预校验不会走到这里）
                     return data.error;
                 }
                 if (data.mode === 'validate') {
-                    // 校验模式：返回校验结果消息
                     return data.valid ? (data.message || '✅ JSON OK') : (data.error || '❌ JSON Invalid');
                 }
-                // format / minify 模式：返回格式化后的输出
-                return data.output || '';
+
+                var output = data.output || '';
+                // 压缩模式：直接返回纯文本
+                if (data.mode === 'minify') {
+                    return '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">' +
+                        '<button class="btn-sm" onclick="copyToClipboard(this)" data-copy="' + escapeHtml(output).replace(/"/g, '&quot;') + '">📋 复制</button>' +
+                        '</div><pre style="margin:0;white-space:pre-wrap;word-break:break-all;font-family:inherit;">' + escapeHtml(output) + '</pre>';
+                }
+
+                // 格式化模式：尝试解析为树形视图
+                try {
+                    var parsed = JSON.parse(output);
+                    var treeHtml = '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;gap:8px;">' +
+                        '<button class="btn-sm" onclick="expandAllJsonNodes()">📂 全部展开</button>' +
+                        '<button class="btn-sm" onclick="collapseAllJsonNodes()">📁 全部折叠</button>' +
+                        '<button class="btn-sm" onclick="copyToClipboard(this)" data-copy="' + escapeHtml(output).replace(/"/g, '&quot;') + '">📋 复制</button>' +
+                        '</div>';
+                    treeHtml += '<div class="json-tree" style="font-family:monospace;font-size:13px;line-height:1.6;">';
+                    treeHtml += renderJsonNode(parsed, '', true);
+                    treeHtml += '</div>';
+
+                    // 全局展开/折叠函数
+                    window.expandAllJsonNodes = function() {
+                        document.querySelectorAll('.json-toggle.collapsed').forEach(function(el) { el.click(); });
+                    };
+                    window.collapseAllJsonNodes = function() {
+                        document.querySelectorAll('.json-toggle:not(.collapsed)').forEach(function(el) { el.click(); });
+                    };
+
+                    return treeHtml;
+                } catch(e) {
+                    return '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">' +
+                        '<button class="btn-sm" onclick="copyToClipboard(this)" data-copy="' + escapeHtml(output).replace(/"/g, '&quot;') + '">📋 复制</button>' +
+                        '</div><pre style="margin:0;white-space:pre-wrap;word-break:break-all;font-family:inherit;">' + escapeHtml(output) + '</pre>';
+                }
             }
         },
         '/tools/format/sql': {
@@ -193,6 +225,21 @@
                 ], default: 'format' }
             ],
             formatOutput: function(data) { return data.output || data.error || ''; }
+        },
+
+        // ── Markdown 预览 (client-calc) ──
+        '/tools/format/markdown': {
+            type: 'client-calc',
+            inputs: [
+                { name: 'markdown', i18n: 'md.input', type: 'textarea', required: true, rows: 16, ph_i18n: 'md.ph' }
+            ],
+            options: [
+                { name: 'theme', i18n: 'md.theme', type: 'select', options: [
+                    { value: 'github', i18n: 'md.theme_github' },
+                    { value: 'dark', i18n: 'md.theme_dark' }
+                ], default: 'github' }
+            ],
+            calc: function() { return true; }
         },
 
         // ── 转换工具 ──
@@ -479,6 +526,25 @@
             }
         },
 
+        '/tools/converter/json-csv': {
+            type: 'client-calc',
+            inputs: [
+                { name: 'input', i18n: 'tool_label.input_text', type: 'textarea', required: true, rows: 12, ph_i18n: 'jsoncsv.ph' }
+            ],
+            options: [
+                { name: 'direction', i18n: 'jsoncsv.direction', type: 'select', options: [
+                    { value: 'json2csv', i18n: 'jsoncsv.json_to_csv' },
+                    { value: 'csv2json', i18n: 'jsoncsv.csv_to_json' }
+                ], default: 'json2csv' },
+                { name: 'delimiter', i18n: 'jsoncsv.delimiter', type: 'select', options: [
+                    { value: ',', label: '逗号 (,)' },
+                    { value: ';', label: '分号 (;)' },
+                    { value: '\t', label: '制表符 (Tab)' }
+                ], default: ',' }
+            ],
+            calc: function() { return true; }
+        },
+
         // ── 生成器 ──
         '/tools/generator/uuid': {
             type: 'form-generator',
@@ -556,7 +622,11 @@
             ],
             formatOutput: function(data) {
                 if (data.error) return data.error;
-                return '<div class="qrcode-container"><img src="' + data.qrcode + '" alt="QR Code" style="max-width:300px;"></div>';
+                return '<div class="qrcode-container">' +
+                    '<img src="' + data.qrcode + '" alt="QR Code" style="max-width:300px;display:block;margin:0 auto;">' +
+                    '<div style="text-align:center;margin-top:12px;">' +
+                    '<button class="btn-sm" onclick="downloadQRCode(\'' + data.qrcode + '\')">📥 下载二维码</button>' +
+                    '</div></div>';
             },
             outputAsHtml: true
         },
@@ -998,11 +1068,82 @@
                 ], default: 'encode' }
             ],
             formatOutput: function(data) { return data.output || data.error || ''; }
+        },
+        // ── 金融计算 ──
+        '/tools/finance/loan-calculator': {
+            type: 'client-calc',
+            inputs: [
+                { name: 'amount', i18n: 'loan.amount', type: 'number', required: true, step: '0.01', min: '1', default: '1000000' },
+                { name: 'rate', i18n: 'loan.rate', type: 'number', required: true, step: '0.01', min: '0.01', default: '4.9' },
+                { name: 'years', i18n: 'loan.years', type: 'number', required: true, step: '1', min: '1', max: '50', default: '30' },
+                { name: 'prepayAmount', i18n: 'loan.prepay_amount', type: 'number', step: '0.01', min: '0', default: '' },
+                { name: 'prepayMonth', i18n: 'loan.prepay_month', type: 'number', step: '1', min: '1', default: '' }
+            ],
+            options: [
+                { name: 'method', i18n: 'loan.method', type: 'select', options: [
+                    { value: 'both', i18n: 'loan.method_both' },
+                    { value: 'equal_installment', i18n: 'loan.method_ei' },
+                    { value: 'equal_principal', i18n: 'loan.method_ep' }
+                ], default: 'both' }
+            ],
+            calc: function() { return true; }  // 占位，实际计算见下方 loanCalc 函数
+        },
+        // ── 图像处理（纯浏览器端 OCR，无需安装任何软件）──
+        '/tools/image/ocr': {
+            type: 'ocr-client',
+            inputs: [
+                { name: 'file', i18n: 'ocr.file', type: 'file' }
+            ],
+            options: [
+                { name: 'language', i18n: 'ocr.language', type: 'select', options: [
+                    { value: 'chi_sim+eng', i18n: 'ocr.lang_chi_eng' },
+                    { value: 'chi_sim', i18n: 'ocr.lang_chi' },
+                    { value: 'eng', i18n: 'ocr.lang_eng' },
+                    { value: 'chi_sim+eng+jpn', i18n: 'ocr.lang_multi' }
+                ], default: 'chi_sim+eng' },
+                { name: 'mode', i18n: 'ocr.mode', type: 'select', options: [
+                    { value: 'single', i18n: 'ocr.mode_single' },
+                    { value: 'batch', i18n: 'ocr.mode_batch' }
+                ], default: 'single' }
+            ],
+            accept: '.png,.jpg,.jpeg,.gif,.bmp,.tiff,.tif,.webp',
+            maxFileSize: 10 * 1024 * 1024,
+            maxBatchFiles: 20,
+            showGuide: true,
+            guideGroup: 'ocr',
+            ocrClient: true,
+            formatOutput: function(data) {
+                if (data.error) return '<div class="ocr-error">' + escapeHtml(data.error) + '</div>';
+                if (data.text !== undefined) {
+                    var bytes = new Blob([data.text]).size;
+                    return '<div class="ocr-result-header">' +
+                        '<span>📄 ' + data.fileName + '</span>' +
+                        '<span class="ocr-meta">' + data.textLength + ' 字符 / ' + data.lineCount + ' 行 / ' + formatFileSize(bytes) + '</span>' +
+                        '</div>' +
+                        '<div class="ocr-text-wrap">' +
+                        '<pre class="ocr-text">' + escapeHtml(data.text) + '</pre>' +
+                        '</div>' +
+                        '<button class="btn-sm" style="margin-top:8px;" onclick="copyOcrResult(this)" data-text="' + escapeHtml(data.text).replace(/"/g, '&quot;') + '">📋 复制文字</button>';
+                }
+                // batch result
+                if (data.items) {
+                    return renderOcrBatchResult(data);
+                }
+                return '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            },
+            outputAsHtml: true
         }
     };
 
     var config = TOOL_CONFIGS[TOOL.route];
     if (!config) {
+        // LOCAL_ONLY: 纯前端工具，不需要工具引擎渲染
+        if (TOOL.apiPath === 'LOCAL_ONLY') {
+            document.getElementById('toolInputSection').innerHTML = '';
+            document.getElementById('toolOutputSection').style.display = 'block';
+            document.getElementById('toolOutput').innerHTML = '<div class="loading-placeholder" style="text-align:center;padding:40px;">🔧 ' + __('tool.loading') + '</div>';
+            return;
+        }
         document.getElementById('toolInputSection').innerHTML = '<div class="loading-placeholder">' + __('engine.config_not_found') + '</div>';
         return;
     }
@@ -1073,6 +1214,70 @@
                 html += '</div>';
                 html += '</div>';
             });
+        } else if (config.type === 'ocr-upload' || config.type === 'ocr-client') {
+            // OCR 功能引导
+            if (config.showGuide) {
+                var guideG = config.guideGroup || 'ocr';
+                html += '<div class="excel-guide-panel">';
+                html += '<div class="excel-guide-title">📖 ' + __(guideG + '.guide_title') + '</div>';
+                html += '<div class="excel-guide-steps">';
+                html += '<div class="excel-guide-step">';
+                html += '<span class="excel-step-num">1</span>';
+                html += '<span class="excel-step-text">' + __(guideG + '.guide_step1') + '</span>';
+                html += '</div>';
+                html += '<div class="excel-guide-step">';
+                html += '<span class="excel-step-num">2</span>';
+                html += '<span class="excel-step-text">' + __(guideG + '.guide_step2') + '</span>';
+                html += '</div>';
+                html += '<div class="excel-guide-step">';
+                html += '<span class="excel-step-num">3</span>';
+                html += '<span class="excel-step-text">' + __(guideG + '.guide_step3') + '</span>';
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+
+            // OCR 上传区域 — 单张模式
+            html += '<div id="ocrSingleArea">';
+            html += '<div class="input-group">';
+            html += '<label data-i18n="ocr.file">' + __('ocr.file') + '</label>';
+            html += '<div class="file-upload-area" id="fileUploadArea">';
+            html += '<input type="file" name="file" id="fileInput"';
+            if (config.accept) html += ' accept="' + config.accept + '"';
+            html += ' style="display:none;" onchange="onFileSelected(this)">';
+            html += '<div class="file-upload-label" onclick="document.getElementById(\'fileInput\').click()">';
+            html += '<span class="file-upload-icon">🖼️</span>';
+            html += '<span class="file-upload-text" data-i18n="ocr.select_file">' + __('ocr.select_file') + '</span>';
+            html += '<span class="file-upload-hint" data-i18n="ocr.supported_formats">' + __('ocr.supported_formats') + '</span>';
+            html += '</div>';
+            html += '<div class="file-selected-info" id="fileSelectedInfo" style="display:none;">';
+            html += '<span class="file-name" id="selectedFileName"></span>';
+            html += '<button type="button" class="file-clear-btn" onclick="clearFileSelection()">✕</button>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+
+            // OCR 上传区域 — 批量模式（默认隐藏）
+            html += '<div id="ocrBatchArea" style="display:none;">';
+            html += '<div class="input-group">';
+            html += '<label data-i18n="ocr.files">' + __('ocr.files') + '</label>';
+            html += '<div class="file-upload-area" id="fileUploadAreaBatch">';
+            html += '<input type="file" name="files" id="fileInputBatch" multiple';
+            if (config.accept) html += ' accept="' + config.accept + '"';
+            html += ' style="display:none;" onchange="onBatchFilesSelected(this)">';
+            html += '<div class="file-upload-label" onclick="document.getElementById(\'fileInputBatch\').click()">';
+            html += '<span class="file-upload-icon">📚</span>';
+            html += '<span class="file-upload-text" data-i18n="ocr.select_files">' + __('ocr.select_files') + '</span>';
+            html += '<span class="file-upload-hint">' + __('ocr.batch_hint') + '</span>';
+            html += '</div>';
+            html += '<div class="file-selected-info" id="fileSelectedInfoBatch" style="display:none;">';
+            html += '<span class="file-name" id="selectedFileNameBatch"></span>';
+            html += '<button type="button" class="file-clear-btn" onclick="clearBatchFileSelection()">✕</button>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
         } else if (config.type === 'dual-input') {
             html += '<div class="input-row">';
             config.inputs.forEach(function(inp, i) {
@@ -1223,6 +1428,44 @@
         inputSection.innerHTML = html;
         bindConditionalInputs();
 
+        // Markdown 预览：输入时自动实时刷新
+        if (TOOL.route === '/tools/format/markdown') {
+            var mdArea = document.querySelector('[name="markdown"]');
+            if (mdArea) {
+                var debounceTimer;
+                mdArea.addEventListener('input', function() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(function() {
+                        executeTool();
+                    }, 400);
+                });
+                // 初始加载示例内容
+                if (!mdArea.value) {
+                    mdArea.value = __(mdArea.getAttribute('data-i18n-placeholder') || 'md.ph');
+                }
+            }
+        }
+
+        // OCR 模式切换：单张 ↔ 批量
+        if (config.type === 'ocr-upload' || config.type === 'ocr-client') {
+            var modeSelect = document.getElementById('option_mode');
+            var singleArea = document.getElementById('ocrSingleArea');
+            var batchArea = document.getElementById('ocrBatchArea');
+            if (modeSelect && singleArea && batchArea) {
+                var toggleOcrMode = function() {
+                    if (modeSelect.value === 'batch') {
+                        singleArea.style.display = 'none';
+                        batchArea.style.display = 'block';
+                    } else {
+                        singleArea.style.display = 'block';
+                        batchArea.style.display = 'none';
+                    }
+                };
+                modeSelect.addEventListener('change', toggleOcrMode);
+                toggleOcrMode();
+            }
+        }
+
         // 只读类型自动加载
         if (config.type === 'readonly' && config.autoLoad) {
             executeTool();
@@ -1346,6 +1589,66 @@
             return;
         }
 
+        // OCR 识别：纯浏览器端 Tesseract.js，无需安装任何软件
+        if (config.type === 'ocr-upload' || config.type === 'ocr-client') {
+            var modeEl = document.getElementById('option_mode');
+            var isBatch = modeEl && modeEl.value === 'batch';
+            var fileInput = isBatch ? document.getElementById('fileInputBatch') : document.getElementById('fileInput');
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                if (btn) { btn.disabled = false; btn.innerHTML = __('engine.execute'); }
+                outputDiv.innerHTML = '';
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '⚠ ' + __('ocr.no_file');
+                return;
+            }
+            var maxSize = config.maxFileSize || 10 * 1024 * 1024;
+            if (isBatch && fileInput.files.length > (config.maxBatchFiles || 20)) {
+                if (btn) { btn.disabled = false; btn.innerHTML = __('engine.execute'); }
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '⚠ ' + __('ocr.too_many_files').replace('{0}', config.maxBatchFiles);
+                return;
+            }
+            for (var fi = 0; fi < fileInput.files.length; fi++) {
+                if (fileInput.files[fi].size > maxSize) {
+                    if (btn) { btn.disabled = false; btn.innerHTML = __('engine.execute'); }
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = '⚠ ' + __('ocr.file_too_large').replace('{0}', fileInput.files[fi].name);
+                    return;
+                }
+            }
+
+            var langEl = document.getElementById('option_language');
+            var lang = langEl ? langEl.value : 'chi_sim+eng';
+
+            outputDiv.className = 'tool-output tool-output-html';
+            outputDiv.innerHTML = '<div style="text-align:center;padding:20px;" id="ocrProgressWrap">' +
+                // 阶段标题
+                '<div id="ocrLoadTitle" style="font-size:17px;font-weight:600;margin-bottom:14px;color:#e0e7ff;">⏳ 准备中...</div>' +
+                // 进度条 + 百分比
+                '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">' +
+                '<div style="flex:1;height:8px;background:#374151;border-radius:4px;overflow:hidden;">' +
+                '<div id="ocrLoadBar" class="ocr-progress-bar" style="width:2%;height:100%;border-radius:4px;transition:width 0.4s ease;"></div>' +
+                '</div>' +
+                '<div id="ocrPercent" style="font-size:14px;font-weight:700;color:#a5b4fc;min-width:36px;text-align:right;">2%</div>' +
+                '</div>' +
+                // 阶段指示器（5个步骤点）
+                '<div id="ocrPhase" style="display:flex;align-items:center;justify-content:center;gap:6px;margin:10px 0;font-size:12px;flex-wrap:wrap;"></div>' +
+                // 详情信息 + 耗时
+                '<div style="display:flex;justify-content:center;align-items:center;gap:16px;margin-top:4px;">' +
+                '<div id="ocrLoadInfo" style="font-size:12px;color:#9ca3af;">初始化 OCR 引擎...</div>' +
+                '<div id="ocrElapsed" style="font-size:12px;color:#6b7280;display:none;"></div>' +
+                '</div>' +
+                // 取消按钮
+                '<button id="ocrAbortBtn" onclick="abortOcr()" style="margin-top:14px;padding:6px 20px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;transition:opacity 0.2s;">⏹ 取消识别</button>' +
+                '</div>';
+            outputSection.style.display = 'block';
+            errorDiv.style.display = 'none';
+
+            var files = Array.from(fileInput.files);
+            ocrClientRecognize(files, lang, isBatch, btn, outputDiv, errorDiv, config);
+            return;
+        }
+
         var params = {};
 
         // 收集所有输入
@@ -1378,6 +1681,22 @@
                 .map(function(e) { return encodeURIComponent(e[0]) + '=' + encodeURIComponent(e[1]); })
                 .join('&');
             if (qs) url += '?' + qs;
+        }
+
+        // 纯客户端计算类型（如贷款计算器）
+        if (config.type === 'client-calc') {
+            try {
+                var result = doClientCalc(TOOL.route, params);
+                if (btn) { btn.disabled = false; btn.innerHTML = __('engine.execute'); }
+                outputSection.style.display = 'block';
+                outputDiv.className = 'tool-output tool-output-html';
+                outputDiv.innerHTML = result;
+            } catch (e) {
+                if (btn) { btn.disabled = false; btn.innerHTML = __('engine.execute'); }
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = '❌ ' + e.message;
+            }
+            return;
         }
 
         // 只读类型的加载提示
@@ -1452,6 +1771,71 @@
         });
     }
 
+    // ============ JSON 树形视图渲染 ============
+    function renderJsonNode(obj, key, isLast, indent) {
+        indent = indent || 0;
+        var pad = '';
+        for (var i = 0; i < indent; i++) pad += '  ';
+
+        var html = '';
+        var type = Array.isArray(obj) ? 'array' : (obj !== null && typeof obj === 'object' ? 'object' : 'primitive');
+
+        if (type === 'primitive') {
+            var dispKey = key !== undefined && key !== null && key !== '' ? '<span style="color:#7c3aed;">"' + escapeHtml(String(key)) + '"</span>: ' : '';
+            var val;
+            if (obj === null) val = '<span style="color:#ef4444;">null</span>';
+            else if (typeof obj === 'string') val = '<span style="color:#059669;">"' + escapeHtml(obj) + '"</span>';
+            else if (typeof obj === 'boolean') val = '<span style="color:#d97706;">' + obj + '</span>';
+            else val = '<span style="color:#2563eb;">' + obj + '</span>';
+            html += '<div>' + pad + dispKey + val + '</div>';
+            return html;
+        }
+
+        if (type === 'object' || type === 'array') {
+            var entries = type === 'array' ? obj.map(function(v, i) { return { key: i, value: v }; }) : Object.keys(obj).map(function(k) { return { key: k, value: obj[k] }; });
+            var isEmpty = entries.length === 0;
+
+            if (isEmpty) {
+                var label = type === 'array' ? '[]' : '{}';
+                if (key !== undefined && key !== null && key !== '') {
+                    html += '<div class="json-node">' + pad + '<span class="json-toggle collapsed" onclick="toggleJsonNode(this)">▶</span> <span style="color:#7c3aed;">"' + escapeHtml(String(key)) + '"</span>: ' + label + '</div>';
+                } else {
+                    html += '<div class="json-node">' + pad + label + '</div>';
+                }
+                return html;
+            }
+
+            var displayKey = (key !== undefined && key !== null && key !== '') ? '<span style="color:#7c3aed;">"' + escapeHtml(String(key)) + '"</span>: ' : '';
+            var bracket = type === 'array' ? '[' : '{';
+            var closeBracket = type === 'array' ? ']' : '}';
+
+            html += '<div class="json-node">' + pad + '<span class="json-toggle collapsed" onclick="toggleJsonNode(this)" style="cursor:pointer;user-select:none;">▶</span> ' + displayKey + '<span class="json-bracket">' + bracket + '</span>';
+            html += '<div class="json-children" style="display:none;">';
+            entries.forEach(function(entry, idx) {
+                var childIsLast = idx === entries.length - 1;
+                html += renderJsonNode(entry.value, entry.key, childIsLast, indent + 1);
+            });
+            html += pad + '<span class="json-bracket">' + closeBracket + '</span>';
+            html += '</div>';
+            html += '</div>';
+        }
+
+        return html;
+    }
+
+    window.toggleJsonNode = function(el) {
+        var children = el.parentElement.querySelector('.json-children');
+        if (!children) return;
+        if (el.classList.contains('collapsed')) {
+            el.classList.remove('collapsed');
+            el.textContent = '▼';
+            children.style.display = 'block';
+        } else {
+            el.classList.add('collapsed');
+            el.textContent = '▶';
+            children.style.display = 'none';
+        }
+    };
     // 事件委托：data-copy 按钮
     document.addEventListener('click', function(e) {
         var btn = e.target.closest('[data-copy]');
@@ -1594,6 +1978,11 @@
     };
 
     window.clearResult = function() {
+        // 中止正在进行的 OCR（如果有）
+        if (_ocrAbortCtrl && typeof _ocrAbortCtrl.cancel === 'function') {
+            _ocrAbortCtrl.cancel();
+            _ocrAbortCtrl = null;
+        }
         outputSection.style.display = 'none';
         errorDiv.style.display = 'none';
         outputDiv.innerHTML = '';
@@ -1820,6 +2209,701 @@ window.clearFileSelection = function() {
     if (label) label.style.display = 'flex';
 };
 
+// ============ OCR 批量文件选择 ============
+window.onBatchFilesSelected = function(input) {
+    var info = document.getElementById('fileSelectedInfoBatch');
+    var nameEl = document.getElementById('selectedFileNameBatch');
+    var label = document.querySelector('#ocrBatchArea .file-upload-label');
+    if (input.files && input.files.length > 0) {
+        if (nameEl) nameEl.textContent = '已选择 ' + input.files.length + ' 个文件 (' + formatFileSize(Array.from(input.files).reduce(function(s,f){return s+f.size;},0)) + ')';
+        if (info) info.style.display = 'flex';
+        if (label) label.style.display = 'none';
+    }
+};
+
+window.clearBatchFileSelection = function() {
+    var fileInput = document.getElementById('fileInputBatch');
+    var info = document.getElementById('fileSelectedInfoBatch');
+    var label = document.querySelector('#ocrBatchArea .file-upload-label');
+    if (fileInput) fileInput.value = '';
+    if (info) info.style.display = 'none';
+    if (label) label.style.display = 'flex';
+};
+
+// ============ Tesseract.js 客户端 OCR（纯浏览器端，无需安装）============
+var _tesseractLoading = false;
+var _tesseractLoaded = false;
+var _tesseractLoadStart = 0;       // 开始加载的时间戳，用于检测卡死
+var _tesseractScriptElem = null;   // 保存 script 元素引用，超时时可移除
+
+function loadTesseract(callback) {
+    if (_tesseractLoaded) { callback(null); return; }
+
+    // 如果正在加载中，用轮询等待（有超时保护）
+    if (_tesseractLoading) {
+        var pollStart = Date.now();
+        var check = setInterval(function() {
+            if (_tesseractLoaded) {
+                clearInterval(check);
+                callback(null);
+                return;
+            }
+            // 轮询超过 30 秒，认为加载已卡死，重置状态
+            if (Date.now() - pollStart > 30000) {
+                clearInterval(check);
+                _tesseractLoading = false;
+                // 尝试移除可能卡住的 script 标签
+                if (_tesseractScriptElem && _tesseractScriptElem.parentNode) {
+                    try { _tesseractScriptElem.parentNode.removeChild(_tesseractScriptElem); } catch(e) {}
+                }
+                _tesseractScriptElem = null;
+                callback(new Error('Tesseract.js 加载超时（30s），请检查网络连接后刷新重试'));
+            }
+        }, 100);
+        return;
+    }
+
+    // 防止 _tesseractLoading 卡死在 true（上次加载异常后没重置）
+    if (_tesseractLoadStart && Date.now() - _tesseractLoadStart > 60000) {
+        _tesseractLoading = false;
+    }
+
+    _tesseractLoading = true;
+    _tesseractLoadStart = Date.now();
+
+    var script = document.createElement('script');
+    _tesseractScriptElem = script;
+    // 从本地服务器加载，无需依赖外部 CDN
+    script.src = '/ocr/tesseract/tesseract.min.js';
+
+    // 10 秒超时：本地文件加载应该很快，超过 10 秒即为异常
+    var loadTimeout = setTimeout(function() {
+        if (_tesseractLoading && !_tesseractLoaded) {
+            _tesseractLoading = false;
+            if (script.parentNode) {
+                try { script.parentNode.removeChild(script); } catch(e) {}
+            }
+            _tesseractScriptElem = null;
+            callback(new Error('Tesseract.js 加载超时（10s），请刷新页面重试'));
+        }
+    }, 10000);
+
+    script.onload = function() {
+        clearTimeout(loadTimeout);
+        _tesseractLoaded = true;
+        _tesseractLoading = false;
+        _tesseractScriptElem = null;
+        callback(null);
+    };
+    script.onerror = function() {
+        clearTimeout(loadTimeout);
+        _tesseractLoading = false;
+        _tesseractScriptElem = null;
+        callback(new Error('无法加载 Tesseract.js，请刷新页面重试'));
+    };
+    document.head.appendChild(script);
+}
+
+/**
+ * 图片压缩预处理 — 用于 OCR 前自动缩小大图以提升识别速度
+ * Tesseract.js (WASM) 对高分辨率图片极慢，压缩后可提速 5-10 倍
+ *
+ * @param {File|Blob} file - 原始图片文件
+ * @param {Object} opts - 配置选项
+ * @param {number} opts.maxWidth - 最大宽度（默认 2000）
+ * @param {number} opts.maxHeight - 最大高度（默认 2000）
+ * @param {number} opts.quality - JPEG 质量（默认 0.85）
+ * @returns {Promise<{blob: Blob, origW: number, origH: number, newW: number, newH: number}>}
+ */
+function compressImageForOcr(file, opts) {
+    opts = Object.assign({ maxWidth: 2000, maxHeight: 2000, quality: 0.85 }, opts || {});
+    return new Promise(function(resolve, reject) {
+        var img = new Image();
+        img.onload = function() {
+            var origW = img.naturalWidth || img.width;
+            var origH = img.naturalHeight || img.height;
+            var scale = Math.min(1, opts.maxWidth / origW, opts.maxHeight / origH);
+            // 如果图片已经足够小，直接返回原文件（避免不必要的重编码开销）
+            if (scale >= 1) {
+                resolve({
+                    blob: file instanceof File ? file : new Blob([file], { type: 'image/png' }),
+                    origW: origW,
+                    origH: origH,
+                    newW: origW,
+                    newH: origH,
+                    compressed: false
+                });
+                URL.revokeObjectURL(img.src);
+                return;
+            }
+            var newW = Math.round(origW * scale);
+            var newH = Math.round(origH * scale);
+            var canvas = document.createElement('canvas');
+            canvas.width = newW;
+            canvas.height = newH;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, newW, newH);
+            // 使用 JPEG 格式输出（体积更小、OCR 效果几乎无差异）
+            canvas.toBlob(function(blob) {
+                URL.revokeObjectURL(img.src);
+                if (!blob) {
+                    reject(new Error('图片编码失败'));
+                    return;
+                }
+                resolve({
+                    blob: blob,
+                    origW: origW,
+                    origH: origH,
+                    newW: newW,
+                    newH: newH,
+                    compressed: true
+                });
+            }, 'image/jpeg', opts.quality);
+        };
+        img.onerror = function(e) {
+            URL.revokeObjectURL(img.src);
+            reject(new Error('图片加载失败'));
+        };
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+function ocrClientRecognize(files, lang, isBatch, btn, outputDiv, errorDiv, config) {
+    var loadBar = document.getElementById('ocrLoadBar');
+    var loadInfo = document.getElementById('ocrLoadInfo');
+    var loadTitle = document.getElementById('ocrLoadTitle');
+    var ocrPhase = document.getElementById('ocrPhase');
+    var pctEl = document.getElementById('ocrPercent');
+    var elapsedEl = document.getElementById('ocrElapsed');
+    var worker = null;
+    var finished = false;
+    var timeoutId = null;
+    var trickleId = null;
+    var startTime = Date.now();
+    var currentPct = 0;
+    var TIMEOUT_MS = 120000; // 2 分钟超时兜底
+
+    // ── 后端 OCR 降级函数 ──
+
+    /** 检测后端 Tesseract 是否可用 */
+    function checkBackendOcr() {
+        return fetch('/api/tools/ocr/status', { method: 'GET' })
+            .then(function(r) { return r.json(); })
+            .then(function(data) { return data.code === 200 && data.data && data.data.available; })
+            .catch(function() { return false; });
+    }
+
+    /** 通过后端 API 执行单张 OCR */
+    function backendOcrSingle(file) {
+        return new Promise(function(resolve, reject) {
+            var formData = new FormData();
+            formData.append('file', file);
+            formData.append('language', lang);
+            fetch('/api/tools/ocr/single', {
+                method: 'POST',
+                body: formData
+            }).then(function(r) { return r.json(); }).then(function(res) {
+                if (res.code === 200) resolve(res.data);
+                else reject(new Error(res.message || '后端 OCR 失败'));
+            }).catch(reject);
+        });
+    }
+
+    /** 通过后端 API 执行批量 OCR */
+    function backendOcrBatch(fileList) {
+        return new Promise(function(resolve, reject) {
+            var formData = new FormData();
+            fileList.forEach(function(f) { formData.append('files', f); });
+            formData.append('language', lang);
+            fetch('/api/tools/ocr/batch', {
+                method: 'POST',
+                body: formData
+            }).then(function(r) { return r.json(); }).then(function(res) {
+                if (res.code === 200) resolve(res.data);
+                else reject(new Error(res.message || '后端 OCR 批量失败'));
+            }).catch(reject);
+        });
+    }
+
+    // ── 阶段可视化：5 个步骤点 ──
+    var phaseSteps = [
+        { label: '加载引擎', icon: '📦' },
+        { label: '编译核心', icon: '⚙️' },
+        { label: '加载语言', icon: '🌐' },
+        { label: '识别文字', icon: '🔍' },
+        { label: '完成',     icon: '✅' }
+    ];
+    function renderPhase(activeIdx) {
+        if (!ocrPhase) return;
+        var h = '';
+        for (var p = 0; p < phaseSteps.length; p++) {
+            var cls = 'ocr-phase-dot';
+            if (p < activeIdx) cls += ' ocr-phase-done';
+            else if (p === activeIdx) cls += ' ocr-phase-active';
+            else cls += ' ocr-phase-pending';
+            var icon = p < activeIdx ? '✅' : (p === activeIdx ? phaseSteps[p].icon : '○');
+            h += '<span style="display:inline-flex;align-items:center;gap:4px;">' +
+                 '<span class="' + cls + '">' + icon + '</span>' +
+                 '<span style="color:' + (p <= activeIdx ? '#e0e7ff' : '#6b7280') + '">' + phaseSteps[p].label + '</span>' +
+                 '</span>';
+            if (p < phaseSteps.length - 1) h += '<span style="color:#4b5563;">→</span>';
+        }
+        ocrPhase.innerHTML = h;
+    }
+    // 初始渲染所有步骤为待处理
+    renderPhase(-1);
+
+    // ── 主流程：纯后端模式 ──
+    // WASM 方案已验证不可行（高分辨率图片超时/假死），改为仅使用后端 Tesseract CLI
+
+    updateUI(2, '⏳ 正在检测服务端 OCR 引擎...', '准备开始识别...');
+
+    checkBackendOcr().then(function(backendAvailable) {
+        if (finished) return;
+        if (backendAvailable) {
+            // ✅ 后端可用 — 直接使用后端 Tesseract CLI
+            stopTrickle();
+            updateUI(5, '🖥️ 使用服务端 OCR 引擎', 'Tesseract CLI 已就绪，开始识别...');
+            renderPhase(3);
+
+            startTrickle(10, 80, 5000, '服务端正在处理图片...');
+
+            var batchPromise = isBatch ? backendOcrBatch(files) : backendOcrSingle(files[0]);
+            batchPromise.then(function(data) {
+                if (finished) return;
+                finishOk(function() {
+                    outputDiv.className = 'tool-output tool-output-html';
+                    outputDiv.innerHTML = config.formatOutput(data);
+                });
+            }).catch(function(err) {
+                if (finished) return;
+                finishFail('服务端 OCR 失败: ' + (err.message || err));
+            });
+
+        } else {
+            // ❌ 后端不可用 — 给出明确提示（不再尝试慢速 WASM）
+            stopTrickle();
+            finishFail(
+                '⚠️ 服务端 OCR 引擎不可用。\n\n' +
+                '请在此服务器上安装 Tesseract OCR：\n' +
+                'Windows: https://github.com/UB-Mannheim/tesseract/wiki\n' +
+                '  安装时勾选「中文简体」和「英文」语言包\n\n' +
+                '安装完成后刷新页面即可使用。'
+            );
+        }
+    }).catch(function() {
+        if (finished) return;
+        finishFail('无法连接到服务端，请检查网络或刷新页面重试。');
+    });
+
+    // ── 浏览器端 Tesseract.js 初始化 + 识别（带超时降级）──
+    function initBrowserOcr() {
+        loadTesseract(function(err) {
+            stopTrickle();
+            if (err) { finishFail(err.message || 'OCR 引擎加载失败'); return; }
+            if (finished) return;
+
+            updateUI(5, '📦 引擎脚本已加载', '准备创建 OCR 工作线程...');
+            renderPhase(0);
+            startTrickle(5, 12, 5000, '正在编译 OCR 核心引擎 (WebAssembly)...');
+
+            var LOCAL_BASE = '/ocr/tesseract/';
+            var LOCAL_LANG = '/ocr/tessdata/';
+            var workerPromise = Tesseract.createWorker(lang, 1, {
+                workerPath: LOCAL_BASE + 'worker.min.js',
+                corePath: LOCAL_BASE,
+                langPath: LOCAL_LANG,
+                logger: function(m) {
+                    if (finished) return;
+                    stopTrickle();
+                    var st = m.status || '';
+                    var prog = m.progress || 0;
+                    if (st.indexOf('loading tesseract') >= 0 || st.indexOf('Loading tesseract') >= 0) {
+                        updateUI(12 + prog * 8, '⚙️ 正在编译 OCR 核心...',
+                            '编译 WebAssembly 引擎 (' + Math.round(prog * 100) + '%)');
+                        if (prog > 0.3) renderPhase(1);
+                    } else if (st.indexOf('initializ') >= 0) {
+                        updateUI(20, '🔧 初始化引擎完成', '即将加载语言包...');
+                        renderPhase(2);
+                    } else if (st.indexOf('loading') >= 0 || st.indexOf('Loading') >= 0) {
+                        var name = st.replace(/^[Ll]oading /, '');
+                        updateUI(20 + prog * 8, '🌐 正在加载语言包...',
+                            name + ' (' + Math.round(prog * 100) + '%)');
+                        renderPhase(2);
+                    }
+                }
+            });
+
+            workerPromise.then(function(w) {
+                stopTrickle();
+                worker = w;
+                if (finished) return;
+
+                updateUI(28, '✅ OCR 引擎就绪', '开始识别图片文字...');
+                renderPhase(3);
+
+                if (isBatch) processBatch(); else processSingle(files[0]);
+            }).catch(function(err) {
+                finishFail('OCR 引擎初始化失败: ' + (err.message || err) + '。可刷新页面重试');
+            });
+        });
+    }
+
+    // 浏览器端单文件识别（含自动图片压缩 + 超时降级）
+    function processSingle(file) {
+        updateUI(30, '🔍 正在准备: ' + file.name, '浏览器端 OCR 进行中...');
+        startTrickle(30, 35, 3000, '正在压缩大图以加速识别...');
+
+        compressImageForOcr(file, { maxWidth: 2000, maxHeight: 2000 }).then(function(compressed) {
+            if (finished) return;
+            var sizeInfo = compressed.compressed
+                ? ' (' + compressed.origW + 'x' + compressed.origH + ' → ' + compressed.newW + 'x' + compressed.newH + ')'
+                : '';
+            stopTrickle();
+            updateUI(34, '🔍 [浏览器] 识别中: ' + file.name + sizeInfo, 'WASM 文字识别...');
+
+            // ⚡ 关键改进：设置 WASM 识别超时（30s），超时自动降级到后端
+            var wasmTimeout = setTimeout(function() {
+                if (finished) return;
+                console.warn('[OCR] WASM 识别超时(30s)，尝试降级到后端...');
+                updateUI(36, '⚠️ 浏览器端较慢，切换到服务端...', '正在通过服务端重试...');
+
+                // 终止 WASM worker
+                if (worker) { worker.terminate().catch(function(){}); worker = null; }
+
+                // 尝试后端降级
+                checkBackendOcr().then(function(available) {
+                    if (!available || finished) {
+                        if (!finished) finishFail('浏览器端和服务端均不可用。请安装 Tesseract 或缩小图片后重试');
+                        return;
+                    }
+                    backendOcrSingle(file).then(function(data) {
+                        if (finished) return;
+                        finishOk(function() {
+                            outputDiv.className = 'tool-output tool-output-html';
+                            outputDiv.innerHTML = config.formatOutput(data);
+                        });
+                    }).catch(function(e) {
+                        if (finished) return;
+                        finishFail('识别失败: ' + (e.message || e));
+                    });
+                });
+            }, 30000);
+
+            var recognizeOpts = {
+                tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+                logger: function(m) {
+                    if (finished) return;
+                    if (m.status === 'recognizing text') {
+                        clearTimeout(wasmTimeout);
+                        stopTrickle();
+                        updateUI(35 + m.progress * 60, '🔍 [浏览器] 识别中: ' + file.name,
+                            '文字识别中 ' + Math.round(m.progress * 100) + '%');
+                    }
+                }
+            };
+            worker.recognize(compressed.blob, recognizeOpts).then(function(result) {
+                clearTimeout(wasmTimeout);
+                if (finished) return;
+                var text = (result.data.text || '').trim();
+                var data = {
+                    fileName: file.name, fileSize: file.size, text: text,
+                    textLength: text.length,
+                    lineCount: text ? text.split('\n').length : 0,
+                    language: lang, success: true
+                };
+                finishOk(function() {
+                    outputDiv.className = 'tool-output tool-output-html';
+                    outputDiv.innerHTML = config.formatOutput(data);
+                });
+            }).catch(function(err) {
+                clearTimeout(wasmTimeout);
+                if (finished) return;
+                finishFail('浏览器端识别失败: ' + (err.message || err));
+            });
+        }).catch(function(err) {
+            if (finished) return;
+            finishFail('图片预处理失败: ' + (err.message || err));
+        });
+    }
+
+    // 浏览器端批量识别（复用同一个 Worker，含压缩）
+    function processBatch() {
+        var items = [];
+        var successCount = 0, failCount = 0, totalChars = 0;
+        var startTime = Date.now();
+        var totalFiles = files.length;
+
+        function processNext(index) {
+            if (finished || index >= totalFiles) {
+                if (!finished) {
+                    var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    var result = {
+                        items: items, total: totalFiles,
+                        successCount: successCount, failCount: failCount,
+                        totalChars: totalChars, elapsed: elapsed + 's', language: lang
+                    };
+                    window.__ocrBatchData = result;
+                    finishOk(function() {
+                        outputDiv.className = 'tool-output tool-output-html';
+                        outputDiv.innerHTML = renderOcrBatchResult(result);
+                    });
+                }
+                return;
+            }
+            var file = files[index];
+            var pctBase = 30 + (index / totalFiles) * 65;
+            updateUI(pctBase, '🔍 预处理 (' + (index + 1) + '/' + totalFiles + '): ' + file.name,
+                '批量 OCR 进行中，已完成 ' + index + ' / ' + totalFiles + ' 个文件');
+
+            compressImageForOcr(file, { maxWidth: 2000, maxHeight: 2000 }).then(function(compressed) {
+                if (finished) return;
+                updateUI(pctBase, '🔍 识别中 (' + (index + 1) + '/' + totalFiles + '): ' + file.name,
+                    (compressed.compressed ? '已压缩 → ' : '') + '[浏览器] 正在识别...');
+
+                worker.recognize(compressed.blob, {
+                    tessedit_pageseg_mode: Tesseract.PSM.AUTO
+                }).then(function(result) {
+                    if (finished) return;
+                    var text = (result.data.text || '').trim();
+                    items.push({ fileName: file.name, fileSize: file.size, text: text, textLength: text.length, success: true });
+                    successCount++;
+                    totalChars += text.length;
+                    processNext(index + 1);
+                }).catch(function(err) {
+                    if (finished) return;
+                    items.push({ fileName: file.name, fileSize: file.size, error: '识别失败: ' + (err.message || err), success: false });
+                    failCount++;
+                    processNext(index + 1);
+                });
+            }).catch(function(err) {
+                if (finished) return;
+                items.push({ fileName: file.name, fileSize: file.size, error: '图片预处理失败: ' + (err.message || err), success: false });
+                failCount++;
+                processNext(index + 1);
+            });
+        }
+        processNext(0);
+    }
+
+    // ── 耗时更新循环 ──
+    function updateElapsed() {
+        if (finished) return;
+        var s = Math.round((Date.now() - startTime) / 1000);
+        if (elapsedEl) {
+            elapsedEl.style.display = 'inline';
+            elapsedEl.textContent = '⏱ 已耗时 ' + s + ' 秒';
+        }
+    }
+    var elapsedTimer = setInterval(updateElapsed, 1000);
+    updateElapsed();
+
+    // ── 统一的进度更新 ──
+    function updateUI(pct, title, info, phaseHtml, elapsed) {
+        currentPct = Math.max(currentPct, pct);
+        if (loadBar) {
+            loadBar.style.width = Math.min(Math.round(currentPct), 100) + '%';
+            // 未完成时使用流动色，完成时变绿色
+            if (currentPct >= 100) {
+                loadBar.style.background = 'linear-gradient(90deg,#10b981,#34d399)';
+            } else if (currentPct < 5) {
+                loadBar.style.background = 'linear-gradient(90deg,#6366f1,#8b5cf6,#6366f1)';
+                loadBar.style.backgroundSize = '200% 100%';
+                loadBar.style.animation = 'ocrPulse 1.5s ease-in-out infinite';
+            } else {
+                loadBar.style.background = 'linear-gradient(90deg,#6366f1,#8b5cf6)';
+                loadBar.style.animation = 'none';
+            }
+        }
+        if (pctEl) pctEl.textContent = Math.round(currentPct) + '%';
+        if (loadTitle && title !== undefined) loadTitle.textContent = title;
+        if (loadInfo && info !== undefined) loadInfo.textContent = info;
+        if (ocrPhase && phaseHtml !== undefined) ocrPhase.innerHTML = phaseHtml;
+        if (elapsedEl && elapsed !== undefined) elapsedEl.textContent = elapsed;
+    }
+
+    // ── 伪进度（让用户在等待加载时有反馈）──
+    function startTrickle(fromPct, toPct, interval, info) {
+        if (trickleId) clearInterval(trickleId);
+        var val = fromPct;
+        var step = (toPct - fromPct) / (interval / 200);
+        trickleId = setInterval(function() {
+            if (finished) { clearInterval(trickleId); return; }
+            val += step;
+            if (val >= toPct) { val = toPct; clearInterval(trickleId); trickleId = null; }
+            updateUI(val, undefined, info);
+        }, 200);
+    }
+
+    function stopTrickle() {
+        if (trickleId) { clearInterval(trickleId); trickleId = null; }
+    }
+
+    function hideAbortBtn() {
+        var abortBtn = document.getElementById('ocrAbortBtn');
+        if (abortBtn) abortBtn.style.display = 'none';
+    }
+
+    // ── 安全的按钮文本恢复（防止 __() 未定义时雪崩）──
+    function safeBtnText() {
+        try { return typeof __ === 'function' ? __('engine.execute') : '⚡ 执行'; }
+        catch(e) { return '⚡ 执行'; }
+    }
+
+    function finishFail(msg) {
+        finished = true;
+        stopTrickle();
+        clearInterval(elapsedTimer);
+        clearTimeout(timeoutId);
+        if (worker) { worker.terminate().catch(function(){}); worker = null; }
+        _ocrAbortCtrl = null;
+        if (btn) { btn.disabled = false; btn.innerHTML = safeBtnText(); }
+        hideAbortBtn();
+        updateUI(0, '❌ 识别失败', msg);
+        outputDiv.innerHTML = '';
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = '❌ ' + msg;
+    }
+
+    function finishOk(renderFn) {
+        finished = true;
+        stopTrickle();
+        clearInterval(elapsedTimer);
+        clearTimeout(timeoutId);
+        if (worker) { worker.terminate().catch(function(){}); worker = null; }
+        _ocrAbortCtrl = null;
+        if (btn) { btn.disabled = false; btn.innerHTML = safeBtnText(); }
+        hideAbortBtn();
+        var s = Math.round((Date.now() - startTime) / 1000);
+        updateUI(100, '✅ 识别完成', '总耗时 ' + s + ' 秒', '', '⏱ 总耗时 ' + s + ' 秒');
+        renderFn();
+    }
+
+    // ── 全局超时兜底 ──
+    timeoutId = setTimeout(function() {
+        if (!finished) finishFail('OCR 识别超时（已等待超过 ' + Math.round(TIMEOUT_MS/1000) + ' 秒），可尝试缩小图片后重试');
+    }, TIMEOUT_MS);
+
+    // ── 对外暴露终止方法 ──
+    _ocrAbortCtrl = {
+        cancel: function() {
+            if (finished) return;
+            finished = true;
+            stopTrickle();
+            clearInterval(elapsedTimer);
+            clearTimeout(timeoutId);
+            if (worker) { worker.terminate().catch(function(){}); worker = null; }
+            hideAbortBtn();
+            if (btn) { btn.disabled = false; btn.innerHTML = safeBtnText(); }
+            updateUI(0, '⏹ 已取消', 'OCR 识别已取消');
+            outputDiv.innerHTML = '';
+            errorDiv.style.display = 'block';
+            errorDiv.textContent = '⏹ OCR 识别已取消';
+        }
+    };
+
+    window.abortOcr = function() {
+        if (_ocrAbortCtrl) { _ocrAbortCtrl.cancel(); }
+    };
+
+}
+
+// OCR 识别的 copy 按钮
+window.copyOcrResult = function(btn) {
+    var text = btn.getAttribute('data-text');
+    if (!text) {
+        var pre = btn.parentElement.querySelector('.ocr-text');
+        text = pre ? pre.textContent : '';
+    }
+    navigator.clipboard.writeText(text).then(function() {
+        showToast('✅ ' + (__('toast.copied') || 'Copied to clipboard'));
+    }).catch(function() {
+        showToast('⚠ ' + (__('toast.copy_failed_manual') || 'Copy failed'));
+    });
+};
+
+// 格式化文件大小
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(2) + ' MB';
+}
+
+// OCR 批量结果渲染
+function renderOcrBatchResult(data) {
+    var h = '';
+    h += '<div class="ocr-batch-header">';
+    h += '<span>📚 批量识别结果</span>';
+    h += '<span class="ocr-meta">' + data.total + ' 个文件 / ' + data.successCount + ' 成功 / ' + data.failCount + ' 失败 / ' + data.totalChars + ' 字符 / 耗时 ' + data.elapsed + '</span>';
+    h += '</div>';
+    h += '<div class="ocr-batch-summary">';
+    h += '<button class="btn-sm" onclick="copyAllOcrBatchResults()">📋 复制全部文字</button>';
+    h += '<button class="btn-sm" onclick="downloadOcrBatchResults()">📥 导出结果 TXT</button>';
+    h += '</div>';
+    h += '<div class="ocr-batch-list">';
+    data.items.forEach(function(item, idx) {
+        h += '<div class="ocr-batch-item ' + (item.success ? '' : 'ocr-batch-fail') + '">';
+        h += '<div class="ocr-batch-item-header">';
+        h += '<span class="ocr-batch-idx">#' + (idx + 1) + '</span>';
+        h += '<span class="ocr-batch-fname">📄 ' + escapeHtml(item.fileName || 'unknown') + '</span>';
+        h += '<span class="ocr-batch-size">' + formatFileSize(item.fileSize || 0) + '</span>';
+        if (item.success) h += '<span class="ocr-badge-ok">✅ ' + item.textLength + ' 字符</span>';
+        else h += '<span class="ocr-badge-fail">❌ 失败</span>';
+        h += '</div>';
+        if (item.success) {
+            h += '<pre class="ocr-text ocr-batch-text">' + escapeHtml(item.text) + '</pre>';
+            h += '<button class="btn-sm ocr-batch-copy-btn" onclick="copyOcrBatchItem(this)" data-text="' + escapeHtml(item.text).replace(/"/g, '&quot;') + '">📋 复制</button>';
+        } else if (item.error) {
+            h += '<div class="ocr-error ocr-batch-error">' + escapeHtml(item.error) + '</div>';
+        }
+        h += '</div>';
+    });
+    h += '</div>';
+
+    // Store for batch operations
+    window.__ocrBatchData = data;
+    return h;
+}
+
+window.copyAllOcrBatchResults = function() {
+    if (!window.__ocrBatchData) return;
+    var allText = window.__ocrBatchData.items
+        .filter(function(item) { return item.success && item.text; })
+        .map(function(item, idx) {
+            return '=== ' + (item.fileName || ('File #' + (idx + 1))) + ' ===\n' + item.text;
+        }).join('\n\n');
+    navigator.clipboard.writeText(allText).then(function() {
+        showToast('✅ 已复制 ' + window.__ocrBatchData.successCount + ' 个文件的文字');
+    }).catch(function() {
+        showToast('⚠ 复制失败，文字过长请使用导出功能');
+    });
+};
+
+window.downloadOcrBatchResults = function() {
+    if (!window.__ocrBatchData) return;
+    var allText = window.__ocrBatchData.items
+        .filter(function(item) { return item.success && item.text; })
+        .map(function(item, idx) {
+            return '=== ' + (item.fileName || ('File #' + (idx + 1))) + ' ===\n' + item.text;
+        }).join('\n\n');
+    var blob = new Blob(['\uFEFF' + allText], { type: 'text/plain;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'OCR_Batch_Result_' + new Date().toISOString().slice(0,10) + '.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+};
+
+window.copyOcrBatchItem = function(btn) {
+    var text = btn.getAttribute('data-text');
+    navigator.clipboard.writeText(text).then(function() {
+        showToast('✅ ' + (__('toast.copied') || 'Copied'));
+    }).catch(function() {
+        showToast('⚠ ' + (__('toast.copy_failed_manual') || 'Copy failed'));
+    });
+};
+
 // ============ 时间戳工具专用函数 ============
 
 // 填入当前秒级时间戳
@@ -2014,3 +3098,508 @@ document.addEventListener('mousedown', function(e) {
         tsPickOpen = false;
     }
 });
+
+// ============ 客户端计算引擎 ============
+function doClientCalc(route, params) {
+    if (route === '/tools/finance/loan-calculator') {
+        return calcLoan(params);
+    }
+    if (route === '/tools/format/markdown') {
+        return renderMarkdown(params);
+    }
+    if (route === '/tools/converter/json-csv') {
+        return convertJsonCsv(params);
+    }
+    throw new Error('Unknown client-calc route: ' + route);
+}
+
+// ============ Markdown 预览 ============
+function renderMarkdown(params) {
+    var md = params.markdown || '';
+    if (!md.trim()) return '<div style="text-align:center;padding:40px;color:#9ca3af;">📝 请在输入框中输入 Markdown 内容</div>';
+
+    var theme = params.theme || 'github';
+    
+    // 使用 marked.js CDN 渲染
+    if (typeof marked === 'undefined') {
+        return '<div style="text-align:center;padding:40px;color:#f59e0b;">⏳ 正在加载 Markdown 渲染引擎...<br><small>如果长时间未响应，请检查网络连接</small></div>';
+    }
+
+    marked.setOptions({ breaks: true, gfm: true });
+
+    var html = '';
+    
+    // 暗色主题 CSS
+    if (theme === 'dark') {
+        html += '<style>' +
+            '.md-preview-dark { background:#1e1e2e; color:#cdd6f4; padding:20px 30px; border-radius:8px; }' +
+            '.md-preview-dark h1,.md-preview-dark h2,.md-preview-dark h3,.md-preview-dark h4 { color:#cba6f7; border-bottom:1px solid #45475a; padding-bottom:8px; }' +
+            '.md-preview-dark code { background:#313244; color:#f5c2e7; padding:2px 6px; border-radius:4px; }' +
+            '.md-preview-dark pre { background:#11111b; padding:16px; border-radius:8px; overflow-x:auto; }' +
+            '.md-preview-dark pre code { background:none; color:#cdd6f4; }' +
+            '.md-preview-dark a { color:#89b4fa; }' +
+            '.md-preview-dark table { border-collapse:collapse; width:100%; }' +
+            '.md-preview-dark th,.md-preview-dark td { border:1px solid #45475a; padding:8px 12px; text-align:left; }' +
+            '.md-preview-dark th { background:#313244; }' +
+            '.md-preview-dark blockquote { border-left:4px solid #cba6f7; padding-left:16px; margin-left:0; color:#a6adc8; }' +
+            '.md-preview-dark img { max-width:100%; }' +
+            '</style>';
+    } else {
+        html += '<style>' +
+            '.md-preview-light { background:#fff; color:#24292e; padding:20px 30px; border-radius:8px; border:1px solid #d0d7de; }' +
+            '.md-preview-light h1,.md-preview-light h2,.md-preview-light h3,.md-preview-light h4 { color:#1f2328; border-bottom:1px solid #d0d7de; padding-bottom:8px; }' +
+            '.md-preview-light code { background:#f6f8fa; color:#cf222e; padding:2px 6px; border-radius:4px; }' +
+            '.md-preview-light pre { background:#f6f8fa; padding:16px; border-radius:8px; overflow-x:auto; border:1px solid #d0d7de; }' +
+            '.md-preview-light pre code { background:none; color:#24292e; }' +
+            '.md-preview-light a { color:#0969da; }' +
+            '.md-preview-light table { border-collapse:collapse; width:100%; }' +
+            '.md-preview-light th,.md-preview-light td { border:1px solid #d0d7de; padding:8px 12px; text-align:left; }' +
+            '.md-preview-light th { background:#f6f8fa; }' +
+            '.md-preview-light blockquote { border-left:4px solid #d0d7de; padding-left:16px; margin-left:0; color:#656d76; }' +
+            '.md-preview-light img { max-width:100%; }' +
+            '</style>';
+    }
+
+    var themeClass = theme === 'dark' ? 'md-preview-dark' : 'md-preview-light';
+    
+    try {
+        var rendered = marked.parse(md);
+        html += '<div class="' + themeClass + '">' + rendered + '</div>';
+    } catch(e) {
+        html = '<div style="padding:16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;">❌ 渲染失败: ' + e.message + '</div>';
+    }
+
+    // 词数统计
+    var textOnly = md.replace(/[#*`~>\[\]\(\)!\-_=|{}.]/g, ' ').replace(/\s+/g, ' ').trim();
+    var chars = md.replace(/\s/g, '').length;
+    var words = textOnly ? textOnly.split(/\s+/).length : 0;
+    var lines = md.split('\n').length;
+
+    html += '<div style="margin-top:12px;display:flex;gap:16px;font-size:13px;color:#9ca3af;">';
+    html += '<span>📊 ' + chars + ' 字符</span>';
+    html += '<span>📝 ' + words + ' 单词</span>';
+    html += '<span>📄 ' + lines + ' 行</span>';
+    html += '</div>';
+
+    return html;
+}
+
+// ============ JSON ↔ CSV 转换 ============
+function convertJsonCsv(params) {
+    var input = (params.input || '').trim();
+    var direction = params.direction || 'json2csv';
+    var delimiter = params.delimiter || ',';
+
+    if (!input) return '<div style="text-align:center;padding:40px;color:#9ca3af;">📋 请输入要转换的内容</div>';
+
+    try {
+        if (direction === 'json2csv') {
+            var data = JSON.parse(input);
+            if (!Array.isArray(data)) throw new Error('JSON 必须是数组格式，例如 [{"name":"Alice","age":25}]');
+            if (data.length === 0) throw new Error('JSON 数组不能为空');
+
+            // 收集所有键作为列头
+            var headers = [];
+            var seen = {};
+            data.forEach(function(row) {
+                Object.keys(row).forEach(function(k) {
+                    if (!seen[k]) { seen[k] = true; headers.push(k); }
+                });
+            });
+
+            // 生成 CSV
+            var csvRows = [headers.map(escapeCSV).join(delimiter)];
+            data.forEach(function(row) {
+                var vals = headers.map(function(h) {
+                    var v = row[h];
+                    if (v === null || v === undefined) return '';
+                    if (typeof v === 'object') return escapeCSV(JSON.stringify(v));
+                    return escapeCSV(String(v));
+                });
+                csvRows.push(vals.join(delimiter));
+            });
+
+            var csv = csvRows.join('\n');
+            var rowCount = data.length;
+            var colCount = headers.length;
+
+            var resultHtml = '<div style="margin-bottom:8px;display:flex;gap:12px;align-items:center;">';
+            resultHtml += '<span style="color:#10b981;">✅ 转换成功</span>';
+            resultHtml += '<span style="color:#9ca3af;font-size:13px;">' + rowCount + ' 行 × ' + colCount + ' 列</span>';
+            resultHtml += '<button class="btn-sm" onclick="copyToClipboard(this)" data-copy="' + escapeHtml(csv).replace(/"/g, '&quot;') + '">📋 复制结果</button>';
+            resultHtml += '</div>';
+            resultHtml += '<pre style="margin:0;background:rgba(99,102,241,0.06);padding:12px;border-radius:6px;overflow:auto;max-height:500px;font-size:13px;">' + escapeHtml(csv) + '</pre>';
+
+            return resultHtml;
+
+        } else {
+            // CSV → JSON
+            var lines = input.split('\n').filter(function(l) { return l.trim(); });
+            if (lines.length < 2) throw new Error('CSV 至少需要包含表头和一行数据');
+
+            var headers = parseCSVLine(lines[0], delimiter);
+            var jsonRows = [];
+
+            for (var i = 1; i < lines.length; i++) {
+                var values = parseCSVLine(lines[i], delimiter);
+                var row = {};
+                headers.forEach(function(h, idx) {
+                    var v = values[idx] || '';
+                    // 尝试自动类型转换
+                    if (v === 'true') v = true;
+                    else if (v === 'false') v = false;
+                    else if (v === 'null' || v === '') v = null;
+                    else if (!isNaN(v) && v !== '' && v.trim() !== '') v = Number(v);
+                    row[h] = v;
+                });
+                jsonRows.push(row);
+            }
+
+            var json = JSON.stringify(jsonRows, null, 2);
+            var resultHtml = '<div style="margin-bottom:8px;display:flex;gap:12px;align-items:center;">';
+            resultHtml += '<span style="color:#10b981;">✅ 转换成功</span>';
+            resultHtml += '<span style="color:#9ca3af;font-size:13px;">' + jsonRows.length + ' 条记录</span>';
+            resultHtml += '<button class="btn-sm" onclick="copyToClipboard(this)" data-copy="' + escapeHtml(json).replace(/"/g, '&quot;') + '">📋 复制结果</button>';
+            resultHtml += '</div>';
+            resultHtml += '<pre style="margin:0;background:rgba(99,102,241,0.06);padding:12px;border-radius:6px;overflow:auto;max-height:500px;font-size:13px;">' + escapeHtml(json) + '</pre>';
+
+            return resultHtml;
+        }
+    } catch(e) {
+        return '<div style="padding:16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;">' +
+            '<strong>❌ 转换失败</strong><br>' + escapeHtml(e.message) +
+            '<br><small style="color:#9ca3af;">' + 
+            (direction === 'json2csv' ? '示例: [{"name":"Alice","age":25},{"name":"Bob","age":30}]' : '示例: name,age\\nAlice,25\\nBob,30') +
+            '</small></div>';
+    }
+}
+
+function escapeCSV(val) {
+    var s = String(val);
+    if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+        return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+}
+
+function parseCSVLine(line, delimiter) {
+    var result = [];
+    var current = '';
+    var inQuotes = false;
+
+    for (var i = 0; i < line.length; i++) {
+        var ch = line[i];
+        if (inQuotes) {
+            if (ch === '"') {
+                if (i + 1 < line.length && line[i + 1] === '"') {
+                    current += '"';
+                    i++;
+                } else {
+                    inQuotes = false;
+                }
+            } else {
+                current += ch;
+            }
+        } else {
+            if (ch === '"') {
+                inQuotes = true;
+            } else if (ch === delimiter) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += ch;
+            }
+        }
+    }
+    result.push(current.trim());
+    return result;
+}
+
+// 通用剪贴板复制
+window.copyToClipboard = function(btn) {
+    var text = btn.getAttribute('data-copy');
+    if (!text) return;
+    // 反转义 HTML 实体
+    var txt = document.createElement('textarea');
+    txt.innerHTML = text;
+    text = txt.value;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+            var orig = btn.innerHTML;
+            btn.innerHTML = '✅ 已复制';
+            btn.disabled = true;
+            setTimeout(function() { btn.innerHTML = orig; btn.disabled = false; }, 1500);
+        }).catch(function() {
+            fallbackCopy(btn, text);
+        });
+    } else {
+        fallbackCopy(btn, text);
+    }
+};
+
+function fallbackCopy(btn, text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+    var orig = btn.innerHTML;
+    btn.innerHTML = '✅ 已复制';
+    btn.disabled = true;
+    setTimeout(function() { btn.innerHTML = orig; btn.disabled = false; }, 1500);
+}
+
+// ============ 二维码下载 ============
+window.downloadQRCode = function(dataUrl) {
+    var a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'qrcode-' + Date.now() + '.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
+
+// ============ 贷款计算器 ============
+function calcLoan(p) {
+    var amount = parseFloat(p.amount) || 0;
+    var rate = parseFloat(p.rate) || 0;      // 年利率 %
+    var years = parseInt(p.years) || 1;
+    var months = years * 12;
+    var monthlyRate = rate / 100 / 12;
+    var method = p.method || 'both';
+
+    if (amount <= 0) throw new Error('请输入有效的贷款金额');
+    if (rate <= 0) throw new Error('请输入有效的年利率');
+    if (months <= 0) throw new Error('请输入有效的贷款年限');
+
+    // 提前还款参数
+    var prepayAmount = parseFloat(p.prepayAmount) || 0;
+    var prepayMonth = parseInt(p.prepayMonth) || 0;
+
+    function fmtMoney(v) { return v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+    function fmtInt(v) { return v.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+    // ── 等额本息 ──
+    function calcEI(P, r, n, startMonth) {
+        startMonth = startMonth || 1;
+        if (r === 0) {
+            var mp = P / n;
+            return { monthly: mp, totalPayment: P, totalInterest: 0, schedule: [] };
+        }
+        var pow = Math.pow(1 + r, n);
+        var M = P * r * pow / (pow - 1);
+        var totalPayment = M * n;
+        var totalInterest = totalPayment - P;
+        var schedule = [];
+        var remaining = P;
+        for (var k = 1; k <= n; k++) {
+            var interest = remaining * r;
+            var principal = M - interest;
+            remaining -= principal;
+            if (remaining < 0) remaining = 0;
+            schedule.push({
+                month: startMonth + k - 1,
+                payment: M,
+                principal: principal,
+                interest: interest,
+                remaining: remaining
+            });
+        }
+        return { monthly: M, totalPayment: totalPayment, totalInterest: totalInterest, schedule: schedule };
+    }
+
+    // ── 等额本金 ──
+    function calcEP(P, r, n, startMonth) {
+        startMonth = startMonth || 1;
+        var monthlyPrincipal = P / n;
+        var totalInterest = 0;
+        var totalPayment = 0;
+        var schedule = [];
+        var remaining = P;
+        for (var k = 1; k <= n; k++) {
+            var interest = remaining * r;
+            var payment = monthlyPrincipal + interest;
+            totalInterest += interest;
+            totalPayment += payment;
+            remaining -= monthlyPrincipal;
+            if (remaining < 0) remaining = 0;
+            schedule.push({
+                month: startMonth + k - 1,
+                payment: payment,
+                principal: monthlyPrincipal,
+                interest: interest,
+                remaining: remaining
+            });
+        }
+        return { firstMonth: schedule[0] ? schedule[0].payment : 0,
+                 monthlyPrincipal: monthlyPrincipal,
+                 totalPayment: totalPayment,
+                 totalInterest: totalInterest,
+                 schedule: schedule };
+    }
+
+    // ── 生成对比 HTML ──
+    function buildComparison(ei, ep) {
+        var h = '';
+        h += '<div class="loan-compare-grid">';
+
+        // 等额本息卡片
+        h += '<div class="loan-card loan-card-ei">';
+        h += '<div class="loan-card-title">📊 等额本息</div>';
+        h += '<div class="loan-card-row"><span>月供</span><strong>¥' + fmtMoney(ei.monthly) + '</strong></div>';
+        h += '<div class="loan-card-row"><span>总还款额</span><strong>¥' + fmtMoney(ei.totalPayment) + '</strong></div>';
+        h += '<div class="loan-card-row"><span>总利息</span><strong style="color:#f59e0b;">¥' + fmtMoney(ei.totalInterest) + '</strong></div>';
+        h += '</div>';
+
+        // 等额本金卡片
+        h += '<div class="loan-card loan-card-ep">';
+        h += '<div class="loan-card-title">📉 等额本金</div>';
+        h += '<div class="loan-card-row"><span>首月月供</span><strong>¥' + fmtMoney(ep.firstMonth) + '</strong></div>';
+        h += '<div class="loan-card-row"><span>每月递减</span><strong>¥' + fmtMoney(ep.monthlyPrincipal * monthlyRate) + '</strong></div>';
+        h += '<div class="loan-card-row"><span>总还款额</span><strong>¥' + fmtMoney(ep.totalPayment) + '</strong></div>';
+        h += '<div class="loan-card-row"><span>总利息</span><strong style="color:#f59e0b;">¥' + fmtMoney(ep.totalInterest) + '</strong></div>';
+        h += '</div>';
+
+        h += '</div>';
+
+        // 对比总结
+        var diff = ei.totalInterest - ep.totalInterest;
+        h += '<div class="loan-summary">';
+        h += '<p>💡 <strong>等额本金比等额本息节省利息：<span style="color:#10b981;">¥' + fmtMoney(diff) + '</span></strong></p>';
+        h += '<p style="font-size:13px;color:#9ca3af;">等额本息每月还款额固定，适合收入稳定的人群；等额本金前期还款压力大，但总利息更少。</p>';
+        h += '</div>';
+
+        return h;
+    }
+
+    // ── 还款明细表 ──
+    function buildScheduleTable(schedule, title, maxRows) {
+        maxRows = maxRows || 360;
+        var showRows = Math.min(schedule.length, maxRows);
+        var h = '';
+        h += '<div class="loan-schedule">';
+        h += '<h4 class="loan-schedule-title">' + title + '</h4>';
+        h += '<div class="loan-table-wrap"><table class="loan-table">';
+        h += '<thead><tr><th>期数</th><th>月供(元)</th><th>本金(元)</th><th>利息(元)</th><th>剩余本金(元)</th></tr></thead>';
+        h += '<tbody>';
+        for (var i = 0; i < showRows; i++) {
+            var s = schedule[i];
+            h += '<tr>';
+            h += '<td>' + s.month + '</td>';
+            h += '<td>' + fmtMoney(s.payment) + '</td>';
+            h += '<td>' + fmtMoney(s.principal) + '</td>';
+            h += '<td>' + fmtMoney(s.interest) + '</td>';
+            h += '<td>' + fmtMoney(s.remaining) + '</td>';
+            h += '</tr>';
+        }
+        if (schedule.length > maxRows) {
+            h += '<tr><td colspan="5" style="text-align:center;color:#9ca3af;">... 仅显示前 ' + maxRows + ' 期，共 ' + schedule.length + ' 期</td></tr>';
+        }
+        h += '</tbody></table></div>';
+        h += '</div>';
+        return h;
+    }
+
+    // ── 提前还款模拟 ──
+    function buildPrepaySection(baseEI, baseEP, prepayAmt, prepayMon, P, r, n) {
+        if (prepayAmt <= 0 || prepayMon <= 0 || prepayMon > n) return '';
+
+        var h = '<div class="loan-prepay-section">';
+        h += '<h4>⚡ 提前还款模拟（第 ' + prepayMon + ' 期还款 ' + fmtMoney(prepayAmt) + ' 元）</h4>';
+
+        // 等额本息提前还款
+        var remainingEI = 0;
+        for (var i = 0; i < prepayMon; i++) {
+            remainingEI = baseEI.schedule[i] ? baseEI.schedule[i].remaining : P;
+        }
+        remainingEI = baseEI.schedule[prepayMon - 1] ? baseEI.schedule[prepayMon - 1].remaining : P;
+        var newRemainingEI = Math.max(0, remainingEI - prepayAmt);
+        var newMonthsEI = n - prepayMon;
+        var newEI = calcEI(newRemainingEI, r, newMonthsEI, prepayMon + 1);
+        var savedEI = baseEI.totalInterest - (baseEI.schedule.slice(0, prepayMon).reduce(function(s,x){return s+x.interest;}, 0) + newEI.totalInterest);
+
+        // 等额本金提前还款
+        var remainingEP = baseEP.schedule[prepayMon - 1] ? baseEP.schedule[prepayMon - 1].remaining : P;
+        var newRemainingEP = Math.max(0, remainingEP - prepayAmt);
+        var newMonthsEP = n - prepayMon;
+        var newEP = calcEP(newRemainingEP, r, newMonthsEP, prepayMon + 1);
+        var savedEP = baseEP.totalInterest - (baseEP.schedule.slice(0, prepayMon).reduce(function(s,x){return s+x.interest;}, 0) + newEP.totalInterest);
+
+        h += '<div class="loan-compare-grid">';
+        h += '<div class="loan-card loan-card-ei">';
+        h += '<div class="loan-card-title">📊 等额本息 - 提前还款后</div>';
+        h += '<div class="loan-card-row"><span>剩余本金</span><strong>¥' + fmtMoney(newRemainingEI) + '</strong></div>';
+        h += '<div class="loan-card-row"><span>新月供</span><strong>¥' + fmtMoney(newEI.monthly) + '</strong></div>';
+        h += '<div class="loan-card-row"><span>节省利息</span><strong style="color:#10b981;">¥' + fmtMoney(savedEI) + '</strong></div>';
+        h += '</div>';
+        h += '<div class="loan-card loan-card-ep">';
+        h += '<div class="loan-card-title">📉 等额本金 - 提前还款后</div>';
+        h += '<div class="loan-card-row"><span>剩余本金</span><strong>¥' + fmtMoney(newRemainingEP) + '</strong></div>';
+        h += '<div class="loan-card-row"><span>新首月月供</span><strong>¥' + fmtMoney(newEP.firstMonth) + '</strong></div>';
+        h += '<div class="loan-card-row"><span>节省利息</span><strong style="color:#10b981;">¥' + fmtMoney(savedEP) + '</strong></div>';
+        h += '</div>';
+        h += '</div>';
+
+        h += '</div>';
+        return h;
+    }
+
+    // ── CSV 导出 ──
+    function buildExportButton(schedule, label) {
+        var id = 'csvData_' + label.replace(/[^a-zA-Z]/g, '_');
+        window[id] = schedule;
+        var h = '<button class="btn-sm" style="margin:8px 4px;" onclick="exportLoanCSV(\'' + id + '\',\'' + label + '\')">📥 导出 ' + label + ' CSV</button>';
+        return h;
+    }
+
+    // ── 计算并渲染 ──
+    var ei = calcEI(amount, monthlyRate, months, 1);
+    var ep = calcEP(amount, monthlyRate, months, 1);
+
+    var html = '';
+
+    // 对比表格
+    html += buildComparison(ei, ep);
+
+    // 导出按钮
+    html += '<div style="margin-top:12px;">';
+    html += buildExportButton(ei.schedule, '等额本息还款明细');
+    html += buildExportButton(ep.schedule, '等额本金还款明细');
+    html += '</div>';
+
+    // 还款明细表
+    if (method === 'both' || method === 'equal_installment') {
+        html += buildScheduleTable(ei.schedule, '等额本息 - 还款明细表', 120);
+    }
+    if (method === 'both' || method === 'equal_principal') {
+        html += buildScheduleTable(ep.schedule, '等额本金 - 还款明细表', 120);
+    }
+
+    // 提前还款模拟
+    if (prepayAmount > 0 && prepayMonth > 0) {
+        html += buildPrepaySection(ei, ep, prepayAmount, prepayMonth, amount, monthlyRate, months);
+    }
+
+    return html;
+}
+
+// CSV 导出函数（挂载到 window 全局）
+window.exportLoanCSV = function(dataId, label) {
+    var schedule = window[dataId];
+    if (!schedule || !schedule.length) return;
+    var csv = '\uFEFF期数,月供(元),本金(元),利息(元),剩余本金(元)\n';
+    schedule.forEach(function(s) {
+        csv += s.month + ',' + s.payment.toFixed(2) + ',' + s.principal.toFixed(2) + ',' + s.interest.toFixed(2) + ',' + s.remaining.toFixed(2) + '\n';
+    });
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = label + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+};

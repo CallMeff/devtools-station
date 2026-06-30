@@ -33,7 +33,6 @@ public class PageController {
      */
     @GetMapping("/")
     public String index(Model model) {
-        List<Category> categories = toolService.getCategoriesWithTools();
         List<Tool> allTools = toolService.searchTools(null);
         List<Tool> hotTools = toolService.getHotTools(8);
 
@@ -41,7 +40,6 @@ public class PageController {
         Map<Long, List<Tool>> toolMap = allTools.stream()
                 .collect(Collectors.groupingBy(Tool::getCategoryId));
 
-        model.addAttribute("categories", categories);
         model.addAttribute("toolMap", toolMap);
         model.addAttribute("hotTools", hotTools);
         model.addAttribute("totalTools", allTools.size());
@@ -49,17 +47,15 @@ public class PageController {
     }
 
     /**
-     * 静态页面路由
+     * 静态页面路由 — categories 由 GlobalModelAdvice 统一注入
      */
     @GetMapping("/about")
-    public String about(Model model) {
-        model.addAttribute("categories", toolService.getCategoriesWithTools());
+    public String about() {
         return "about";
     }
 
     @GetMapping("/guide")
-    public String guide(Model model) {
-        model.addAttribute("categories", toolService.getCategoriesWithTools());
+    public String guide() {
         return "guide";
     }
 
@@ -71,20 +67,17 @@ public class PageController {
     }
 
     @GetMapping("/feedback")
-    public String feedback(Model model) {
-        model.addAttribute("categories", toolService.getCategoriesWithTools());
+    public String feedback() {
         return "feedback";
     }
 
     @GetMapping("/changelog")
-    public String changelog(Model model) {
-        model.addAttribute("categories", toolService.getCategoriesWithTools());
+    public String changelog() {
         return "changelog";
     }
 
     @GetMapping("/doc.html")
-    public String doc(Model model) {
-        model.addAttribute("categories", toolService.getCategoriesWithTools());
+    public String doc() {
         return "doc";
     }
 
@@ -98,6 +91,7 @@ public class PageController {
 
     /**
      * 工具页面 - 支持多级路由如 /tools/crypto/md5
+     * 统一入口：检查 apiPath 是否为 LOCAL_ONLY，决定使用自定义模板或标准工具模板
      */
     @GetMapping("/tools/**")
     public String tool(HttpServletRequest request, Model model) {
@@ -111,6 +105,12 @@ public class PageController {
             return "error/404";
         }
 
+        // LOCAL_ONLY 工具使用自定义独立模板
+        if ("LOCAL_ONLY".equals(currentTool.getApiPath())) {
+            model.addAttribute("tool", currentTool);
+            return "docs-search";
+        }
+
         // 获取父分类
         Category category = toolService.getCategoriesWithTools().stream()
                 .filter(c -> c.getId().equals(currentTool.getCategoryId()))
@@ -120,7 +120,6 @@ public class PageController {
                 .filter(t -> t.getCategoryId().equals(currentTool.getCategoryId()))
                 .collect(Collectors.toList());
 
-        model.addAttribute("categories", toolService.getCategoriesWithTools());
         model.addAttribute("tool", currentTool);
         model.addAttribute("category", category);
         model.addAttribute("relatedTools", sameCategoryTools);

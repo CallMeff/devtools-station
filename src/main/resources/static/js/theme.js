@@ -104,6 +104,49 @@
         });
     }
 
+    // ========== 缓存清理按钮 ==========
+    function buildCacheClearBtn() {
+        var navActions = document.querySelector('.nav-actions');
+        if (!navActions) return;
+        // 避免重复添加
+        if (document.getElementById('cacheClearBtn')) return;
+
+        var btn = document.createElement('button');
+        btn.id = 'cacheClearBtn';
+        btn.className = 'cache-clear-btn';
+        btn.title = '清除本站缓存并刷新';
+        btn.innerHTML = '🗑';
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!confirm('确定要清除 DevTools Station 的所有本地数据并刷新吗？\n\n这将清除：\n· 主题设置\n· 语言设置\n· 登录状态\n· 文档搜索索引缓存\n\n页面将在清除完成后自动刷新。')) {
+                return;
+            }
+            // 清除所有本站相关数据
+            var keysToRemove = [];
+            for (var i = 0; i < localStorage.length; i++) {
+                var key = localStorage.key(i);
+                if (key && (key.startsWith('devtools-') || key.startsWith('ds-'))) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(function(k) { localStorage.removeItem(k); });
+            // 清除 sessionStorage
+            sessionStorage.clear();
+            // 清除 Service Worker 缓存（如果有）
+            if ('caches' in window) {
+                caches.keys().then(function(names) {
+                    names.forEach(function(name) { caches.delete(name); });
+                });
+            }
+            // 硬刷新（跳过浏览器缓存）
+            location.href = location.href.split('?')[0] + '?cleared=' + Date.now();
+        });
+
+        // 插入到 nav-actions 开头
+        navActions.insertBefore(btn, navActions.firstChild);
+    }
+
     // 初始化
     function init() {
         var current = getTheme();
@@ -143,6 +186,9 @@
         // 查找所有 .theme-switcher 容器并构建 UI
         var containers = document.querySelectorAll('.theme-switcher');
         containers.forEach(buildSwitcher);
+
+        // 添加缓存清理按钮
+        buildCacheClearBtn();
     }
 
     // 暴露 API

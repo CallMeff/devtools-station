@@ -14,7 +14,10 @@ INSERT INTO dt_category (name, icon, sort_order, description) VALUES
 ('文本处理', '📄', 5, '文本对比、正则、统计、去重等'),
 ('网络工具', '🌐', 6, 'IP 查询、UA 解析、HTTP 状态码等'),
 ('开发者工具', '💻', 7, 'Cron 表达式、Git 命令、MIME 类型等'),
-('编码解码', '📟', 8, 'Base64、URL、Unicode、HTML 实体编解码');
+('编码解码', '📟', 8, 'Base64、URL、Unicode、HTML 实体编解码'),
+('金融计算', '💰', 9, '贷款计算、投资回报、利率换算等金融工具'),
+('图像处理', '🖼️', 10, 'OCR 文字识别、图片处理等图像工具'),
+('本地工具', '💻', 11, '本地文档搜索、文件处理等纯本地工具，保障数据私密性');
 
 -- 工具数据
 INSERT INTO dt_tool (category_id, name, description, icon, route, api_path, sort_order, is_hot, is_new) VALUES
@@ -26,11 +29,12 @@ INSERT INTO dt_tool (category_id, name, description, icon, route, api_path, sort
 (1, 'HMAC 签名', 'HMAC-SHA256 消息认证码生成', '✍️', '/tools/crypto/hmac', '/api/tools/crypto/hmac', 5, 0, 0),
 
 -- 格式化工具
-(2, 'JSON 格式化', 'JSON 美化/压缩/校验', '✨', '/tools/format/json', '/api/tools/format/json', 1, 1, 0),
+(2, 'JSON 格式化', 'JSON 美化/压缩/校验，支持树形视图折叠展开', '✨', '/tools/format/json', '/api/tools/format/json', 1, 1, 0),
 (2, 'SQL 格式化', 'SQL 语句美化与压缩', '🗄️', '/tools/format/sql', '/api/tools/format/sql', 2, 1, 0),
 (2, 'CSS 格式化', 'CSS 代码美化与压缩', '🎨', '/tools/format/css', '/api/tools/format/css', 3, 0, 0),
 (2, 'HTML 格式化', 'HTML 代码美化与压缩', '📋', '/tools/format/html', '/api/tools/format/html', 4, 0, 0),
 (2, 'XML 格式化', 'XML 代码美化与压缩', '📰', '/tools/format/xml', '/api/tools/format/xml', 5, 0, 0),
+(2, 'Markdown 预览', 'Markdown 实时预览与编辑，支持 GFM 语法高亮', '📝', '/tools/format/markdown', '/api/tools/client/markdown', 6, 0, 1),
 
 -- 转换工具
 (3, '时间戳转换', 'Unix 时间戳与日期互转', '⏰', '/tools/converter/timestamp', '/api/tools/convert/timestamp', 1, 1, 0),
@@ -40,6 +44,7 @@ INSERT INTO dt_tool (category_id, name, description, icon, route, api_path, sort
 (3, 'Unicode 转换', 'Unicode 与中文互转', '🌍', '/tools/converter/unicode', '/api/tools/convert/unicode', 5, 0, 0),
 (3, 'Excel转JSON', 'Excel文件(.xlsx/.xls)转换为JSON格式', '📊', '/tools/converter/excel2json', '/api/tools/convert/excel2json', 6, 0, 1),
 (3, 'JSON 转 YAML', 'JSON 与 YAML 格式互转', '🔄', '/tools/converter/json-yaml', '/api/tools/convert/json-yaml', 7, 0, 1),
+(3, 'JSON ↔ CSV', 'JSON 数组与 CSV 表格格式互转', '📋', '/tools/converter/json-csv', '/api/tools/client/json-csv', 8, 0, 1),
 
 -- 生成器
 (4, 'UUID 生成', '批量生成 UUID/GUID', '🆔', '/tools/generator/uuid', '/api/tools/generate/uuid', 1, 1, 0),
@@ -71,4 +76,10 @@ INSERT INTO dt_tool (category_id, name, description, icon, route, api_path, sort
 -- 编码解码
 (8, 'URL 编解码', 'URL Encode / Decode', '🔗', '/tools/encode/url', '/api/tools/encode/url', 1, 0, 0),
 (8, 'HTML 实体', 'HTML 实体编码与解码', '📄', '/tools/encode/html', '/api/tools/encode/html', 2, 0, 0),
-(8, '摩尔斯电码', '摩尔斯电码编解码', '📻', '/tools/encode/morse', '/api/tools/encode/morse', 3, 0, 1);
+(8, '摩尔斯电码', '摩尔斯电码编解码', '📻', '/tools/encode/morse', '/api/tools/encode/morse', 3, 0, 1),
+-- 金融计算
+(9, '贷款计算器', '等额本息与等额本金对比计算，支持提前还款模拟和还款明细表导出', '🏦', '/tools/finance/loan-calculator', '', 1, 1, 1),
+-- 图像处理
+(10, 'OCR 文字识别', '图片文字识别，支持中文/英文/混合语言，支持单张和批量识别', '📸', '/tools/image/ocr', '/api/tools/ocr/single', 1, 1, 1),
+-- 本地工具
+(11, '本地文档瞬搜', '选择本地文件夹，纯浏览器端全文检索 Word/PDF/TXT 等文档，文件不上传，保障数据绝对私密', '🔍', '/tools/local-search/doc-search', 'LOCAL_ONLY', 1, 1, 1);

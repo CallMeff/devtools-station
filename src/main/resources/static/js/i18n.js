@@ -166,6 +166,12 @@
             'guide.cat7_desc': 'Cron 表达式、Git 命令、MIME 类型',
             'guide.cat8': '📟 编码解码:',
             'guide.cat8_desc': 'URL 编码、HTML 实体、摩尔斯电码',
+            'guide.cat9': '💰 金融计算:',
+            'guide.cat9_desc': '贷款计算、等额本息与等额本金对比',
+            'guide.cat10': '🖼️ 图像处理:',
+            'guide.cat10_desc': 'OCR 文字识别、单张批量图片识别',
+            'guide.cat11': '💻 本地工具:',
+            'guide.cat11_desc': '本地文档瞬搜，纯浏览器端运行，数据零上传',
             'guide.kbd_title': '⌨️ 键盘快捷键',
             'guide.kbd1': 'Ctrl+K / ⌘K - 聚焦搜索框',
             'guide.kbd2': 'Ctrl+Enter / ⌘Enter - 执行当前工具',
@@ -475,6 +481,8 @@
             'tool_ph.unicode': '中文文本 或 \\uXXXX 格式的 Unicode 编码',
             'tool_ph.excel2json': '点击或拖拽选择 .xlsx / .xls 文件',
             'tool_ph.json_yaml': '请输入 JSON 或 YAML 格式的文本...',
+            'tool_ph.markdown': '# 标题\n\n**粗体** *斜体* 代码块\n\n- 列表项 1\n- 列表项 2',
+            'tool_ph.jsoncsv': 'JSON: [{"name":"Alice","age":25}]\nCSV: name,age\nAlice,25',
             'tool_ph.qrcode': '请输入要生成二维码的文本或链接...',
             'tool_ph.diff1': '请输入第一段文本...',
             'tool_ph.diff2': '请输入第二段文本...',
@@ -548,6 +556,8 @@
             'tool_optval.excel_objects': 'JSON 对象（每行一个）',
             'tool_optval.json_to_yaml': 'JSON → YAML',
             'tool_optval.yaml_to_json': 'YAML → JSON',
+            'tool_optval.json_to_csv': 'JSON → CSV',
+            'tool_optval.csv_to_json': 'CSV → JSON',
             'tool_optval.number': '随机整数',
             'tool_optval.string': '随机字符串',
             'tool_optval.keep_order': '保持原序',
@@ -658,6 +668,8 @@
             'tool_desc.html': 'HTML 代码美化与压缩',
             'tool_name.xml': 'XML 格式化',
             'tool_desc.xml': 'XML 代码美化与压缩',
+            'tool_name.markdown': 'Markdown 预览',
+            'tool_desc.markdown': 'Markdown 实时预览与编辑，支持 GFM 语法高亮',
             // 转换工具
             'tool_name.timestamp': '时间戳转换',
             'tool_desc.timestamp': 'Unix 时间戳与日期互转',
@@ -671,6 +683,10 @@
             'tool_desc.unicode': 'Unicode 与中文互转',
             'tool_name.excel2json': 'Excel转JSON',
             'tool_desc.excel2json': '将Excel文件(.xlsx/.xls)转换为JSON格式',
+            'tool_name.markdown': 'Markdown 预览',
+            'tool_desc.markdown': 'Markdown 实时预览与编辑，支持 GFM 语法高亮',
+            'tool_name.json_csv': 'JSON ↔ CSV',
+            'tool_desc.json_csv': 'JSON 数组与 CSV 表格格式互转',
             // 生成器
             'tool_name.uuid': 'UUID 生成',
             'tool_desc.uuid': '批量生成 UUID/GUID',
@@ -718,6 +734,8 @@
             'tool_desc.htmlent': 'HTML 实体编码与解码',
             'tool_name.morse': '摩尔斯电码',
             'tool_desc.morse': '摩尔斯电码编解码',
+            'tool_name.loan': '贷款计算器',
+            'tool_desc.loan': '等额本息与等额本金对比计算，支持提前还款模拟和还款明细表导出',
 
             // ---- 分类名称 ----
             'cat_name.crypto': '加密解密',
@@ -728,6 +746,63 @@
             'cat_name.network': '网络工具',
             'cat_name.devtools': '开发者工具',
             'cat_name.encode': '编码解码',
+            'cat_name.finance': '金融计算',
+            'cat_name.image': '图像处理',
+            'cat_name.local': '本地工具',
+
+            // ---- 贷款计算器 ----
+            'loan.amount': '贷款金额（元）',
+            'loan.rate': '年利率（%）',
+            'loan.years': '贷款年限（年）',
+            'loan.prepay_amount': '提前还款金额（元，可选）',
+            'loan.prepay_month': '提前还款期数（第几个月，可选）',
+            'loan.method': '显示方式',
+            'loan.method_both': '同时显示两种方式',
+            'loan.method_ei': '仅等额本息',
+            'loan.method_ep': '仅等额本金',
+
+            // ---- OCR 文字识别 ----
+            'tool_name.ocr': 'OCR 文字识别',
+            'tool_desc.ocr': '图片文字识别，支持中文/英文/混合语言，支持单张和批量识别',
+            'ocr.file': '选择图片',
+            'ocr.files': '选择多张图片',
+            'ocr.language': '识别语言',
+            'ocr.lang_chi_eng': '中英文混合',
+            'ocr.lang_chi': '中文简体',
+            'ocr.lang_eng': '英文',
+            'ocr.lang_multi': '中/英/日文',
+            'ocr.mode': '识别模式',
+            'ocr.mode_single': '单张识别',
+            'ocr.mode_batch': '批量识别',
+            'ocr.select_file': '点击或拖拽图片到此处',
+            'ocr.select_files': '点击或拖拽多张图片到此处',
+            'ocr.supported_formats': '支持 PNG / JPG / GIF / BMP / TIFF / WebP',
+            'ocr.batch_hint': '最多 20 个文件，单文件最大 10MB',
+            'ocr.no_file': '请选择要识别的图片文件',
+            'ocr.too_many_files': '批量识别最多支持 {0} 个文件',
+            'ocr.file_too_large': '文件 {0} 过大（最大 10MB）',
+            'ocr.recognizing': '正在识别中，请稍候...',
+            'ocr.guide_title': '使用说明',
+            'ocr.guide_step1': '选择单张或批量上传图片文件（PNG/JPG/GIF 等）',
+            'ocr.guide_step2': '选择识别语言（中文/英文/混合）',
+            'ocr.guide_step3': '点击执行，浏览器端识别，无需安装任何软件，图片不上传保障隐私',
+
+            // ---- Markdown 预览 ----
+            'md.input': 'Markdown 内容',
+            'md.ph': '# 标题\n\n**粗体** *斜体* 代码块\n\n- 列表项 1\n- 列表项 2',
+            'md.theme': '预览主题',
+            'md.theme_github': 'GitHub 明亮',
+            'md.theme_dark': '暗色主题',
+
+            // ---- JSON ↔ CSV ----
+            'jsoncsv.direction': '转换方向',
+            'jsoncsv.json_to_csv': 'JSON → CSV',
+            'jsoncsv.csv_to_json': 'CSV → JSON',
+            'jsoncsv.delimiter': '分隔符',
+
+            // ---- 本地文档瞬搜 ----
+            'tool_name.docsearch': '本地文档瞬搜',
+            'tool_desc.docsearch': '选择本地文件夹，纯浏览器端全文检索 Word/PDF/TXT 等文档，文件不上传，保障数据绝对私密',
         },
 
         'en-US': {
@@ -887,6 +962,12 @@
             'guide.cat7_desc': 'Cron expressions, Git commands, MIME types',
             'guide.cat8': '📟 Encoding & Decoding:',
             'guide.cat8_desc': 'URL encoding, HTML entities, Morse code',
+            'guide.cat9': '💰 Finance:',
+            'guide.cat9_desc': 'Loan calculator, amortization schedule, early repayment',
+            'guide.cat10': '🖼️ Image Processing:',
+            'guide.cat10_desc': 'OCR text recognition, single and batch image recognition',
+            'guide.cat11': '💻 Local Tools:',
+            'guide.cat11_desc': 'Local document search, runs entirely in browser, zero data upload',
             'guide.kbd_title': '⌨️ Keyboard Shortcuts',
             'guide.kbd1': 'Ctrl+K / ⌘K - Focus search box',
             'guide.kbd2': 'Ctrl+Enter / ⌘Enter - Execute current tool',
@@ -1196,6 +1277,8 @@
             'tool_ph.unicode': 'Chinese text or \\uXXXX Unicode encoding',
             'tool_ph.excel2json': 'Click or drag to select .xlsx / .xls file',
             'tool_ph.json_yaml': 'Enter JSON or YAML formatted text...',
+            'tool_ph.markdown': '# Heading\n\n**Bold** *Italic* Code block\n\n- Item 1\n- Item 2',
+            'tool_ph.jsoncsv': 'JSON: [{"name":"Alice","age":25}]\nCSV: name,age\nAlice,25',
             'tool_ph.qrcode': 'Enter text or link to generate QR code...',
             'tool_ph.diff1': 'Enter first text...',
             'tool_ph.diff2': 'Enter second text...',
@@ -1269,6 +1352,8 @@
             'tool_optval.excel_objects': 'JSON Object (each row)',
             'tool_optval.json_to_yaml': 'JSON → YAML',
             'tool_optval.yaml_to_json': 'YAML → JSON',
+            'tool_optval.json_to_csv': 'JSON → CSV',
+            'tool_optval.csv_to_json': 'CSV → JSON',
             'tool_optval.number': 'Random Integer',
             'tool_optval.string': 'Random String',
             'tool_optval.keep_order': 'Keep Original Order',
@@ -1379,6 +1464,8 @@
             'tool_desc.html': 'HTML code beautify and minify',
             'tool_name.xml': 'XML Formatter',
             'tool_desc.xml': 'XML code beautify and minify',
+            'tool_name.markdown': 'Markdown Preview',
+            'tool_desc.markdown': 'Real-time Markdown preview with GFM syntax highlighting',
             // Converters
             'tool_name.timestamp': 'Timestamp Converter',
             'tool_desc.timestamp': 'Convert between Unix timestamp and date',
@@ -1392,6 +1479,10 @@
             'tool_desc.unicode': 'Convert between Unicode and Chinese characters',
             'tool_name.excel2json': 'Excel to JSON',
             'tool_desc.excel2json': 'Convert Excel files (.xlsx/.xls) to JSON format',
+            'tool_name.markdown': 'Markdown Preview',
+            'tool_desc.markdown': 'Real-time Markdown preview with GFM syntax highlighting',
+            'tool_name.json_csv': 'JSON ↔ CSV',
+            'tool_desc.json_csv': 'Convert between JSON array and CSV table format',
             // Generators
             'tool_name.uuid': 'UUID Generator',
             'tool_desc.uuid': 'Batch generate UUID/GUID',
@@ -1439,6 +1530,8 @@
             'tool_desc.htmlent': 'HTML entity encoding and decoding',
             'tool_name.morse': 'Morse Code',
             'tool_desc.morse': 'Morse code encoding and decoding',
+            'tool_name.loan': 'Loan Calculator',
+            'tool_desc.loan': 'Compare equal installment vs equal principal methods, with early repayment simulation and amortization schedule export',
 
             // ---- Category Names ----
             'cat_name.crypto': 'Crypto',
@@ -1449,6 +1542,63 @@
             'cat_name.network': 'Network Tools',
             'cat_name.devtools': 'Dev Tools',
             'cat_name.encode': 'Encoders',
+            'cat_name.finance': 'Finance',
+            'cat_name.image': 'Image Processing',
+            'cat_name.local': 'Local Tools',
+
+            // ---- Loan Calculator ----
+            'loan.amount': 'Loan Amount (¥)',
+            'loan.rate': 'Annual Interest Rate (%)',
+            'loan.years': 'Loan Term (Years)',
+            'loan.prepay_amount': 'Early Repayment Amount (¥, optional)',
+            'loan.prepay_month': 'Early Repayment Month (optional)',
+            'loan.method': 'Display Mode',
+            'loan.method_both': 'Show Both Methods',
+            'loan.method_ei': 'Equal Installment Only',
+            'loan.method_ep': 'Equal Principal Only',
+
+            // ---- OCR Text Recognition ----
+            'tool_name.ocr': 'OCR Text Recognition',
+            'tool_desc.ocr': 'Extract text from images, supports Chinese/English/mixed, single and batch mode',
+            'ocr.file': 'Select Image',
+            'ocr.files': 'Select Multiple Images',
+            'ocr.language': 'Language',
+            'ocr.lang_chi_eng': 'Chinese + English',
+            'ocr.lang_chi': 'Chinese (Simplified)',
+            'ocr.lang_eng': 'English',
+            'ocr.lang_multi': 'CN/EN/JP',
+            'ocr.mode': 'Recognition Mode',
+            'ocr.mode_single': 'Single Image',
+            'ocr.mode_batch': 'Batch Processing',
+            'ocr.select_file': 'Click or drag an image here',
+            'ocr.select_files': 'Click or drag multiple images here',
+            'ocr.supported_formats': 'Supports PNG / JPG / GIF / BMP / TIFF / WebP',
+            'ocr.batch_hint': 'Up to 20 files, max 10MB per file',
+            'ocr.no_file': 'Please select an image file to recognize',
+            'ocr.too_many_files': 'Batch processing supports up to {0} files',
+            'ocr.file_too_large': 'File {0} is too large (max 10MB)',
+            'ocr.recognizing': 'Recognizing text, please wait...',
+            'ocr.guide_title': 'How to Use',
+            'ocr.guide_step1': 'Select single or multiple image files (PNG/JPG/GIF etc.)',
+            'ocr.guide_step2': 'Choose recognition language (Chinese/English/Mixed)',
+            'ocr.guide_step3': 'Click execute. Browser-side recognition, no installation needed, images never uploaded',
+
+            // ---- Markdown Preview ----
+            'md.input': 'Markdown Content',
+            'md.ph': '# Heading\n\n**Bold** *Italic* Code block\n\n- Item 1\n- Item 2',
+            'md.theme': 'Preview Theme',
+            'md.theme_github': 'GitHub Light',
+            'md.theme_dark': 'Dark Theme',
+
+            // ---- JSON ↔ CSV ----
+            'jsoncsv.direction': 'Convert Direction',
+            'jsoncsv.json_to_csv': 'JSON → CSV',
+            'jsoncsv.csv_to_json': 'CSV → JSON',
+            'jsoncsv.delimiter': 'Delimiter',
+
+            // ---- Local Document Search ----
+            'tool_name.docsearch': 'Local Document Search',
+            'tool_desc.docsearch': 'Select a local folder, full-text search Word/PDF/TXT documents entirely in browser. Files never uploaded, ensuring absolute data privacy',
         },
 
         'ja-JP': {
@@ -3071,7 +3221,7 @@
             }
 
             // 刷新分类名称 (index.html): data-cat-name-i18n 存储分类 ID
-            var catIdMap = {1:'crypto',2:'format',3:'converter',4:'generator',5:'text',6:'network',7:'devtools',8:'encode'};
+            var catIdMap = {1:'crypto',2:'format',3:'converter',4:'generator',5:'text',6:'network',7:'devtools',8:'encode',9:'finance',10:'image',11:'local'};
             var catNameEls = document.querySelectorAll('[data-cat-name-i18n]');
             for (var ci = 0; ci < catNameEls.length; ci++) {
                 var cne = catNameEls[ci];

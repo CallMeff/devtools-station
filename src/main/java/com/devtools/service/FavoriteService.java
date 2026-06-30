@@ -90,6 +90,7 @@ public class FavoriteService extends ServiceImpl<FavoriteMapper, Favorite> {
 
         Favorite fav = new Favorite();
         fav.setUserId(userId);
+        fav.setUserKey("");  // 兼容 NOT NULL 约束（已登录用户用 user_id 标识）
         fav.setToolId(toolId);
         fav.setSortOrder(nextOrder);
         this.save(fav);

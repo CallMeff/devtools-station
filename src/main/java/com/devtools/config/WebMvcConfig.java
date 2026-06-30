@@ -1,6 +1,8 @@
 package com.devtools.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -24,6 +26,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
+    }
+
+    @Override
+    public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
+        // 注册 WASM MIME 类型（OCR 引擎需要加载 .wasm 文件）
+        configurer.mediaType("wasm", MediaType.valueOf("application/wasm"));
+        configurer.mediaType("gz", MediaType.valueOf("application/gzip"));
     }
 
     @Override

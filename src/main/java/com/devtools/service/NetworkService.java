@@ -1,6 +1,7 @@
 package com.devtools.service;
 
 import cn.hutool.core.util.StrUtil;
+import com.google.gson.Gson;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -387,57 +388,14 @@ public class NetworkService {
         return map;
     }
 
+    private final Gson gson = new Gson();
+
     private String toJson(Map<String, Object> map) {
-        StringBuilder sb = new StringBuilder("{");
-        boolean first = true;
-        for (Map.Entry<String, Object> e : map.entrySet()) {
-            if (!first) sb.append(",");
-            first = false;
-            sb.append("\"").append(escapeJson(e.getKey())).append("\":");
-            appendJsonValue(sb, e.getValue());
-        }
-        sb.append("}");
-        return sb.toString();
+        return gson.toJson(map);
     }
 
     private String toJsonArray(List<Map<String, Object>> rows) {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < rows.size(); i++) {
-            if (i > 0) sb.append(",");
-            sb.append(toJson(rows.get(i)));
-        }
-        sb.append("]");
-        return sb.toString();
-    }
-
-    @SuppressWarnings("unchecked")
-    private void appendJsonValue(StringBuilder sb, Object val) {
-        if (val == null) {
-            sb.append("null");
-        } else if (val instanceof String s) {
-            sb.append("\"").append(escapeJson(s)).append("\"");
-        } else if (val instanceof Number || val instanceof Boolean) {
-            sb.append(val);
-        } else if (val instanceof Map) {
-            sb.append(toJson((Map<String, Object>) val));
-        } else if (val instanceof List list) {
-            sb.append("[");
-            for (int i = 0; i < list.size(); i++) {
-                if (i > 0) sb.append(",");
-                appendJsonValue(sb, list.get(i));
-            }
-            sb.append("]");
-        } else {
-            sb.append("\"").append(escapeJson(val.toString())).append("\"");
-        }
-    }
-
-    private String escapeJson(String s) {
-        return s.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
+        return gson.toJson(rows);
     }
 
     private String truncateBody(String body, int maxLen) {

@@ -35,6 +35,14 @@ public class DatabaseMigration {
             log.warn("数据库迁移: 检查/添加 user_id 列异常: {}", e.getMessage());
         }
 
+        // 修复 user_key 列允许为 NULL（已登录用户不需要 user_key）
+        try {
+            jdbcTemplate.execute("ALTER TABLE dt_favorite MODIFY COLUMN user_key VARCHAR(128) DEFAULT ''");
+            log.info("数据库迁移: dt_favorite.user_key 已修改为可空");
+        } catch (Exception e) {
+            log.warn("数据库迁移: 修改 user_key 列异常（可能已修改）: {}", e.getMessage());
+        }
+
         try {
             jdbcTemplate.execute("CREATE INDEX idx_favorite_user_id ON dt_favorite(user_id)");
         } catch (Exception e) { /* 索引已存在忽略 */ }
