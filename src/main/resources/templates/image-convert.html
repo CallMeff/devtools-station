@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">图片格式转换 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh}
+        .container{max-width:800px;margin:0 auto;padding:20px 24px}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent,#7c3aed);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+
+        .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:20px}
+        @media (max-width:640px){.main-grid{grid-template-columns:1fr}}
+
+        .card{background:var(--bg-secondary,#1e1e2e);border-radius:16px;padding:24px;border:1px solid var(--border-color,#333)}
+        .card h3{font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+        .card .icon{font-size:24px}
+
+        .upload-area{border:2px dashed var(--border-color,#555);border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .3s;margin:16px 0}
+        .upload-area:hover{border-color:var(--accent,#7c3aed);background:rgba(124,58,237,.05)}
+        .upload-area.has-file{border-color:#10b981;border-style:solid;padding:16px}
+        .upload-area .placeholder{font-size:40px;margin-bottom:8px}
+        .upload-area .placeholder-text{font-size:13px;color:var(--text-muted,#999)}
+        .upload-area .file-info{display:none;align-items:center;gap:12px}
+        .upload-area .file-info.show{display:flex}
+        .upload-area .file-info .thumb{width:60px;height:60px;object-fit:cover;border-radius:8px}
+        .upload-area .file-info .meta{font-size:13px}
+        .upload-area .file-info .meta .name{color:var(--text-primary,#ddd);margin-bottom:4px;word-break:break-all}
+        .upload-area .file-info .meta .size{color:var(--text-muted,#999)}
+
+        .format-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+        .format-btn{padding:10px 18px;border:2px solid var(--border-color,#444);border-radius:10px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:14px;transition:all .15s;display:flex;align-items:center;gap:6px;flex:1;justify-content:center;min-width:80px}
+        .format-btn:hover{border-color:var(--text-muted,#666)}
+        .format-btn.active{border-color:var(--accent,#7c3aed);background:var(--accent,#7c3aed);color:#fff;font-weight:bold}
+        .format-btn .ext{font-size:12px;opacity:.7}
+
+        .btn{width:100%;padding:12px;border:none;border-radius:10px;background:var(--accent,#7c3aed);color:#fff;cursor:pointer;font-size:15px;font-weight:bold;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+        .btn:hover{opacity:.85;transform:translateY(-1px)}
+        .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+        .btn.outline{background:transparent;border:1px solid var(--border-color,#444);color:var(--text-primary,#ddd)}
+        .btn.outline:hover{background:var(--bg-tertiary,#2a2a3a)}
+
+        .result-section{margin-top:16px;text-align:center}
+        .result-section .preview-img{max-width:100%;max-height:280px;border-radius:8px;margin-bottom:12px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+        .result-section .info{font-size:13px;color:var(--text-muted,#999);margin-bottom:8px}
+
+        /* 批量模式 */
+        .batch-section{margin-top:24px}
+        .batch-section h3{font-size:16px;margin-bottom:12px}
+        .batch-list{display:flex;flex-direction:column;gap:8px}
+        .batch-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-secondary,#1e1e2e);border-radius:10px;border:1px solid var(--border-color,#333)}
+        .batch-item .idx{width:28px;height:28px;border-radius:50%;background:var(--accent,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+        .batch-item .fname{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .batch-item .status{font-size:12px;padding:3px 8px;border-radius:6px;flex-shrink:0}
+        .batch-item .status.done{background:#10b98120;color:#10b981}
+        .batch-item .status.processing{background:#f59e0b20;color:#f59e0b}
+
+        .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#444);color:var(--text-primary,#ddd);padding:8px 20px;border-radius:20px;font-size:13px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
+        .toast.show{opacity:1}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand">
+            <a href="/">🏠 DevTools</a>
+            <span class="sep">/</span>
+            <span class="tool-name" th:text="${tool.name}">图片格式转换</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-grid">
+            <!-- 上传区 -->
+            <div class="card">
+                <h3><span class="icon">📤</span> 选择图片</h3>
+                <div class="upload-area" id="uploadArea">
+                    <div class="placeholder" id="uploadPlaceholder">
+                        <div class="placeholder-text">📁</div>
+                        <div class="placeholder-text">拖拽或点击上传图片</div>
+                    </div>
+                    <div class="file-info" id="fileInfo">
+                        <img class="thumb" id="fileThumb" src="" alt="">
+                        <div class="meta">
+                            <div class="name" id="fileName">-</div>
+                            <div class="size" id="fileSize">-</div>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                </div>
+
+                <h3 style="margin-top:20px"><span class="icon">🔄</span> 目标格式</h3>
+                <div class="format-btns">
+                    <button class="format-btn active" data-fmt="image/png" data-ext="png">
+                        <span>PNG</span><span class="ext">.png</span>
+                    </button>
+                    <button class="format-btn" data-fmt="image/jpeg" data-ext="jpg">
+                        <span>JPG</span><span class="ext">.jpg</span>
+                    </button>
+                    <button class="format-btn" data-fmt="image/webp" data-ext="webp">
+                        <span>WebP</span><span class="ext">.webp</span>
+                    </button>
+                </div>
+
+                <div style="margin-top:8px">
+                    <label style="font-size:12px;color:var(--text-muted,#999);display:flex;align-items:center;gap:8px">
+                        JPG/WebP 质量: 
+                        <input type="range" id="qualitySlider" min="10" max="100" value="92" style="flex:1;accent-color:var(--accent,#7c3aed)">
+                        <span id="qualityVal" style="min-width:28px;font-weight:bold">92</span>%
+                    </label>
+                </div>
+
+                <button class="btn" id="btnConvert" disabled style="margin-top:16px">
+                    🔄 开始转换
+                </button>
+            </div>
+
+            <!-- 结果区 -->
+            <div class="card">
+                <h3><span class="icon">✨</span> 转换结果</h3>
+                <div class="result-section" id="resultSection">
+                    <p style="color:var(--text-muted,#999);font-size:14px;padding:40px 0;text-align:center">
+                        👈 选择图片和格式后开始转换
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 批量转换 -->
+        <div class="batch-section" id="batchSection" style="display:none">
+            <h3>📦 批量转换 (可选多张)</h3>
+            <div class="batch-list" id="batchList"></div>
+            <button class="btn outline" id="btnBatchDownload" style="display:none;margin-top:12px">
+                📥 打包下载全部
+            </button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    (function(){
+        var uploadArea = document.getElementById('uploadArea');
+        var fileInput = document.getElementById('fileInput');
+        var uploadPlaceholder = document.getElementById('uploadPlaceholder');
+        var fileInfo = document.getElementById('fileInfo');
+        var fileThumb = document.getElementById('fileThumb');
+        var fileName = document.getElementById('fileName');
+        var fileSize = document.getElementById('fileSize');
+        var qualitySlider = document.getElementById('qualitySlider');
+        var qualityVal = document.getElementById('qualityVal');
+        var btnConvert = document.getElementById('btnConvert');
+        var resultSection = document.getElementById('resultSection');
+        var batchSection = document.getElementById('batchSection');
+        var batchList = document.getElementById('batchList');
+        var btnBatchDownload = document.getElementById('btnBatchDownload');
+        var toast = document.getElementById('toast');
+
+        var currentFiles = [];
+        var convertedBlobs = {};
+        var targetFormat = 'image/png';
+        var targetExt = 'png';
+
+        // 拖拽
+        ['dragenter','dragover','dragleave','drop'].forEach(function(evt){
+            document.addEventListener(evt, function(e){ e.preventDefault(); e.stopPropagation(); }, false);
+        });
+        uploadArea.addEventListener('drop', function(e){
+            var files = Array.from(e.dataTransfer.files).filter(function(f){ return f.type.match(/image\//); });
+            if (files.length) handleFiles(files);
+        });
+
+        uploadArea.addEventListener('click', function(){ fileInput.click(); });
+        fileInput.addEventListener('change', function(){
+            if (fileInput.files.length) handleFiles(Array.from(fileInput.files));
+        });
+
+        // 格式选择
+        document.querySelectorAll('.format-btn').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                document.querySelectorAll('.format-btn').forEach(function(b){ b.classList.remove('active'); });
+                btn.classList.add('active');
+                targetFormat = btn.dataset.fmt;
+                targetExt = btn.dataset.ext;
+            });
+        });
+
+        qualitySlider.addEventListener('input', function(){
+            qualityVal.textContent = this.value;
+        });
+
+        function formatSize(bytes){
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
+            return (bytes/1048576).toFixed(2) + ' MB';
+        }
+
+        function handleFiles(files){
+            currentFiles = files;
+            convertedBlobs = {};
+            var first = files[0];
+            fileName.textContent = first.name;
+            fileSize.textContent = formatSize(first.size);
+
+            var reader = new FileReader();
+            reader.onload = function(e){
+                fileThumb.src = e.target.result;
+                fileInfo.classList.add('show');
+                uploadPlaceholder.style.display = 'none';
+                btnConvert.disabled = false;
+            };
+            reader.readAsDataURL(first);
+
+            // 多文件模式
+            if (files.length > 1) renderBatchList();
+        }
+
+        function renderBatchList(){
+            batchSection.style.display = 'block';
+            batchList.innerHTML = '';
+            currentFiles.forEach(function(f, i){
+                var item = document.createElement('div');
+                item.className = 'batch-item';
+                item.innerHTML = 
+                    '<span class="idx">' + (i+1) + '</span>' +
+                    '<span class="fname">' + f.name + '</span>' +
+                    '<span class="status" id="status' + i + '">' + formatSize(f.size) + '</span>';
+                batchList.appendChild(item);
+            });
+            btnBatchDownload.style.display = 'none';
+        }
+
+        btnConvert.addEventListener('click', function(){
+            if (!currentFiles.length) return;
+            convertedBlobs = {};
+            showToast('⏳ 正在转换 ' + currentFiles.length + ' 张图片…');
+
+            var quality = parseInt(qualitySlider.value) / 100;
+            var q = targetFormat === 'image/png' ? undefined : quality;
+
+            var completed = 0;
+            currentFiles.forEach(function(file, i){
+                convertOne(file, targetFormat, q, function(blob){
+                    convertedBlobs[i] = blob;
+                    completed++;
+                    var statusEl = document.getElementById('status' + i);
+                    if (statusEl) {
+                        statusEl.textContent = formatSize(blob.size);
+                        statusEl.className = 'status done';
+                    }
+                    if (completed === currentFiles.length) {
+                        showToast('✅ 全部 ' + currentFiles.length + ' 张转换完成');
+                        if (currentFiles.length > 1) btnBatchDownload.style.display = 'block';
+                        showPreview();
+                    }
+                });
+            });
+        });
+
+        function convertOne(file, mime, quality, callback){
+            var reader = new FileReader();
+            reader.onload = function(e){
+                var img = new Image();
+                img.onload = function(){
+                    var canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    var ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    canvas.toBlob(function(blob){ callback(blob); }, mime, quality);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showPreview(){
+            var blob = currentFiles.length === 1 ? convertedBlobs[0] : null;
+            if (!blob) return;
+
+            var url = URL.createObjectURL(blob);
+            var origSize = currentFiles[0].size;
+            var newSize = blob.size;
+            var changePct = ((newSize - origSize) / origSize * 100).toFixed(1);
+            var changeColor = changePct > 0 ? '#f59e0b' : '#10b981';
+            var changeSign = changePct > 0 ? '+' : '';
+
+            resultSection.innerHTML = 
+                '<img class="preview-img" src="' + url + '" alt="转换结果">' +
+                '<div class="info">' +
+                '原文件: <strong>' + formatSize(origSize) + '</strong> → ' +
+                '转换后: <strong>' + formatSize(newSize) + '</strong> ' +
+                '<span style="color:' + changeColor + '">(' + changeSign + changePct + '%)</span>' +
+                '</div>' +
+                '<button class="btn" onclick="downloadConverted()" style="width:auto;display:inline-flex">💾 下载 .' + targetExt + '</button>';
+
+            window.downloadConverted = function(){
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = (currentFiles[0].name.replace(/\.[^.]+$/, '') || 'converted') + '.' + targetExt;
+                a.click();
+                showToast('✅ 已下载');
+            };
+        }
+
+        btnBatchDownload.addEventListener('click', function(){
+            showToast('⏳ 正在打包下载…');
+            convertedBlobs[0]; // trigger read
+            // 逐个下载
+            currentFiles.forEach(function(f, i){
+                var blob = convertedBlobs[i];
+                if (!blob) return;
+                setTimeout(function(){
+                    var a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = (f.name.replace(/\.[^.]+$/, '') || 'image') + '.' + targetExt;
+                    a.click();
+                }, i * 300);
+            });
+            showToast('✅ 开始下载 ' + Object.keys(convertedBlobs).length + ' 个文件');
+        });
+
+        function showToast(msg){
+            toast.textContent = msg;
+            toast.classList.add('show');
+            clearTimeout(toast._t);
+            toast._t = setTimeout(function(){ toast.classList.remove('show'); }, 2500);
+        }
+
+        // 快捷键
+        document.addEventListener('keydown', function(e){
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                if (!btnConvert.disabled) btnConvert.click();
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

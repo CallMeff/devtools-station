@@ -242,6 +242,25 @@
             calc: function() { return true; }
         },
 
+        '/tools/format/js': {
+            type: 'client-calc',
+            inputs: [
+                { name: 'input', i18n: 'js.input', type: 'textarea', required: true, rows: 16, ph_i18n: 'js.ph' }
+            ],
+            options: [
+                { name: 'mode', i18n: 'js.mode', type: 'select', options: [
+                    { value: 'beautify', i18n: 'js.mode_beautify' },
+                    { value: 'minify', i18n: 'js.mode_minify' }
+                ], default: 'beautify' },
+                { name: 'indent', i18n: 'js.indent', type: 'select', options: [
+                    { value: '2', i18n: 'js.indent_2' },
+                    { value: '4', i18n: 'js.indent_4' },
+                    { value: 'tab', i18n: 'js.indent_tab' }
+                ], default: '2' }
+            ],
+            calc: function() { return true; }
+        },
+
         // ── 转换工具 ──
         '/tools/converter/timestamp': {
             type: 'text-transform',
@@ -545,6 +564,53 @@
             calc: function() { return true; }
         },
 
+        '/tools/converter/image-base64': {
+            type: 'image-base64',
+            inputs: [
+                { name: 'file', i18n: 'image64.file', type: 'file' }
+            ],
+            accept: '.png,.jpg,.jpeg,.gif,.webp,.bmp,.svg',
+            maxFileSize: 20 * 1024 * 1024
+        },
+
+        '/tools/converter/json-xml': {
+            type: 'client-calc',
+            inputs: [
+                { name: 'input', i18n: 'jsonxml.input', type: 'textarea', required: true, rows: 14, ph_i18n: 'jsonxml.ph' }
+            ],
+            options: [
+                { name: 'direction', i18n: 'jsonxml.direction', type: 'select', options: [
+                    { value: 'json2xml', i18n: 'jsonxml.json2xml' },
+                    { value: 'xml2json', i18n: 'jsonxml.xml2json' }
+                ], default: 'json2xml' },
+                { name: 'indent', i18n: 'jsonxml.indent', type: 'select', options: [
+                    { value: '2', label: '2' },
+                    { value: '4', label: '4' }
+                ], default: '2' }
+            ],
+            calc: function() { return true; }
+        },
+
+        '/tools/converter/rmb-upper': {
+            type: 'text-transform',
+            endpoint: '/api/tools/convert/rmb-upper',
+            method: 'POST',
+            inputs: [
+                { name: 'input', i18n: 'rmb.input', type: 'text', required: true, ph_i18n: 'rmb.ph' }
+            ],
+            exampleInput: '12345.67',
+            outputAsHtml: true,
+            formatOutput: function(data) {
+                if (data.error) return '<div style="padding:16px;background:rgba(239,68,68,0.1);border-radius:8px;">❌ ' + escapeHtml(data.error) + '</div>';
+                return '<div style="padding:20px;background:rgba(99,102,241,0.06);border-radius:8px;text-align:center;">' +
+                    '<div style="font-size:12px;color:#9ca3af;margin-bottom:8px;">' + __('rmb.result') + '</div>' +
+                    '<div style="font-size:28px;font-weight:700;letter-spacing:2px;font-family:\'KaiTi\',\'楷体\',\'STKaiti\',serif;color:#6366f1;">' + escapeHtml(data.output) + '</div>' +
+                    '<div style="margin-top:12px;display:flex;gap:8px;justify-content:center;">' +
+                    '<button class="btn-sm" onclick="copyToClipboard(this)" data-copy="' + escapeHtml(data.output).replace(/"/g, '&quot;') + '">📋 ' + __('tool.copy') + '</button>' +
+                    '</div></div>';
+            }
+        },
+
         // ── 生成器 ──
         '/tools/generator/uuid': {
             type: 'form-generator',
@@ -629,6 +695,27 @@
                     '</div></div>';
             },
             outputAsHtml: true
+        },
+
+        '/tools/generator/mock-data': {
+            type: 'client-calc',
+            inputs: [
+                { name: 'template', i18n: 'mock.template', type: 'select', options: [
+                    { value: 'person', i18n: 'mock.template_person' },
+                    { value: 'company', i18n: 'mock.template_company' },
+                    { value: 'order', i18n: 'mock.template_order' },
+                    { value: 'product', i18n: 'mock.template_product' },
+                    { value: 'custom', i18n: 'mock.template_custom' }
+                ], default: 'person' }
+            ],
+            extraInputs: [
+                { name: 'count', i18n: 'mock.count', type: 'number', default: 5, min: 1, max: 100 },
+                { name: 'locale', i18n: 'mock.locale', type: 'select', options: [
+                    { value: 'zh', i18n: 'mock.locale_zh' },
+                    { value: 'en', i18n: 'mock.locale_en' }
+                ], default: 'zh' }
+            ],
+            calc: function() { return true; }
         },
 
         // ── 文本处理 ──
@@ -1287,6 +1374,60 @@
                 html += '</div>';
             });
             html += '</div>';
+        } else if (config.type === 'image-base64') {
+            // 图片转 Base64 上传区域
+            html += '<div class="input-group">';
+            html += '<label data-i18n="image64.file">' + __('image64.file') + '</label>';
+            html += '<div class="file-upload-area" id="imageBase64Area">';
+            html += '<input type="file" name="file" id="imageBase64Input"';
+            if (config.accept) html += ' accept="' + config.accept + '"';
+            html += ' style="display:none;" onchange="onImageBase64Selected(this)">';
+            html += '<div class="file-upload-label" onclick="document.getElementById(\'imageBase64Input\').click()">';
+            html += '<span class="file-upload-icon">🖼️</span>';
+            html += '<span class="file-upload-text" data-i18n="image64.select">' + __('image64.select') + '</span>';
+            html += '<span class="file-upload-hint" data-i18n="image64.supported">' + __('image64.supported') + '</span>';
+            html += '</div>';
+            html += '<div class="file-selected-info" id="imageBase64Info" style="display:none;">';
+            html += '<span class="file-name" id="imageBase64Name"></span>';
+            html += '<button type="button" class="file-clear-btn" onclick="clearImageBase64()">✕</button>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+
+            // 图片预览 & Base64 结果区域（隐藏，等待文件选择）
+            html += '<div id="imageBase64Result" style="display:none;margin-top:16px;">';
+            html += '<div style="display:flex;gap:16px;flex-wrap:wrap;">';
+
+            html += '<div style="flex:1;min-width:280px;">';
+            html += '<div style="font-weight:600;margin-bottom:8px;" data-i18n="image64.preview">' + __('image64.preview') + '</div>';
+            html += '<div id="imagePreviewBox" style="background:rgba(0,0,0,0.05);border-radius:8px;padding:12px;text-align:center;min-height:200px;display:flex;align-items:center;justify-content:center;">';
+            html += '<img id="imagePreviewImg" style="max-width:100%;max-height:400px;border-radius:4px;" alt="Preview">';
+            html += '</div>';
+            html += '</div>';
+
+            html += '<div style="flex:1;min-width:280px;">';
+            html += '<div style="font-weight:600;margin-bottom:8px;" data-i18n="image64.file_info">' + __('image64.file_info') + '</div>';
+            html += '<div style="background:rgba(0,0,0,0.05);border-radius:8px;padding:12px;font-size:13px;">';
+            html += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(0,0,0,0.06);"><span data-i18n="image64.file_name">' + __('image64.file_name') + '</span><strong id="imgFileName">-</strong></div>';
+            html += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(0,0,0,0.06);"><span data-i18n="image64.file_size">' + __('image64.file_size') + '</span><strong id="imgFileSize">-</strong></div>';
+            html += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(0,0,0,0.06);"><span data-i18n="image64.file_type">' + __('image64.file_type') + '</span><strong id="imgFileType">-</strong></div>';
+            html += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(0,0,0,0.06);"><span data-i18n="image64.resolution">' + __('image64.resolution') + '</span><strong id="imgResolution">-</strong></div>';
+            html += '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span data-i18n="image64.base64_length">' + __('image64.base64_length') + '</span><strong id="imgBase64Len">-</strong></div>';
+            html += '</div>';
+            html += '</div>';
+
+            html += '</div>';
+
+            html += '<div style="margin-top:16px;">';
+            html += '<div style="font-weight:600;margin-bottom:8px;" data-i18n="image64.base64_head">' + __('image64.base64_head') + '</div>';
+            html += '<textarea id="imageBase64Output" readonly rows="6" style="width:100%;font-family:monospace;font-size:12px;resize:vertical;word-break:break-all;background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.1);border-radius:6px;padding:10px;"></textarea>';
+            html += '<div style="margin-top:8px;display:flex;gap:8px;">';
+            html += '<button class="btn-sm" onclick="copyImageDataUri()" data-i18n="image64.copy_datauri">📋 ' + __('image64.copy_datauri') + '</button>';
+            html += '<button class="btn-sm" onclick="copyImageBase64()" data-i18n="image64.copy_base64">📋 ' + __('image64.copy_base64') + '</button>';
+            html += '</div>';
+            html += '</div>';
+
+            html += '</div>';
         } else {
             // text-transform, text-with-key, form-generator
             config.inputs.forEach(function(inp) {
@@ -1470,6 +1611,67 @@
         if (config.type === 'readonly' && config.autoLoad) {
             executeTool();
         }
+
+        // ── 输入历史记录（仅 text-transform / text-with-key 类型）──
+        if (config.type === 'text-transform' || config.type === 'text-with-key') {
+            addInputHistory();
+        }
+    }
+
+    // ============ 输入历史记录 ============
+    function addInputHistory() {
+        var firstInput = inputSection.querySelector('textarea[name="input"], input[name="input"][type="text"], input[name="text"]');
+        if (!firstInput) return;
+
+        var historyKey = 'devtools-hist-' + TOOL.route.replace(/[^a-zA-Z0-9]/g, '_');
+        var MAX_HIST = 20;
+
+        function loadHist() { try { var r = localStorage.getItem(historyKey); return r ? JSON.parse(r) : []; } catch(e) { return []; } }
+        function saveHist(val) {
+            if (!val || !val.trim()) return;
+            var h = loadHist();
+            var idx = h.indexOf(val);
+            if (idx >= 0) h.splice(idx, 1);
+            h.unshift(val);
+            if (h.length > MAX_HIST) h = h.slice(0, MAX_HIST);
+            try { localStorage.setItem(historyKey, JSON.stringify(h)); } catch(e) {}
+        }
+
+        var history = loadHist();
+        if (!history.length) return;
+
+        var histHtml = '<div class="history-dropdown" style="margin-bottom:8px;">';
+        histHtml += '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:rgba(99,102,241,0.06);border-radius:4px;">';
+        histHtml += '<span style="font-size:11px;color:#9ca3af;">📜 ' + __('engine.history') + ' (' + history.length + ')</span>';
+        histHtml += '<button type="button" class="history-clear-btn" onclick="(function(){var k=\'' + historyKey + '\';localStorage.removeItem(k);var a=document.getElementById(\'inputHistoryArea\');if(a)a.innerHTML=\'\';})()" style="font-size:11px;background:none;border:none;color:#ef4444;cursor:pointer;">' + __('engine.clear_all') + '</button>';
+        histHtml += '</div>';
+        histHtml += '<div class="history-list" style="max-height:160px;overflow-y:auto;border:1px solid rgba(0,0,0,0.06);border-top:none;border-radius:0 0 4px 4px;">';
+        for (var hi = 0; hi < history.length; hi++) {
+            var item = history[hi];
+            var display = item.length > 80 ? item.substring(0, 80) + '...' : item;
+            var escItem = item.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            histHtml += '<div class="history-item" data-value="' + escItem + '" style="padding:4px 8px;cursor:pointer;font-size:12px;border-bottom:1px solid rgba(0,0,0,0.05);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="(function(el){var v=el.getAttribute(\'data-value\');v=v?document.createElement(\'textarea\').appendChild(document.createTextNode(v)).parentNode.innerHTML:null;var inp=document.querySelector(\'textarea[name=input],input[name=input][type=text],input[name=text]\');if(inp&&v)inp.value=v})(this)">' + escapeHtml(display) + '</div>';
+        }
+        histHtml += '</div></div>';
+
+        var histContainer = document.createElement('div');
+        histContainer.id = 'inputHistoryArea';
+        histContainer.innerHTML = histHtml;
+
+        var inputGroup = firstInput.closest('.input-group');
+        if (inputGroup && inputGroup.parentNode) {
+            inputGroup.parentNode.insertBefore(histContainer, inputGroup);
+        }
+
+        // 劫持执行按钮保存历史
+        var origExec = window.executeTool;
+        window.executeTool = function() {
+            var val = document.querySelector('textarea[name="input"], input[name="input"][type="text"], input[name="text"]');
+            if (val && val.value && val.value.trim()) {
+                saveHist(val.value.trim());
+            }
+            origExec();
+        };
     }
 
     // ============ API 调用 ============
@@ -3110,6 +3312,15 @@ function doClientCalc(route, params) {
     if (route === '/tools/converter/json-csv') {
         return convertJsonCsv(params);
     }
+    if (route === '/tools/converter/json-xml') {
+        return convertJsonXml(params);
+    }
+    if (route === '/tools/format/js') {
+        return formatJavaScript(params);
+    }
+    if (route === '/tools/generator/mock-data') {
+        return window.generateMockData(params);
+    }
     throw new Error('Unknown client-calc route: ' + route);
 }
 
@@ -3314,6 +3525,464 @@ function parseCSVLine(line, delimiter) {
     result.push(current.trim());
     return result;
 }
+
+// ============ JSON ↔ XML 转换 ============
+function convertJsonXml(params) {
+    var input = (params.input || '').trim();
+    var direction = params.direction || 'json2xml';
+    var indent = parseInt(params.indent) || 2;
+
+    if (!input) return '<div style="text-align:center;padding:40px;color:#9ca3af;">📋 请输入要转换的内容</div>';
+
+    try {
+        if (direction === 'json2xml') {
+            var json = JSON.parse(input);
+            var xml = jsonToXml(json, 'root', indent);
+            var resultHtml = '<div style="margin-bottom:8px;display:flex;gap:12px;align-items:center;">';
+            resultHtml += '<span style="color:#10b981;" data-i18n="jsonxml.success">✅ 转换成功</span>';
+            resultHtml += '<button class="btn-sm" onclick="copyToClipboard(this)" data-copy="' + escapeHtml(xml).replace(/"/g, '&quot;') + '">📋 复制结果</button>';
+            resultHtml += '</div>';
+            resultHtml += '<pre style="margin:0;background:rgba(99,102,241,0.06);padding:12px;border-radius:6px;overflow:auto;max-height:500px;font-size:13px;">' + escapeHtml(xml) + '</pre>';
+            return resultHtml;
+        } else {
+            var xml = parseXmlString(input);
+            var json = JSON.stringify(xml, null, indent);
+            var resultHtml = '<div style="margin-bottom:8px;display:flex;gap:12px;align-items:center;">';
+            resultHtml += '<span style="color:#10b981;" data-i18n="jsonxml.success">✅ 转换成功</span>';
+            resultHtml += '<button class="btn-sm" onclick="copyToClipboard(this)" data-copy="' + escapeHtml(json).replace(/"/g, '&quot;') + '">📋 复制结果</button>';
+            resultHtml += '</div>';
+            resultHtml += '<pre style="margin:0;background:rgba(99,102,241,0.06);padding:12px;border-radius:6px;overflow:auto;max-height:500px;font-size:13px;">' + escapeHtml(json) + '</pre>';
+            return resultHtml;
+        }
+    } catch(e) {
+        return '<div style="padding:16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;">' +
+            '<strong>❌ 转换失败</strong><br>' + escapeHtml(e.message) +
+            '</div>';
+    }
+}
+
+function jsonToXml(obj, nodeName, indent, level) {
+    level = level || 0;
+    var pad = '';
+    for (var i = 0; i < level * indent; i++) pad += ' ';
+    var padInner = '';
+    for (var i = 0; i < (level + 1) * indent; i++) padInner += ' ';
+
+    if (obj === null || obj === undefined) {
+        return pad + '<' + nodeName + ' />';
+    }
+
+    if (Array.isArray(obj)) {
+        if (obj.length === 0) return pad + '<' + nodeName + ' />';
+        var xml = '';
+        obj.forEach(function(item) {
+            xml += (xml ? '\n' : '') + jsonToXml(item, nodeName, indent, level);
+        });
+        return xml;
+    }
+
+    if (typeof obj === 'object') {
+        var keys = Object.keys(obj);
+        if (keys.length === 0) return pad + '<' + nodeName + ' />';
+        var xml = pad + '<' + nodeName + '>\n';
+        keys.forEach(function(k) {
+            xml += jsonToXml(obj[k], k, indent, level + 1) + '\n';
+        });
+        xml += pad + '</' + nodeName + '>';
+        return xml;
+    }
+
+    var value = escapeXml(String(obj));
+    return pad + '<' + nodeName + '>' + value + '</' + nodeName + '>';
+}
+
+function escapeXml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
+function parseXmlString(xmlStr) {
+    var doc;
+    if (typeof DOMParser !== 'undefined') {
+        doc = new DOMParser().parseFromString(xmlStr, 'text/xml');
+    } else {
+        // Fallback for older browsers
+        doc = new ActiveXObject('Microsoft.XMLDOM');
+        doc.async = false;
+        doc.loadXML(xmlStr);
+    }
+    var errorNode = doc.querySelector('parsererror');
+    if (errorNode) throw new Error('XML 解析错误: ' + errorNode.textContent);
+    return xmlNodeToJson(doc.documentElement);
+}
+
+function xmlNodeToJson(node) {
+    var obj = {};
+    var hasAttributes = false;
+    if (node.attributes && node.attributes.length > 0) {
+        hasAttributes = true;
+        for (var i = 0; i < node.attributes.length; i++) {
+            obj['@' + node.attributes[i].name] = node.attributes[i].value;
+        }
+    }
+    var childElements = [];
+    for (var i = 0; i < node.childNodes.length; i++) {
+        var child = node.childNodes[i];
+        if (child.nodeType === 1) childElements.push(child);
+    }
+    if (childElements.length === 0) {
+        var text = node.textContent.trim();
+        if (hasAttributes) {
+            obj['#text'] = text;
+            return obj;
+        }
+        return text;
+    }
+    var groups = {};
+    childElements.forEach(function(child) {
+        var name = child.nodeName;
+        if (!groups[name]) groups[name] = [];
+        groups[name].push(xmlNodeToJson(child));
+    });
+    Object.keys(groups).forEach(function(name) {
+        var items = groups[name];
+        if (items.length === 1) {
+            obj[name] = items[0];
+        } else {
+            obj[name] = items;
+        }
+    });
+    return obj;
+}
+
+// ============ JS 代码格式化 ============
+function formatJavaScript(params) {
+    var input = (params.input || '').trim();
+    var mode = params.mode || 'beautify';
+    var indentStyle = params.indent || '2';
+
+    if (!input) return '<div style="text-align:center;padding:40px;color:#9ca3af;">💻 请输入 JavaScript 代码</div>';
+
+    var indentChar = indentStyle === 'tab' ? '\t' : (indentStyle === '4' ? '    ' : '  ');
+
+    try {
+        var result;
+        if (mode === 'minify') {
+            // Simple minify: remove comments, whitespace
+            result = minifyJS(input);
+        } else {
+            result = beautifyJS(input, indentChar);
+        }
+
+        // Verify by parsing
+        try { new Function(result); } catch(e) {
+            return '<div style="padding:16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;">' +
+                '<strong>⚠️ 格式化后的代码可能有语法问题</strong><br>' +
+                '<pre style="margin:8px 0 0;white-space:pre-wrap;font-size:12px;">' + escapeHtml(result) + '</pre></div>';
+        }
+
+        var origLen = input.length;
+        var resultLen = result.length;
+
+        var resultHtml = '<div style="margin-bottom:8px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">';
+        resultHtml += '<span style="color:#10b981;" data-i18n="js.success">✅ 格式化完成</span>';
+        resultHtml += '<span style="color:#9ca3af;font-size:12px;"><span data-i18n="js.orig_size">原始大小</span>: ' + origLen + ' <span data-i18n="js.chars">字符</span></span>';
+        resultHtml += '<span style="color:#9ca3af;font-size:12px;"><span data-i18n="js.result_size">结果大小</span>: ' + resultLen + ' <span data-i18n="js.chars">字符</span></span>';
+        resultHtml += '<button class="btn-sm" onclick="copyToClipboard(this)" data-copy="' + escapeHtml(result).replace(/"/g, '&quot;') + '">📋 复制结果</button>';
+        resultHtml += '</div>';
+        resultHtml += '<pre style="margin:0;background:rgba(99,102,241,0.06);padding:12px;border-radius:6px;overflow:auto;max-height:500px;font-size:13px;white-space:pre-wrap;">' + escapeHtml(result) + '</pre>';
+
+        return resultHtml;
+    } catch(e) {
+        return '<div style="padding:16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;">' +
+            '<strong>❌ 格式化失败</strong><br>' + escapeHtml(e.message) + '</div>';
+    }
+}
+
+function beautifyJS(code, indent) {
+    var result = '';
+    var level = 0;
+    var i = 0;
+    var inString = false;
+    var stringChar = '';
+    var inComment = false;
+    var inLineComment = false;
+    var prevChar = '';
+    var newLine = true;
+
+    // Remove leading/trailing whitespace on each line and normalize
+    code = code.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+    function getIndent() {
+        var s = '';
+        for (var j = 0; j < level; j++) s += indent;
+        return s;
+    }
+
+    for (i = 0; i < code.length; i++) {
+        var ch = code[i];
+        var nextCh = code[i + 1] || '';
+
+        if (inLineComment) {
+            result += ch;
+            if (ch === '\n') { inLineComment = false; newLine = true; }
+            continue;
+        }
+
+        if (inComment) {
+            result += ch;
+            if (ch === '*' && nextCh === '/') { result += '/'; i++; inComment = false; }
+            continue;
+        }
+
+        if (inString) {
+            result += ch;
+            if (ch === '\\') { i++; result += code[i]; }
+            else if (ch === stringChar) { inString = false; }
+            continue;
+        }
+
+        if (ch === '/' && nextCh === '/' && !inString) {
+            result += '//';
+            i++;
+            inLineComment = true;
+            continue;
+        }
+
+        if (ch === '/' && nextCh === '*' && !inString) {
+            result += '/*';
+            i++;
+            inComment = true;
+            continue;
+        }
+
+        if (ch === '"' || ch === "'") {
+            inString = true;
+            stringChar = ch;
+            result += ch;
+            newLine = false;
+            continue;
+        }
+
+        if (ch === '\n' || ch === '\r') {
+            newLine = true;
+            result += '\n';
+            continue;
+        }
+
+        if (newLine) {
+            var trimmed = result.trimEnd();
+            if (trimmed !== result) result = trimmed + '\n';
+            // Skip blank lines and whitespace at start of line
+            if (ch === ' ' || ch === '\t') continue;
+            newLine = false;
+            result += getIndent();
+        }
+
+        if (ch === '{' || ch === '[' || ch === '(') {
+            result += ch;
+            if (nextCh !== '}' && nextCh !== ']' && nextCh !== ')') {
+                level++;
+                if (!isClosure(code, i)) {
+                    result += '\n';
+                    newLine = true;
+                }
+            }
+        } else if (ch === '}' || ch === ']' || ch === ')') {
+            // Check if the closing bracket should reduce indent
+            var closing = ch;
+            var matching = (closing === '}' ? '{' : (closing === ']' ? '[' : '('));
+            if (level > 0 && !prevCharHasOpen(result, matching)) {
+                level = Math.max(0, level - 1);
+                // Remove extra whitespace before closing bracket
+                result = result.trimEnd();
+                if (result.endsWith('\n')) {
+                    result = result.slice(0, -1) + getIndent();
+                } else {
+                    result += '\n' + getIndent();
+                    newLine = false;
+                }
+            }
+            result += ch;
+        } else if (ch === ';') {
+            result += ';';
+            if (nextCh !== undefined && nextCh !== '\n' && nextCh !== '\r' && nextCh !== '}') {
+                result += '\n';
+                newLine = true;
+            }
+            if (nextCh === '}') {
+                // Don't add extra newline
+            }
+        } else if (ch === ',') {
+            result += ',';
+            if (!inBrackets(code, i)) {
+                result += '\n';
+                newLine = true;
+            }
+        } else if (ch === ' ' || ch === '\t') {
+            if (result.length > 0 && result[result.length - 1] !== ' ' && result[result.length - 1] !== '\n') {
+                result += ' ';
+            }
+        } else {
+            result += ch;
+        }
+        prevChar = ch;
+    }
+
+    return result.trim();
+}
+
+function isClosure(code, pos) {
+    var j = pos + 1;
+    while (j < code.length) {
+        var ch = code[j];
+        if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') { j++; continue; }
+        return ch === '}' || ch === ']' || ch === ')';
+    }
+    return false;
+}
+
+function prevCharHasOpen(result, openChar) {
+    // Check if the result ends with the opening bracket on the same line
+    var lines = result.split('\n');
+    var lastLine = lines[lines.length - 1].trim();
+    return lastLine.indexOf(openChar) !== -1;
+}
+
+function inBrackets(code, pos) {
+    var depth = 0;
+    for (var i = 0; i < pos; i++) {
+        if (code[i] === '[' || code[i] === '(' || code[i] === '{') depth++;
+        if (code[i] === ']' || code[i] === ')' || code[i] === '}') depth--;
+    }
+    return depth > 0;
+}
+
+function minifyJS(code) {
+    var result = '';
+    var inString = false;
+    var stringChar = '';
+    var inLineComment = false;
+    var inBlockComment = false;
+    var prevWasSpace = false;
+
+    for (var i = 0; i < code.length; i++) {
+        var ch = code[i];
+        var nextCh = code[i + 1] || '';
+
+        if (inLineComment) {
+            if (ch === '\n') { inLineComment = false; result += '\n'; prevWasSpace = true; }
+            continue;
+        }
+
+        if (inBlockComment) {
+            if (ch === '*' && nextCh === '/') { inBlockComment = false; i++; }
+            continue;
+        }
+
+        if (inString) {
+            result += ch;
+            if (ch === '\\') { i++; result += code[i]; }
+            else if (ch === stringChar) { inString = false; }
+            prevWasSpace = false;
+            continue;
+        }
+
+        if (ch === '/' && nextCh === '/') { inLineComment = true; i++; continue; }
+        if (ch === '/' && nextCh === '*') { inBlockComment = true; i++; continue; }
+        if (ch === '"' || ch === "'" || ch === '`') { inString = true; stringChar = ch; result += ch; prevWasSpace = false; continue; }
+
+        if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') {
+            if (!prevWasSpace) {
+                var before = result.length > 0 ? result[result.length - 1] : '';
+                var after = nextCh || '';
+                if (before && after && /[\w$)\]}"']/.test(before) && /[\w$(\[{!"']/.test(after)) {
+                    result += ' ';
+                    prevWasSpace = true;
+                }
+            }
+        } else {
+            result += ch;
+            prevWasSpace = false;
+        }
+    }
+    return result.trim();
+}
+
+// ============ 图片转 Base64 ============
+var __imageBase64Data = null;
+
+window.onImageBase64Selected = function(input) {
+    var file = input.files[0];
+    if (!file) return;
+
+    // Check size
+    var maxSize = TOOL_CONFIGS[TOOL.route] && TOOL_CONFIGS[TOOL.route].maxFileSize || 20 * 1024 * 1024;
+    if (file.size > maxSize) {
+        alert(__('image64.no_file') || '文件过大，最大支持 20MB');
+        input.value = '';
+        return;
+    }
+
+    document.getElementById('imageBase64Name').textContent = file.name;
+    document.getElementById('imageBase64Info').style.display = 'flex';
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var dataUrl = e.target.result;
+        var base64 = dataUrl.split(',')[1];
+        __imageBase64Data = { dataUrl: dataUrl, base64: base64, file: file };
+
+        // Show preview
+        var img = document.getElementById('imagePreviewImg');
+        img.src = dataUrl;
+        img.onload = function() {
+            document.getElementById('imgResolution').textContent = img.naturalWidth + ' × ' + img.naturalHeight;
+        };
+
+        // Show file info
+        document.getElementById('imgFileName').textContent = file.name;
+        document.getElementById('imgFileSize').textContent = formatFileSize(file.size);
+        document.getElementById('imgFileType').textContent = file.type || 'unknown';
+        document.getElementById('imgBase64Len').textContent = base64.length.toLocaleString();
+
+        // Show base64 output
+        var previewBase64 = base64.length > 500 ? base64.substring(0, 500) + '...' : base64;
+        document.getElementById('imageBase64Output').value = 'data:' + (file.type || 'image/png') + ';base64,' + base64;
+
+        document.getElementById('imageBase64Result').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+};
+
+window.clearImageBase64 = function() {
+    __imageBase64Data = null;
+    document.getElementById('imageBase64Input').value = '';
+    document.getElementById('imageBase64Info').style.display = 'none';
+    document.getElementById('imageBase64Result').style.display = 'none';
+    document.getElementById('imageBase64Output').value = '';
+};
+
+window.copyImageDataUri = function() {
+    if (!__imageBase64Data) return;
+    var btn = document.querySelector('[data-i18n="image64.copy_datauri"]') || document.activeElement;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(__imageBase64Data.dataUrl).then(function() {
+            if (btn) { var orig = btn.innerHTML; btn.innerHTML = '✅ 已复制'; btn.disabled = true; setTimeout(function() { btn.innerHTML = orig; btn.disabled = false; }, 1500); }
+            showToast('✅ 已复制 Data URI 到剪贴板');
+        });
+    }
+};
+
+window.copyImageBase64 = function() {
+    if (!__imageBase64Data) return;
+    var btn = document.querySelector('[data-i18n="image64.copy_base64"]') || document.activeElement;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(__imageBase64Data.base64).then(function() {
+            if (btn) { var orig = btn.innerHTML; btn.innerHTML = '✅ 已复制'; btn.disabled = true; setTimeout(function() { btn.innerHTML = orig; btn.disabled = false; }, 1500); }
+            showToast('✅ 已复制 Base64 编码到剪贴板');
+        });
+    }
+};
 
 // 通用剪贴板复制
 window.copyToClipboard = function(btn) {
@@ -3600,6 +4269,147 @@ window.exportLoanCSV = function(dataId, label) {
     var a = document.createElement('a');
     a.href = url;
     a.download = label + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+};
+
+// ============ Mock 数据生成器（全局函数） ============
+window.generateMockData = function(params) {
+    var template = params.template || 'person';
+    var count = Math.min(parseInt(params.count) || 5, 100);
+    var locale = params.locale || 'zh';
+
+    var zhSurnames = ['王','李','张','刘','陈','杨','赵','黄','周','吴','徐','孙','马','胡','朱','郭','何','罗','高','林'];
+    var zhNames = ['伟','芳','娜','敏','静','丽','强','磊','军','洋','勇','艳','杰','涛','明','超','秀英','华','慧','鑫','斌','宁','欣','平'];
+    var zhCities = ['北京','上海','广州','深圳','杭州','成都','武汉','南京','西安','重庆','长沙','青岛','大连','厦门','苏州','天津','郑州','合肥','福州','昆明'];
+    var zhStreets = ['中山路','人民路','建设路','解放路','长安街','南京路','淮海路','天府大道','科技路','高新路'];
+    var zhCompanies = ['华为技术','阿里巴巴','腾讯科技','字节跳动','百度在线','京东集团','小米科技','网易集团','美团点评','滴滴出行','联想集团','中兴通讯','海康威视','大疆创新','比亚迪','宁德时代','格力电器','美的集团','海尔智家','京东方'];
+    var zhProducts = ['智能手机','笔记本电脑','无线耳机','智能手表','平板电脑','蓝牙音箱','移动电源','数据线','充电器','显示器'];
+    var zhPhonePrefixes = ['139','138','137','136','135','158','159','150','151','152','188','186'];
+
+    var enFirstNames = ['James','Mary','John','Patricia','Robert','Jennifer','Michael','Linda','David','Elizabeth','William','Barbara','Richard','Susan','Joseph','Jessica','Thomas','Sarah','Charles','Karen'];
+    var enLastNames = ['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Rodriguez','Martinez','Hernandez','Lopez','Gonzalez','Wilson','Anderson','Thomas','Taylor','Moore','Jackson','Martin'];
+    var enCities = ['New York','Los Angeles','Chicago','Houston','Phoenix','Philadelphia','San Antonio','San Diego','Dallas','San Jose'];
+    var enStreets = ['Main St','Oak Ave','Elm St','Park Ave','Broadway','Market St','Church St','Washington St','Maple Ave','First St'];
+    var enCompanies = ['Acme Corp','GlobalTech','InnoSoft','DataFlow Inc','CloudPeak','NexGen Systems','BrightWave','CoreLogic','PrimeAI','NetSphere'];
+    var enProducts = ['SmartPhone X','Pro Laptop','Wireless Buds','Smart Watch','Tablet Pro','Bluetooth Speaker','Power Bank','USB-C Hub','4K Monitor','Mech Keyboard'];
+
+    function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function randDate(startYear, endYear) {
+        var y = randInt(startYear, endYear);
+        var m = randInt(1, 12);
+        var d = randInt(1, 28);
+        return y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    }
+    function genPhone(prefixes) { var p = rand(prefixes); for (var i = 0; i < 8; i++) p += randInt(0,9); return p; }
+    function genEmail(name, domain) { return name.toLowerCase().replace(/\s/g,'') + randInt(100,999) + '@' + domain; }
+
+    var data = [];
+    var localeData = locale === 'en' ? {
+        firstNames: enFirstNames, lastNames: enLastNames, cities: enCities,
+        streets: enStreets, companies: enCompanies, products: enProducts,
+        phonePrefixes: ['555','505','606','707','808']
+    } : {
+        firstNames: zhSurnames, lastNames: zhNames, cities: zhCities,
+        streets: zhStreets, companies: zhCompanies, products: zhProducts,
+        phonePrefixes: zhPhonePrefixes
+    };
+    var isZh = locale === 'zh';
+    var _i18nT = window.__I18N__ && window.__I18N__.t ? window.__I18N__.t : function(k) { return k; };
+
+    for (var i = 0; i < count; i++) {
+        var item = {};
+        var firstName = rand(localeData.firstNames);
+        var lastName = locale === 'en' ? rand(localeData.lastNames) : (rand(localeData.firstNames) + rand(localeData.lastNames));
+        var fullName = locale === 'en' ? firstName + ' ' + lastName : lastName;
+        var city = rand(localeData.cities);
+        var company = rand(localeData.companies);
+        var phone = genPhone(localeData.phonePrefixes);
+
+        if (template === 'person') {
+            item[isZh ? '姓名' : 'name'] = fullName;
+            item[isZh ? '性别' : 'gender'] = Math.random() > 0.5 ? (isZh ? '男' : 'Male') : (isZh ? '女' : 'Female');
+            item[isZh ? '年龄' : 'age'] = randInt(20, 55);
+            item[isZh ? '手机号' : 'phone'] = phone;
+            item[isZh ? '邮箱' : 'email'] = genEmail(fullName, isZh ? 'example.com' : 'mail.com');
+            item[isZh ? '城市' : 'city'] = city;
+            item[isZh ? '地址' : 'address'] = city + (isZh ? '市' : '') + rand(localeData.streets) + randInt(1, 200) + (isZh ? '号' : '');
+            item[isZh ? '身份证号' : 'idNumber'] = randInt(310000, 510000) + '199' + randInt(0,9) + String(randInt(1,12)).padStart(2,'0') + String(randInt(1,28)).padStart(2,'0') + String(randInt(1000,9999));
+        } else if (template === 'company') {
+            item[isZh ? '公司名称' : 'company'] = company;
+            item[isZh ? '行业' : 'industry'] = isZh ? rand(['互联网','金融','教育','医疗','制造','零售','物流','房地产']) : rand(['Technology','Finance','Education','Healthcare','Manufacturing','Retail','Logistics','Real Estate']);
+            item[isZh ? '城市' : 'city'] = city;
+            item[isZh ? '员工数' : 'employees'] = randInt(20, 5000);
+            item[isZh ? '联系人' : 'contact'] = fullName;
+            item[isZh ? '电话' : 'phone'] = phone;
+            item[isZh ? '邮箱' : 'email'] = genEmail(company.replace(/\s/g,'').toLowerCase(), isZh ? 'company.cn' : 'corp.com');
+            item[isZh ? '成立日期' : 'founded'] = randDate(2000, 2024);
+        } else if (template === 'order') {
+            item[isZh ? '订单号' : 'orderId'] = 'ORD-' + Date.now().toString(36).toUpperCase() + String(i).padStart(4,'0');
+            item[isZh ? '客户' : 'customer'] = fullName;
+            item[isZh ? '商品' : 'product'] = rand(localeData.products);
+            item[isZh ? '数量' : 'quantity'] = randInt(1, 20);
+            item[isZh ? '单价' : 'unitPrice'] = Math.round(randInt(10, 5000) * 100) / 100;
+            item[isZh ? '总价' : 'total'] = Math.round(item[isZh ? '数量' : 'quantity'] * item[isZh ? '单价' : 'unitPrice'] * 100) / 100;
+            item[isZh ? '下单时间' : 'orderTime'] = randDate(2024, 2025) + ' ' + String(randInt(8,22)).padStart(2,'0') + ':' + String(randInt(0,59)).padStart(2,'0') + ':' + String(randInt(0,59)).padStart(2,'0');
+            item[isZh ? '状态' : 'status'] = isZh ? rand(['待付款','已付款','已发货','已完成','已取消']) : rand(['Pending','Paid','Shipped','Completed','Cancelled']);
+        } else if (template === 'product') {
+            item[isZh ? '商品名称' : 'name'] = rand(localeData.products) + ' ' + (isZh ? ['Pro','Max','Plus','Lite','Ultra'][randInt(0,4)] : ['Pro','Max','Plus','Lite','Ultra'][randInt(0,4)]);
+            item[isZh ? 'SKU' : 'sku'] = 'SKU-' + randInt(1000,9999);
+            item[isZh ? '分类' : 'category'] = isZh ? rand(['电子产品','服装','食品','家居','运动','图书','美妆','汽车']) : rand(['Electronics','Clothing','Food','Home','Sports','Books','Beauty','Auto']);
+            item[isZh ? '品牌' : 'brand'] = company;
+            item[isZh ? '价格' : 'price'] = Math.round(randInt(10, 20000) * 100) / 100;
+            item[isZh ? '库存' : 'stock'] = randInt(0, 500);
+            item[isZh ? '评分' : 'rating'] = Math.round((3.5 + Math.random() * 1.5) * 10) / 10;
+            item[isZh ? '上架日期' : 'listedDate'] = randDate(2022, 2025);
+        } else {
+            item.id = i + 1;
+            item.name = fullName;
+            item.email = genEmail(fullName, 'test.com');
+            item.phone = phone;
+            item.city = city;
+            item.createdAt = randDate(2023, 2025);
+        }
+        data.push(item);
+    }
+
+    var json = JSON.stringify(data, null, 2);
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
+    html += '<span style="color:#10b981;">✅ ' + _i18nT('mock.generated') + count + ' ' + _i18nT('mock.records') + '</span>';
+    html += '<div style="display:flex;gap:8px;">';
+    html += '<button class="btn-sm" onclick="window.copyToClipboard(this)" data-copy="' + escHtml(json).replace(/"/g, '&quot;') + '">📋 ' + _i18nT('tool.copy') + '</button>';
+    html += '<button class="btn-sm" onclick="window.downloadMockCSV(\'' + template + '\', ' + count + ')">📥 ' + _i18nT('mock.download_csv') + '</button>';
+    html += '</div></div>';
+    html += '<pre style="margin:0;background:rgba(99,102,241,0.06);padding:12px;border-radius:6px;overflow:auto;max-height:500px;font-size:13px;">' + escHtml(json) + '</pre>';
+
+    window.__mockData = data;
+    return html;
+};
+
+window.downloadMockCSV = function(template, count) {
+    var data = window.__mockData;
+    if (!data || !data.length) return;
+    var keys = Object.keys(data[0]);
+    var csv = '\uFEFF' + keys.join(',') + '\n';
+    data.forEach(function(row) {
+        csv += keys.map(function(k) {
+            var v = row[k];
+            if (typeof v === 'string' && (v.indexOf(',') >= 0 || v.indexOf('"') >= 0)) {
+                return '"' + v.replace(/"/g, '""') + '"';
+            }
+            return v;
+        }).join(',') + '\n';
+    });
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'mock-' + template + '-' + Date.now() + '.csv';
     a.click();
     URL.revokeObjectURL(url);
 };

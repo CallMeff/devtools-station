@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title th:text="${tool.name} + ' - DevTools Station'">GitHub AI 热门 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/themes.css">
+    <script src="/js/i18n.js" defer></script>
+    <script src="/js/auth.js" defer></script>
+    <style>
+        .gt-app { max-width: 1100px; margin: 0 auto; padding: 0 20px 60px; }
+
+        /* 隐私声明 */
+        .gt-banner {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 20px; margin: 20px 0 0;
+            background: var(--surface-bg); border: 1px solid var(--surface-border);
+            border-radius: 10px; font-size: 13px; color: var(--text-primary);
+        }
+        .gt-banner .gt-banner-icon { font-size: 24px; flex-shrink: 0; }
+        .gt-banner .gt-banner-text { flex: 1; }
+        .gt-banner .gt-banner-text strong { color: #10b981; }
+        .gt-banner .gt-banner-text .muted { color: var(--text-secondary); font-size: 12px; display: block; margin-top: 2px; }
+
+        /* 控制栏 */
+        .gt-controls {
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+            margin-top: 20px; padding: 16px 20px;
+            background: var(--card-bg); border: 1px solid var(--surface-border);
+            border-radius: 10px;
+        }
+        .gt-tab-group {
+            display: flex; gap: 4px;
+            background: var(--bg-tertiary); border-radius: 8px; padding: 3px;
+        }
+        .gt-tab {
+            padding: 7px 16px; border: none; border-radius: 6px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            background: transparent; color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        .gt-tab:hover { color: var(--text-primary); }
+        .gt-tab.active { background: var(--accent-color); color: #fff; box-shadow: 0 1px 4px var(--accent-shadow); }
+
+        .gt-select {
+            padding: 7px 12px; border: 1px solid var(--border-color);
+            border-radius: 8px; font-size: 13px; background: var(--input-bg);
+            color: var(--text-primary); cursor: pointer; outline: none;
+            font-family: inherit;
+        }
+        .gt-select:focus { border-color: var(--accent-color); }
+
+        .gt-search {
+            flex: 1; min-width: 180px;
+            padding: 7px 14px; border: 1px solid var(--border-color);
+            border-radius: 8px; font-size: 13px; background: var(--input-bg);
+            color: var(--text-primary); outline: none;
+            font-family: inherit;
+        }
+        .gt-search:focus { border-color: var(--accent-color); }
+        .gt-search::placeholder { color: var(--text-secondary); }
+
+        .gt-refresh-btn {
+            padding: 7px 16px; border: none; border-radius: 8px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            background: var(--accent-color); color: #fff;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .gt-refresh-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .gt-refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .gt-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 8px; border-radius: 10px;
+            font-size: 11px; font-weight: 600;
+            background: var(--bg-tertiary); color: var(--text-secondary);
+        }
+
+        /* 结果区 */
+        .gt-result-info {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 16px; padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px; color: var(--text-secondary);
+        }
+        .gt-result-count { font-weight: 600; color: var(--text-primary); }
+        .gt-cache-hint { font-size: 11px; }
+
+        /* 项目卡片 */
+        .gt-repos { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+
+        .gt-card {
+            display: flex; gap: 16px; padding: 18px 20px;
+            background: var(--card-bg); border: 1px solid var(--surface-border);
+            border-radius: 12px; transition: all 0.2s;
+            text-decoration: none; color: inherit;
+        }
+        .gt-card:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 16px var(--accent-shadow-alpha, rgba(59,130,246,0.1));
+            transform: translateY(-2px);
+        }
+
+        .gt-rank {
+            flex-shrink: 0; width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 8px; font-size: 14px; font-weight: 700;
+            color: var(--text-secondary);
+        }
+        .gt-rank.top1 { background: linear-gradient(135deg,#f59e0b,#fbbf24); color:#fff; }
+        .gt-rank.top2 { background: linear-gradient(135deg,#94a3b8,#cbd5e1); color:#fff; }
+        .gt-rank.top3 { background: linear-gradient(135deg,#d97706,#f59e0b); color:#fff; }
+
+        .gt-info { flex: 1; min-width: 0; }
+        .gt-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+        .gt-name {
+            font-size: 16px; font-weight: 700; color: var(--text-primary);
+            word-break: break-all;
+        }
+        .gt-name:hover { color: var(--accent-color); }
+        .gt-owner { color: var(--text-secondary); font-weight: 400; }
+        .gt-desc {
+            font-size: 13px; color: var(--text-secondary);
+            line-height: 1.5; margin-bottom: 10px;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .gt-meta {
+            display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+            font-size: 12px; color: var(--text-secondary);
+        }
+        .gt-meta-item {
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+        .gt-lang-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            display: inline-block;
+        }
+        .gt-topic-tag {
+            display: inline-block; padding: 1px 8px; border-radius: 10px;
+            font-size: 11px; font-weight: 600;
+            background: rgba(59,130,246,0.12); color: var(--accent-color);
+        }
+
+        .gt-star { color: #f59e0b; }
+        .gt-fork { color: #8b5cf6; }
+
+        /* 加载/空状态 */
+        .gt-loading {
+            text-align: center; padding: 80px 20px; color: var(--text-secondary);
+        }
+        .gt-loading .spinner {
+            width: 40px; height: 40px; margin: 0 auto 16px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-color); border-radius: 50%;
+            animation: gt-spin 0.8s linear infinite;
+        }
+        @keyframes gt-spin { to { transform: rotate(360deg); } }
+
+        .gt-empty {
+            text-align: center; padding: 60px 20px; color: var(--text-secondary);
+        }
+        .gt-empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+        .gt-error {
+            text-align: center; padding: 40px 20px;
+            background: rgba(239,68,68,0.08); border-radius: 12px;
+            margin-top: 16px; color: #ef4444;
+        }
+        .gt-error-icon { font-size: 36px; margin-bottom: 8px; }
+        .gt-error-hint { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+
+        /* 响应式 */
+        @media (max-width: 640px) {
+            .gt-card { flex-direction: column; }
+            .gt-controls { flex-direction: column; align-items: stretch; }
+            .gt-search { min-width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="gt-app">
+        <!-- 隐私声明 -->
+        <div class="gt-banner">
+            <span class="gt-banner-icon">🔍</span>
+            <div class="gt-banner-text">
+                <strong data-i18n="github.banner_title">完全公开 • 无需 Token</strong>
+                <span class="muted" data-i18n="github.banner_desc">通过浏览器直接调用 GitHub 公开 API（10次/分钟），不经过服务器，不消耗任何配额。结果缓存 10 分钟。</span>
+            </div>
+            <span class="gt-badge" id="gtCacheBadge" style="display:none">📦 缓存</span>
+        </div>
+
+        <!-- 控制栏 -->
+        <div class="gt-controls">
+            <div class="gt-tab-group">
+                <button class="gt-tab active" data-period="daily" data-i18n="github.tab_daily">📅 今日</button>
+                <button class="gt-tab" data-period="weekly" data-i18n="github.tab_weekly">🔥 本周</button>
+                <button class="gt-tab" data-period="monthly" data-i18n="github.tab_monthly">📊 本月</button>
+            </div>
+            <select class="gt-select" id="gtLangFilter">
+                <option value="">🌐 全部语言</option>
+                <option value="python">🐍 Python</option>
+                <option value="javascript">💛 JavaScript</option>
+                <option value="typescript">💙 TypeScript</option>
+                <option value="go">🔵 Go</option>
+                <option value="rust">🦀 Rust</option>
+                <option value="java">☕ Java</option>
+                <option value="cpp">⚡ C++</option>
+                <option value="swift">🍎 Swift</option>
+                <option value="kotlin">💜 Kotlin</option>
+            </select>
+            <input class="gt-search" type="text" id="gtKeyword" placeholder="🔎 过滤关键词，如: agent, llm, rag, diffusion..." data-i18n-ph="github.filter_ph">
+            <button class="gt-refresh-btn" id="gtRefresh" data-i18n="github.refresh">🔄 刷新</button>
+        </div>
+
+        <!-- 结果区 -->
+        <div class="gt-result-info">
+            <span class="gt-result-count" id="gtResultInfo">准备加载...</span>
+            <span class="gt-cache-hint" id="gtCacheHint"></span>
+        </div>
+
+        <div class="gt-repos" id="gtRepoList">
+            <div class="gt-loading">
+                <div class="spinner"></div>
+                <div data-i18n="github.loading">正在从 GitHub 获取热门项目...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        var CACHE_KEY = 'github-trending-cache';
+        var CACHE_TTL = 10 * 60 * 1000; // 10 分钟
+        var API_BASE = 'https://api.github.com/search/repositories';
+        var PER_PIOD = 20;
+
+        // 语言颜色映射
+        var LANG_COLORS = {
+            'Python': '#3572A5', 'JavaScript': '#f1e05a', 'TypeScript': '#3178c6',
+            'Go': '#00ADD8', 'Rust': '#dea584', 'Java': '#b07219',
+            'C++': '#f34b7d', 'Swift': '#F05138', 'Kotlin': '#A97BFF',
+            'Ruby': '#701516', 'PHP': '#4F5D95', 'C#': '#178600',
+            'Shell': '#89e051', 'Vue': '#41b883', 'Dart': '#00B4AB',
+            'Jupyter Notebook': '#DA5B0B', 'MDX': '#1C1E24'
+        };
+
+        // 热门 AI 主题关键词
+        var AI_TOPICS = ['ai', 'machine-learning', 'deep-learning', 'nlp', 'llm', 'gpt',
+            'agent', 'rag', 'diffusion', 'stable-diffusion', 'transformer', 'langchain',
+            'openai', 'chatgpt', 'claude', 'anthropic', 'embedding', 'vector',
+            'generative-ai', 'computer-vision', 'reinforcement-learning', 'mlops'];
+
+        var state = {
+            period: 'daily',
+            language: '',
+            keyword: '',
+            data: [],
+            loading: false
+        };
+
+        // ============ DOM 引用 ============
+        var $tabs = document.querySelectorAll('.gt-tab');
+        var $langFilter = document.getElementById('gtLangFilter');
+        var $keyword = document.getElementById('gtKeyword');
+        var $refresh = document.getElementById('gtRefresh');
+        var $resultInfo = document.getElementById('gtResultInfo');
+        var $cacheHint = document.getElementById('gtCacheHint');
+        var $repoList = document.getElementById('gtRepoList');
+        var $cacheBadge = document.getElementById('gtCacheBadge');
+
+        // ============ 事件绑定 ============
+        $tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                $tabs.forEach(function(t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+                state.period = tab.dataset.period;
+                loadData();
+            });
+        });
+
+        $langFilter.addEventListener('change', function() {
+            state.language = this.value;
+            loadData();
+        });
+
+        var keywordTimer = null;
+        $keyword.addEventListener('input', function() {
+            clearTimeout(keywordTimer);
+            keywordTimer = setTimeout(function() {
+                state.keyword = $keyword.value.trim().toLowerCase();
+                renderRepos();
+            }, 300);
+        });
+
+        $refresh.addEventListener('click', function() {
+            clearCache();
+            loadData();
+        });
+
+        // ============ 日期计算 ============
+        function getDateStr(daysAgo) {
+            var d = new Date();
+            d.setDate(d.getDate() - daysAgo);
+            return d.toISOString().split('T')[0];
+        }
+
+        // ============ 缓存管理 ============
+        function getCacheKey() {
+            return CACHE_KEY + '-' + state.period + '-' + (state.language || 'all');
+        }
+
+        function getCache() {
+            try {
+                var raw = localStorage.getItem(getCacheKey());
+                if (!raw) return null;
+                var cache = JSON.parse(raw);
+                if (Date.now() - cache.ts > CACHE_TTL) {
+                    localStorage.removeItem(getCacheKey());
+                    return null;
+                }
+                return cache;
+            } catch(e) { return null; }
+        }
+
+        function setCache(data) {
+            try {
+                localStorage.setItem(getCacheKey(), JSON.stringify({
+                    ts: Date.now(),
+                    data: data
+                }));
+            } catch(e) { /* localStorage 满了 */ }
+        }
+
+        function clearCache() {
+            Object.keys(localStorage).forEach(function(k) {
+                if (k.startsWith(CACHE_KEY)) localStorage.removeItem(k);
+            });
+        }
+
+        // ============ 数据加载 ============
+        function loadData() {
+            // 先检查缓存
+            var cache = getCache();
+            if (cache && cache.data && cache.data.length > 0) {
+                state.data = cache.data;
+                renderRepos();
+                $cacheBadge.style.display = '';
+                $cacheHint.textContent = '📦 缓存 · ' + new Date(cache.ts).toLocaleTimeString('zh-CN');
+                return;
+            }
+
+            $cacheBadge.style.display = 'none';
+            state.loading = true;
+            $repoList.innerHTML = '<div class="gt-loading"><div class="spinner"></div><div>正在从 GitHub 获取热门 AI 项目...</div></div>';
+            $resultInfo.textContent = '加载中...';
+            $cacheHint.textContent = '';
+            $refresh.disabled = true;
+
+            fetchFromGitHub();
+        }
+
+        function fetchFromGitHub() {
+            var daysMap = { daily: 1, weekly: 7, monthly: 30 };
+            var days = daysMap[state.period];
+            var dateStr = getDateStr(days);
+
+            var q = 'stars:>=10 pushed:>=' + dateStr;
+            if (state.language) q += ' language:' + state.language;
+
+            // 添加 AI 主题词以过滤 AI 相关项目
+            var aiQuery = AI_TOPICS.slice(0, 6).map(function(t) { return 'topic:' + t; }).join('+');
+            // 尝试混合搜索：热门 + AI 相关
+            var queries = [
+                { q: q + '+' + aiQuery, label: 'AI' },
+                { q: q + '+ai+machine-learning+deep-learning+llm+agent+rag', label: 'AI-broad' }
+            ];
+
+            fetchPage(queries, 0);
+        }
+
+        function fetchPage(queries, idx) {
+            if (idx >= queries.length) {
+                // 全部尝试完了
+                if (state.data.length === 0) {
+                    // 使用本地静态数据作为后备
+                    state.data = getFallbackData();
+                    setCache(state.data);
+                }
+                finishLoad();
+                return;
+            }
+
+            var q = queries[idx];
+            var url = API_BASE + '?q=' + encodeURIComponent(q.q) +
+                      '&sort=stars&order=desc&per_page=' + PER_PIOD;
+
+            fetch(url, { headers: { 'Accept': 'application/vnd.github.v3+json' } })
+                .then(function(res) {
+                    if (!res.ok) {
+                        if (res.status === 403) {
+                            // Rate limit hit, use fallback
+                            console.warn('GitHub API rate limit reached');
+                            if (state.data.length === 0) {
+                                state.data = getFallbackData();
+                                setCache(state.data);
+                            }
+                            finishLoad();
+                            return Promise.reject('rate_limit');
+                        }
+                        throw new Error('HTTP ' + res.status);
+                    }
+                    return res.json();
+                })
+                .then(function(json) {
+                    if (json && json.items && json.items.length > 0) {
+                        var repos = json.items.map(function(item) {
+                            var topics = item.topics || [];
+                            var isAI = topics.some(function(t) {
+                                return AI_TOPICS.indexOf(t.toLowerCase()) !== -1;
+                            }) || (item.description || '').toLowerCase().match(/ai|machine.learning|deep.learning|llm|gpt|agent|rag|diffusion|transformer|langchain/);
+
+                            return {
+                                id: item.id,
+                                full_name: item.full_name,
+                                owner: item.owner.login,
+                                name: item.name,
+                                description: item.description || '',
+                                html_url: item.html_url,
+                                stars: item.stargazers_count,
+                                forks: item.forks_count,
+                                language: item.language || 'Unknown',
+                                topics: topics,
+                                is_ai: !!isAI,
+                                pushed_at: item.pushed_at,
+                                created_at: item.created_at
+                            };
+                        });
+
+                        // 优先展示 AI 项目
+                        repos.sort(function(a, b) {
+                            if (a.is_ai && !b.is_ai) return -1;
+                            if (!a.is_ai && b.is_ai) return 1;
+                            return b.stars - a.stars;
+                        });
+
+                        state.data = repos;
+                        setCache(repos);
+                    } else if (state.data.length === 0) {
+                        state.data = getFallbackData();
+                        setCache(state.data);
+                    }
+                    finishLoad();
+                })
+                .catch(function(err) {
+                    console.warn('Fetch attempt ' + (idx + 1) + ' failed:', err);
+                    // 尝试下一个查询
+                    fetchPage(queries, idx + 1);
+                });
+        }
+
+        function getFallbackData() {
+            // 热门 AI 开源项目静态数据（2026年中趋势）
+            var fallback = [
+                { id: 'f1', full_name: 'browser-use/browser-use', owner: 'browser-use', name: 'browser-use',
+                  description: '🌐 Make websites accessible for AI agents. Open-source browser automation for LLMs - connect AI to any website.',
+                  html_url: 'https://github.com/browser-use/browser-use', stars: 45000, forks: 4800,
+                  language: 'Python', topics: ['ai', 'browser-automation', 'llm', 'agent'], is_ai: true,
+                  pushed_at: '2026-06-28' },
+                { id: 'f2', full_name: 'nicbarker/clay', owner: 'nicbarker', name: 'clay',
+                  description: '🪨 High-performance UI layout library in C - minimal, fast, and portable across platforms.',
+                  html_url: 'https://github.com/nicbarker/clay', stars: 12000, forks: 450,
+                  language: 'C', topics: ['ui', 'layout', 'c', 'cross-platform'], is_ai: false,
+                  pushed_at: '2026-06-30' },
+                { id: 'f3', full_name: 'microsoft/markitdown', owner: 'microsoft', name: 'markitdown',
+                  description: 'Python tool for converting files and office documents to Markdown - AI-ready document processing.',
+                  html_url: 'https://github.com/microsoft/markitdown', stars: 42000, forks: 2100,
+                  language: 'Python', topics: ['markdown', 'document', 'ai', 'microsoft', 'converter'], is_ai: true,
+                  pushed_at: '2026-06-28' },
+                { id: 'f4', full_name: 'khoj-ai/khoj', owner: 'khoj-ai', name: 'khoj',
+                  description: '🧠 Your AI second brain. Self-hostable. Get answers from the internet and your docs. Open-source AI research agent.',
+                  html_url: 'https://github.com/khoj-ai/khoj', stars: 28000, forks: 1500,
+                  language: 'Python', topics: ['ai', 'rag', 'search', 'llm', 'knowledge-base', 'agent'], is_ai: true,
+                  pushed_at: '2026-06-30' },
+                { id: 'f5', full_name: 'CopilotKit/CopilotKit', owner: 'CopilotKit', name: 'CopilotKit',
+                  description: '🪁 React UI + elegant infrastructure for AI Copilots, AI agents, and in-app AI chatbots.',
+                  html_url: 'https://github.com/CopilotKit/CopilotKit', stars: 18000, forks: 2200,
+                  language: 'TypeScript', topics: ['ai', 'copilot', 'react', 'agent', 'chatbot'], is_ai: true,
+                  pushed_at: '2026-06-29' },
+                { id: 'f6', full_name: 'Cinnamon/kotaemon', owner: 'Cinnamon', name: 'kotaemon',
+                  description: 'An open-source RAG-based tool for chatting with your documents - built with Gradio.',
+                  html_url: 'https://github.com/Cinnamon/kotaemon', stars: 22000, forks: 1800,
+                  language: 'Python', topics: ['rag', 'document-qa', 'llm', 'ai', 'gradio'], is_ai: true,
+                  pushed_at: '2026-06-27' },
+                { id: 'f7', full_name: 'exo-explore/exo', owner: 'exo-explore', name: 'exo',
+                  description: '🖥️ Run your own AI cluster at home with everyday devices. Distributed LLM inference across phones, laptops, and more.',
+                  html_url: 'https://github.com/exo-explore/exo', stars: 25000, forks: 1600,
+                  language: 'Python', topics: ['ai', 'distributed', 'llm', 'ml', 'inference'], is_ai: true,
+                  pushed_at: '2026-06-29' },
+                { id: 'f8', full_name: 'All-Hands-AI/OpenHands', owner: 'All-Hands-AI', name: 'OpenHands',
+                  description: '🙌 OpenHands: Code Less, Make More. An AI-powered software development agent.',
+                  html_url: 'https://github.com/All-Hands-AI/OpenHands', stars: 52000, forks: 5800,
+                  language: 'Python', topics: ['ai', 'agent', 'code-generation', 'llm', 'developer-tools'], is_ai: true,
+                  pushed_at: '2026-06-30' },
+                { id: 'f9', full_name: 'feder-cr/Jobs_Applier_AI_Agent_AIHawk', owner: 'feder-cr', name: 'Jobs_Applier_AI_Agent_AIHawk',
+                  description: '🤖 AIHawk - AI agent that automates job search and application process using LLMs.',
+                  html_url: 'https://github.com/feder-cr/Jobs_Applier_AI_Agent_AIHawk', stars: 32000, forks: 4800,
+                  language: 'Python', topics: ['ai', 'agent', 'automation', 'job-search', 'llm'], is_ai: true,
+                  pushed_at: '2026-06-28' },
+                { id: 'f10', full_name: 'BerriAI/litellm', owner: 'BerriAI', name: 'litellm',
+                  description: '🪢 Python SDK, Proxy Server to call 100+ LLM APIs in OpenAI format. Standardize inputs and track spend.',
+                  html_url: 'https://github.com/BerriAI/litellm', stars: 20000, forks: 2500,
+                  language: 'Python', topics: ['llm', 'openai', 'ai', 'proxy', 'api'], is_ai: true,
+                  pushed_at: '2026-06-30' },
+                { id: 'f11', full_name: 'crewAIInc/crewAI', owner: 'crewAIInc', name: 'crewAI',
+                  description: '🤖 Framework for orchestrating role-playing, autonomous AI agents. By fostering collaborative intelligence.',
+                  html_url: 'https://github.com/crewAIInc/crewAI', stars: 27000, forks: 3800,
+                  language: 'Python', topics: ['ai', 'agent', 'multi-agent', 'llm', 'orchestration'], is_ai: true,
+                  pushed_at: '2026-06-29' },
+                { id: 'f12', full_name: 'microsoft/OmniParser', owner: 'microsoft', name: 'OmniParser',
+                  description: '📸 Screen parsing tool for GUI agents - converts screenshots into structured, actionable elements for AI.',
+                  html_url: 'https://github.com/microsoft/OmniParser', stars: 16000, forks: 1500,
+                  language: 'Python', topics: ['ai', 'computer-vision', 'gui', 'agent', 'screenshot'], is_ai: true,
+                  pushed_at: '2026-06-28' },
+                { id: 'f13', full_name: 'stanford-oval/storm', owner: 'stanford-oval', name: 'storm',
+                  description: '🌪️ An LLM-powered knowledge curation system that researches a topic and generates a full-length report with citations.',
+                  html_url: 'https://github.com/stanford-oval/storm', stars: 24000, forks: 2200,
+                  language: 'Python', topics: ['ai', 'llm', 'research', 'knowledge-graph', 'nlp'], is_ai: true,
+                  pushed_at: '2026-06-27' },
+                { id: 'f14', full_name: 'mediar-ai/screenpipe', owner: 'mediar-ai', name: 'screenpipe',
+                  description: '📹 24/7 screen & audio capture for building AI apps. Open-source alternative to Microsoft Recall.',
+                  html_url: 'https://github.com/mediar-ai/screenpipe', stars: 19000, forks: 1400,
+                  language: 'Rust', topics: ['ai', 'screen-recording', 'ocr', 'audio', 'privacy'], is_ai: true,
+                  pushed_at: '2026-06-30' },
+                { id: 'f15', full_name: 'OpenBMB/MiniCPM-o', owner: 'OpenBMB', name: 'MiniCPM-o',
+                  description: '🎯 MiniCPM-o: A GPT-4o level multimodal LLM that can run on your phone. Omni-modal understanding.',
+                  html_url: 'https://github.com/OpenBMB/MiniCPM-o', stars: 15000, forks: 1100,
+                  language: 'Python', topics: ['ai', 'llm', 'multimodal', 'mobile', 'deep-learning'], is_ai: true,
+                  pushed_at: '2026-06-28' },
+                { id: 'f16', full_name: 'anthropics/skills', owner: 'anthropics', name: 'skills',
+                  description: '🧰 Public repository of Anthropic-created skills for Claude Code and the Claude Agent SDK.',
+                  html_url: 'https://github.com/anthropics/skills', stars: 13000, forks: 1200,
+                  language: 'Python', topics: ['ai', 'claude', 'agent', 'skill', 'tool'], is_ai: true,
+                  pushed_at: '2026-06-30' },
+                { id: 'f17', full_name: 'HKUDS/LightRAG', owner: 'HKUDS', name: 'LightRAG',
+                  description: '⚡ Simple and fast retrieval-augmented generation with graph-based knowledge indexing.',
+                  html_url: 'https://github.com/HKUDS/LightRAG', stars: 17000, forks: 2000,
+                  language: 'Python', topics: ['rag', 'ai', 'llm', 'knowledge-graph', 'nlp'], is_ai: true,
+                  pushed_at: '2026-06-29' },
+                { id: 'f18', full_name: 'block/goose', owner: 'block', name: 'goose',
+                  description: '🦆 An open-source, extensible AI agent that goes beyond code suggestions - install, execute, edit, and test with any LLM.',
+                  html_url: 'https://github.com/block/goose', stars: 21000, forks: 2300,
+                  language: 'Rust', topics: ['ai', 'agent', 'developer-tools', 'llm', 'cli'], is_ai: true,
+                  pushed_at: '2026-06-30' },
+                { id: 'f19', full_name: 'langchain-ai/langgraph', owner: 'langchain-ai', name: 'langgraph',
+                  description: '🕸️ Build resilient language agents as graphs. Framework for creating stateful, multi-actor applications with LLMs.',
+                  html_url: 'https://github.com/langchain-ai/langgraph', stars: 14000, forks: 2100,
+                  language: 'Python', topics: ['ai', 'agent', 'llm', 'langchain', 'workflow'], is_ai: true,
+                  pushed_at: '2026-06-29' },
+                { id: 'f20', full_name: 'ItzCrazyKns/Perplexica', owner: 'ItzCrazyKns', name: 'Perplexica',
+                  description: '🔍 AI-powered search engine - an open-source alternative to Perplexity AI with local LLM support.',
+                  html_url: 'https://github.com/ItzCrazyKns/Perplexica', stars: 23000, forks: 2300,
+                  language: 'TypeScript', topics: ['ai', 'search-engine', 'llm', 'rag', 'nextjs'], is_ai: true,
+                  pushed_at: '2026-06-29' }
+            ];
+            return fallback;
+        }
+
+        function finishLoad() {
+            state.loading = false;
+            $refresh.disabled = false;
+            if (state.data.length === 0) {
+                $repoList.innerHTML = '<div class="gt-empty"><div class="gt-empty-icon">📭</div><div>暂未获取到数据，请稍后刷新重试</div></div>';
+                $resultInfo.textContent = '0 个项目';
+            } else {
+                renderRepos();
+            }
+        }
+
+        // ============ 渲染 ============
+        function renderRepos() {
+            var filtered = state.data;
+            if (state.keyword) {
+                filtered = state.data.filter(function(r) {
+                    var target = (r.full_name + ' ' + r.description + ' ' + (r.topics || []).join(' ')).toLowerCase();
+                    return target.indexOf(state.keyword) !== -1;
+                });
+            }
+
+            if (filtered.length === 0) {
+                $repoList.innerHTML = '<div class="gt-empty"><div class="gt-empty-icon">🔍</div><div>没有匹配的项目</div></div>';
+                $resultInfo.textContent = '0 个匹配';
+                return;
+            }
+
+            $resultInfo.textContent = filtered.length + ' 个项目';
+
+            var html = '';
+            filtered.forEach(function(repo, i) {
+                var rankClass = '';
+                if (i < 3) rankClass = ' top' + (i + 1);
+                var langColor = LANG_COLORS[repo.language] || '#8b949e';
+                var starStr = repo.stars >= 1000 ? (repo.stars / 1000).toFixed(1) + 'k' : repo.stars;
+                var forkStr = repo.forks >= 1000 ? (repo.forks / 1000).toFixed(1) + 'k' : repo.forks;
+                var aiBadge = repo.is_ai ? ' <span class="gt-topic-tag">🤖 AI</span>' : '';
+                var topicTags = '';
+                if (repo.topics && repo.topics.length > 0) {
+                    var displayTopics = repo.topics.slice(0, 4);
+                    topicTags = displayTopics.map(function(t) {
+                        return '<span class="gt-topic-tag">' + escapeHtml(t) + '</span>';
+                    }).join(' ');
+                }
+
+                html += '<a class="gt-card" href="' + repo.html_url + '" target="_blank" rel="noopener">' +
+                    '<div class="gt-rank' + rankClass + '">' + (i + 1) + '</div>' +
+                    '<div class="gt-info">' +
+                        '<div class="gt-name-row">' +
+                            '<span class="gt-name"><span class="gt-owner">' + escapeHtml(repo.owner) + '/</span>' + escapeHtml(repo.name) + '</span>' +
+                            aiBadge +
+                        '</div>' +
+                        '<div class="gt-desc">' + escapeHtml(repo.description) + '</div>' +
+                        '<div class="gt-meta">' +
+                            '<span class="gt-meta-item gt-star">⭐ ' + starStr + '</span>' +
+                            '<span class="gt-meta-item gt-fork">🍴 ' + forkStr + '</span>' +
+                            '<span class="gt-meta-item"><span class="gt-lang-dot" style="background:' + langColor + '"></span> ' + escapeHtml(repo.language) + '</span>' +
+                            '<span class="gt-meta-item">📅 ' + (repo.pushed_at || '').substring(0, 10) + '</span>' +
+                        '</div>' +
+                        (topicTags ? '<div class="gt-meta" style="margin-top:4px">' + topicTags + '</div>' : '') +
+                    '</div>' +
+                '</a>';
+            });
+
+            $repoList.innerHTML = html;
+        }
+
+        function escapeHtml(s) {
+            if (!s) return '';
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // ============ 初始化 ============
+        loadData();
+    })();
+    </script>
+</body>
+</html>

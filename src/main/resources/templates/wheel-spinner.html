@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>抽签转盘</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  user-select: none;
+}
+.wrapper { text-align: center; max-width: 500px; width: 100%; padding: 20px; }
+h1 { color: #fff; font-size: 2.2rem; text-shadow: 0 2px 8px rgba(0,0,0,.2); margin-bottom: 4px; }
+.subtitle { color: rgba(255,255,255,.7); font-size: .9rem; margin-bottom: 20px; }
+canvas { border-radius: 50%; box-shadow: 0 8px 40px rgba(0,0,0,.2); cursor: pointer; transition: filter .3s; }
+canvas:hover { filter: brightness(1.05); }
+.spin-btn {
+  margin-top: 16px; background: #fff; color: #f5576c; border: none;
+  padding: 14px 48px; border-radius: 50px; font-size: 1.2rem; font-weight: 700;
+  cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,.15); transition: all .2s;
+  letter-spacing: 2px;
+}
+.spin-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(0,0,0,.2); }
+.spin-btn:active { transform: scale(.96); }
+.spin-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+.result-card {
+  margin-top: 16px; background: rgba(255,255,255,.2); backdrop-filter: blur(8px);
+  border-radius: 16px; padding: 16px 24px; color: #fff; display: inline-block;
+  animation: fadeIn .4s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.result-card .label { font-size: .8rem; opacity: .7; }
+.result-card .value { font-size: 1.6rem; font-weight: bold; margin-top: 2px; }
+.edit-section { margin-top: 20px; }
+.edit-section textarea {
+  width: 100%; max-width: 400px; height: 80px; border-radius: 12px; border: none;
+  padding: 12px; font-size: .9rem; background: rgba(255,255,255,.15);
+  color: #fff; resize: vertical; outline: none;
+}
+.edit-section textarea::placeholder { color: rgba(255,255,255,.5); }
+.presets { margin-top: 12px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.preset-btn {
+  background: rgba(255,255,255,.2); color: #fff; border: 1px solid rgba(255,255,255,.3);
+  padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: .85rem;
+  transition: all .15s;
+}
+.preset-btn:hover { background: rgba(255,255,255,.35); }
+@media (max-width: 500px) {
+  canvas { width: 300px; height: 300px; }
+  h1 { font-size: 1.6rem; }
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <h1>🎯 抽签转盘</h1>
+  <p class="subtitle">点击转盘或下方按钮开始抽签</p>
+  <canvas id="wheel" width="400" height="400"></canvas>
+  <br>
+  <button class="spin-btn" id="spinBtn" onclick="spin()">🎰 开始抽签</button>
+  <div id="result" style="min-height:60px;"></div>
+  <div class="edit-section">
+    <textarea id="itemsInput" placeholder="每行一个选项，例如：&#10;吃火锅&#10;吃烧烤&#10;吃日料&#10;吃韩餐&#10;吃沙拉&#10;点外卖" onchange="updateWheel()"></textarea>
+    <div class="presets">
+      <button class="preset-btn" onclick="setPreset('lunch')">🍜 午餐选择</button>
+      <button class="preset-btn" onclick="setPreset('decision')">✅ 是否决定</button>
+      <button class="preset-btn" onclick="setPreset('names')">👥 点名</button>
+      <button class="preset-btn" onclick="setPreset('numbers')">🔢 数字</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var canvas = document.getElementById('wheel'), ctx = canvas.getContext('2d');
+var CX = 200, CY = 200, R = 180;
+var items = ['吃火锅','吃烧烤','吃日料','吃韩餐','吃沙拉','点外卖'];
+var colors = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD',
+              '#FF8C94','#88D8B0','#F7DC6F','#BB8FCE','#85C1E9','#F0B27A'];
+var spinning = false, currentAngle = 0, result = -1;
+
+var presets = {
+  lunch: '吃火锅\n吃烧烤\n吃日料\n吃韩餐\n吃沙拉\n点外卖\n吃麻辣烫\n吃黄焖鸡',
+  decision: '做！\n不做\n再想想\n问问别人\n明天再说\n碰运气',
+  names: '小明\n小红\n小刚\n小丽\n小王\n小李\n小张\n小赵',
+  numbers: '1\n2\n3\n4\n5\n6\n7\n8\n9\n10'
+};
+
+function parseItems() {
+  var input = document.getElementById('itemsInput').value.trim();
+  if(!input) { items = ['选项1','选项2','选项3']; return; }
+  items = input.split('\n').filter(function(l){return l.trim().length>0;}).map(function(l){return l.trim();});
+  if(items.length < 2) items = ['选项1','选项2'];
+  if(items.length > 20) items = items.slice(0, 20);
+}
+
+function setPreset(key) {
+  document.getElementById('itemsInput').value = presets[key];
+  updateWheel();
+}
+
+function updateWheel() {
+  parseItems(); result = -1;
+  document.getElementById('result').innerHTML = '';
+  drawWheel();
+}
+
+function drawWheel() {
+  ctx.clearRect(0, 0, 400, 400);
+  var sliceAngle = (2*Math.PI) / items.length;
+  for(var i=0; i<items.length; i++) {
+    var start = currentAngle + i*sliceAngle;
+    ctx.beginPath();
+    ctx.moveTo(CX, CY);
+    ctx.arc(CX, CY, R, start, start+sliceAngle);
+    ctx.closePath();
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 2; ctx.stroke();
+    // Text
+    ctx.save();
+    ctx.translate(CX, CY);
+    ctx.rotate(start + sliceAngle/2);
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 14px "Segoe UI",system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    var text = items[i];
+    if(text.length > 5) text = text.slice(0,5)+'..';
+    ctx.fillText(text, R*0.58, 5);
+    ctx.restore();
+  }
+  // Center circle
+  ctx.beginPath(); ctx.arc(CX, CY, 28, 0, 2*Math.PI);
+  ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.fillStyle = '#f5576c'; ctx.font = 'bold 12px "Segoe UI"'; ctx.textAlign = 'center';
+  ctx.fillText('抽我', CX, CY+5);
+  // Pointer
+  ctx.beginPath();
+  ctx.moveTo(CX+R+4, CY);
+  ctx.lineTo(CX+R-18, CY-12);
+  ctx.lineTo(CX+R-18, CY+12);
+  ctx.closePath();
+  ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.1)'; ctx.stroke();
+}
+
+function spin() {
+  if(spinning) return;
+  spinning = true;
+  var btn = document.getElementById('spinBtn');
+  btn.disabled = true; btn.textContent = '🎰 抽签中...';
+  document.getElementById('result').innerHTML = '';
+
+  var targetItem = Math.floor(Math.random()*items.length);
+  var sliceAngle = (2*Math.PI) / items.length;
+  // Target angle: point the selected slice to the right (0 rad)
+  var targetAngle = (2*Math.PI) - (targetItem * sliceAngle + sliceAngle/2) + Math.PI*2;
+  var fullSpins = (4 + Math.floor(Math.random()*3)) * Math.PI*2;
+  var totalRotation = fullSpins + targetAngle;
+
+  var startAngle = currentAngle, startTime = performance.now();
+  var duration = 3000 + Math.random()*1000;
+
+  function animate(now) {
+    var elapsed = now - startTime;
+    var progress = Math.min(elapsed/duration, 1);
+    // Ease out cubic
+    var eased = 1 - Math.pow(1-progress, 3);
+    currentAngle = startAngle + totalRotation * eased;
+    drawWheel();
+    if(progress < 1) { requestAnimationFrame(animate); }
+    else {
+      currentAngle = currentAngle % (Math.PI*2);
+      result = targetItem;
+      spinning = false;
+      btn.disabled = false; btn.textContent = '🎰 开始抽签';
+      document.getElementById('result').innerHTML = '<div class="result-card"><div class="label">抽签结果</div><div class="value">🎉 ' + items[result] + '</div></div>';
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+// Init
+document.getElementById('itemsInput').value = items.join('\n');
+drawWheel();
+</script>
+</body>
+</html>

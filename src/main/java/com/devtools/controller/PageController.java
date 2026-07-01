@@ -108,6 +108,18 @@ public class PageController {
         // LOCAL_ONLY 工具使用自定义独立模板
         if ("LOCAL_ONLY".equals(currentTool.getApiPath())) {
             model.addAttribute("tool", currentTool);
+            // 根据路由映射模板名
+            if (route.contains("/github/")) return "github-trending";
+            if (route.contains("/chart/")) return "drawio-diagram";
+            if (route.contains("/editor/markdown")) return "markdown-editor";
+            if (route.contains("/editor/monaco")) return "monaco-editor";
+            if (route.contains("/image/compress")) return "image-compress";
+            if (route.contains("/image/convert")) return "image-convert";
+            if (route.contains("/image/palette")) return "color-palette";
+            if (route.contains("/fun/2048")) return "game-2048";
+            if (route.contains("/fun/snake")) return "game-snake";
+            if (route.contains("/fun/spinner")) return "wheel-spinner";
+            if (route.contains("/fun/emoji")) return "emoji-picker";
             return "docs-search";
         }
 

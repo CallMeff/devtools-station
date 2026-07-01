@@ -125,6 +125,17 @@ CREATE TABLE IF NOT EXISTS dt_feedback (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 用户页面皮肤表
+CREATE TABLE IF NOT EXISTS dt_user_skin (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE COMMENT '用户ID',
+    skin_image MEDIUMTEXT DEFAULT NULL COMMENT 'Base64皮肤图片',
+    opacity DOUBLE DEFAULT 0.15 COMMENT '不透明度 0.05-1.0',
+    fit_mode VARCHAR(16) DEFAULT 'cover' COMMENT '填充模式',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES dt_user(id)
+);
+
 -- 邮箱验证码表
 CREATE TABLE IF NOT EXISTS dt_email_verification (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

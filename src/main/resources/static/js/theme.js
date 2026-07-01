@@ -203,4 +203,12 @@
     } else {
         init();
     }
+
+    // 加载页面皮肤系统（注入 script 标签，无需修改模板）
+    (function loadSkinScript() {
+        var script = document.createElement('script');
+        script.src = '/js/page-skin.js';
+        script.defer = true;
+        document.head.appendChild(script);
+    })();
 })();

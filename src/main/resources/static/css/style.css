@@ -1773,3 +1773,367 @@ body.theme-anime .auth-left-cpwd {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
+
+/* ============================================
+   页面皮肤水印系统
+   ============================================ */
+
+/* 皮肤覆盖层 —— 全页面背景水印 */
+#page-skin-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: opacity 0.4s ease;
+    will-change: opacity, background-image;
+}
+
+/* navbar 按钮 */
+.skin-control-btn {
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--card-bg);
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    position: relative;
+}
+.skin-control-btn:hover {
+    border-color: #a78bfa;
+    color: #c4b5fd;
+    background: rgba(139, 92, 246, 0.1);
+}
+.skin-control-btn.has-skin::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #a78bfa;
+    box-shadow: 0 0 6px rgba(139, 92, 246, 0.5);
+}
+
+/* 控制面板 */
+.skin-control-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 340px;
+    max-width: 92vw;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
+    z-index: 2000;
+    display: none;
+    flex-direction: column;
+    animation: skinSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+}
+.skin-control-panel.active {
+    display: flex;
+}
+@keyframes skinSlideUp {
+    from { opacity: 0; transform: translateY(12px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 面板头部 */
+.skin-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+.skin-panel-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.skin-panel-close {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+.skin-panel-close:hover {
+    background: rgba(248, 113, 113, 0.15);
+    color: #f87171;
+}
+
+/* 面板内容 */
+.skin-panel-body {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* 上传区域 */
+.skin-upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--hover-bg);
+}
+.skin-upload-area:hover,
+.skin-upload-area.dragover {
+    border-color: #a78bfa;
+    background: rgba(139, 92, 246, 0.08);
+}
+.skin-upload-icon {
+    font-size: 36px;
+    margin-bottom: 8px;
+}
+.skin-upload-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+.skin-upload-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* 预览图 */
+.skin-preview {
+    position: relative;
+    width: 100%;
+    max-height: 140px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.skin-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    max-height: 140px;
+}
+.skin-preview-change {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.skin-preview-change:hover {
+    background: rgba(0,0,0,0.8);
+}
+
+/* 透明度控制 */
+.skin-opacity-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.skin-opacity-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.skin-opacity-value {
+    font-weight: 600;
+    color: var(--accent-color);
+    font-size: 13px;
+}
+
+/* 滑块 */
+.skin-opacity-slider-wrapper {
+    width: 100%;
+}
+.skin-opacity-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, rgba(139,92,246,0.2), rgba(139,92,246,0.8));
+    outline: none;
+    cursor: pointer;
+}
+.skin-opacity-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #a78bfa;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(139,92,246,0.4);
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+.skin-opacity-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+.skin-opacity-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #a78bfa;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(139,92,246,0.4);
+    cursor: pointer;
+}
+
+/* 快速预设按钮 */
+.skin-opacity-quick {
+    display: flex;
+    gap: 6px;
+}
+.skin-opacity-quick button {
+    flex: 1;
+    padding: 5px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--hover-bg);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.skin-opacity-quick button:hover {
+    border-color: #a78bfa;
+    color: #c4b5fd;
+    background: rgba(139,92,246,0.1);
+}
+
+/* 触控提示 */
+.skin-swipe-hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+/* 面板底部 */
+.skin-panel-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.skin-btn-remove {
+    padding: 7px 14px;
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.skin-btn-remove:hover:not(:disabled) {
+    border-color: #f87171;
+    color: #f87171;
+    background: rgba(248,113,113,0.08);
+}
+.skin-btn-remove:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+.skin-save-hint {
+    font-size: 11px;
+    text-align: right;
+    flex: 1;
+}
+
+/* 皮肤 Toast */
+.skin-toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    padding: 10px 22px;
+    border-radius: 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    z-index: 3000;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+}
+.skin-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+.skin-toast-error {
+    border-color: rgba(248,113,113,0.3);
+}
+
+/* 面板打开时 body 允许点击穿透 */
+body.skin-panel-open .skin-control-panel {
+    pointer-events: auto;
+}
+
+/* 移动端适配 */
+@media (max-width: 500px) {
+    .skin-control-panel {
+        bottom: 12px;
+        right: 12px;
+        left: 12px;
+        width: auto;
+        max-width: none;
+    }
+    .skin-panel-body {
+        padding: 12px;
+    }
+    .skin-panel-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .skin-save-hint {
+        text-align: center;
+    }
+}

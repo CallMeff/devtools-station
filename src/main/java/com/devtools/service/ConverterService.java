@@ -635,6 +635,117 @@ public class ConverterService {
         return true;
     }
 
+    // ==================== 数字转中文大写金额 ====================
+
+    /**
+     * 数字转中文大写金额（财务标准写法）
+     * 支持整数和小数（最多两位），如 12345.67 → 壹万贰仟叁佰肆拾伍元陆角柒分
+     */
+    public Map<String, Object> rmbUpper(String input) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("input", input);
+        try {
+            String trimmed = input.trim().replace(",", "").replace("，", "").replace(" ", "");
+            // 验证是否为有效数字
+            if (!trimmed.matches("\\d+(\\.\\d{1,2})?")) {
+                result.put("error", "请输入有效数字，如 12345.67");
+                return result;
+            }
+            double amount = Double.parseDouble(trimmed);
+            if (amount < 0) {
+                result.put("error", "暂不支持负数");
+                return result;
+            }
+            if (amount > 9999999999999.99) {
+                result.put("error", "金额过大，最大支持 9999999999999.99（万亿级）");
+                return result;
+            }
+            result.put("amount", amount);
+            result.put("output", toChineseAmount(amount));
+        } catch (Exception e) {
+            result.put("error", "转换失败: " + e.getMessage());
+        }
+        return result;
+    }
+
+    private static final char[] CN_DIGITS  = {'零','壹','贰','叁','肆','伍','陆','柒','捌','玖'};
+    private static final char[] CN_UNITS   = {'元','拾','佰','仟','万','拾','佰','仟','亿','拾','佰','仟','万','拾','佰','仟'};
+    private static final char[] CN_DECIMAL = {'角','分'};
+
+    private String toChineseAmount(double amount) {
+        long intPart = (long) amount;
+        int decPart = (int) Math.round((amount - intPart) * 100);
+
+        StringBuilder sb = new StringBuilder();
+
+        // 整数部分
+        if (intPart == 0) {
+            sb.append("零元");
+        } else {
+            String intStr = String.valueOf(intPart);
+            int len = intStr.length();
+            boolean needZero = false;
+            boolean hasYi = false;
+            boolean hasWan = false;
+
+            for (int i = 0; i < len; i++) {
+                int digit = intStr.charAt(i) - '0';
+                int unitIdx = len - i - 1; // 0=个位(元), 1=拾, 2=佰...
+
+                if (unitIdx == 8) hasYi = true;
+                if (unitIdx == 4) hasWan = true;
+
+                if (digit == 0) {
+                    // 万位或亿位为零但段已开始 → 输出单位
+                    if (unitIdx == 8 && !hasYi && intPart >= 100000000) {
+                        sb.append("亿");
+                    }
+                    if (unitIdx == 4 && intPart % 100000000 >= 10000) {
+                        sb.append("万");
+                    }
+                    needZero = true;
+                } else {
+                    if (needZero && sb.length() > 0 && sb.charAt(sb.length() - 1) != '亿' && sb.charAt(sb.length() - 1) != '万') {
+                        sb.append("零");
+                    }
+                    sb.append(CN_DIGITS[digit]);
+                    if (unitIdx < CN_UNITS.length) {
+                        sb.append(CN_UNITS[unitIdx]);
+                    }
+                    needZero = false;
+                }
+            }
+
+            // 清理尾部多余的"元"
+            if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '元') {
+                // 元已在
+            } else if (sb.charAt(sb.length() - 1) != '元') {
+                // 确保以"元"结尾（处理像 10 → 拾元 的情况）
+                if (sb.indexOf("元") < 0) {
+                    sb.append("元");
+                }
+            }
+        }
+
+        // 小数部分
+        if (decPart == 0) {
+            sb.append("整");
+        } else {
+            int jiao = decPart / 10;
+            int fen = decPart % 10;
+            if (jiao > 0) {
+                sb.append(CN_DIGITS[jiao]).append("角");
+            } else {
+                sb.append("零");
+            }
+            if (fen > 0) {
+                sb.append(CN_DIGITS[fen]).append("分");
+            }
+        }
+
+        return sb.toString();
+    }
+
     // ==================== JSON ↔ YAML 转换 ====================
 
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();

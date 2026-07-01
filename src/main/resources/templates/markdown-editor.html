@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <title th:text="${tool.name} + ' - DevTools Station'">Markdown 编辑器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/themes.css">
+    <script src="/js/i18n.js" defer></script>
+    <script src="/js/auth.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@15/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11/lib/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/github.min.css" id="hljs-light">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/github-dark.min.css" id="hljs-dark" disabled>
+    <style>
+        .md-app { max-width: 1500px; margin: 0 auto; padding: 0 16px 40px; }
+
+        .md-toolbar {
+            display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+            padding: 10px 16px; margin: 16px 0 0;
+            background: var(--surface-bg); border: 1px solid var(--surface-border); border-radius: 10px;
+        }
+        .md-toolbar button, .md-toolbar select {
+            padding: 6px 12px; border-radius: 6px; font-size: 13px;
+            border: 1px solid var(--surface-border); background: var(--bg);
+            color: var(--text-primary); cursor: pointer;
+        }
+        .md-toolbar button:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .md-toolbar .md-gap { flex: 1; }
+
+        .md-main { display: flex; gap: 12px; margin-top: 12px; min-height: 550px; }
+        .md-editor, .md-preview {
+            flex: 1; min-width: 0;
+            border: 1px solid var(--surface-border); border-radius: 10px;
+            overflow: hidden; background: var(--surface-bg);
+        }
+        .md-editor-header, .md-preview-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 14px; background: var(--bg); border-bottom: 1px solid var(--surface-border);
+            font-size: 13px; font-weight: 600; color: var(--text-primary);
+        }
+        .md-editor textarea {
+            width: 100%; height: calc(100% - 40px); padding: 14px;
+            font-family: 'JetBrains Mono','Fira Code','Consolas',monospace;
+            font-size: 13px; line-height: 1.6; resize: none;
+            background: var(--surface-bg); color: var(--text-primary);
+            border: none; outline: none; tab-size: 2;
+        }
+        .md-preview-content {
+            padding: 20px 24px; height: calc(100% - 40px); overflow-y: auto;
+            color: var(--text-primary); line-height: 1.75;
+        }
+        .md-preview-content h1, .md-preview-content h2, .md-preview-content h3 {
+            margin: 16px 0 8px; border-bottom: 1px solid var(--surface-border);
+            padding-bottom: 6px;
+        }
+        .md-preview-content code {
+            background: var(--bg); padding: 2px 6px; border-radius: 4px;
+            font-size: 90%;
+        }
+        .md-preview-content pre {
+            background: var(--bg); padding: 14px 18px; border-radius: 8px;
+            overflow-x: auto; line-height: 1.5;
+        }
+        .md-preview-content pre code { background: none; padding: 0; }
+        .md-preview-content table {
+            border-collapse: collapse; width: 100%; margin: 10px 0;
+        }
+        .md-preview-content th, .md-preview-content td {
+            border: 1px solid var(--surface-border); padding: 8px 12px;
+            text-align: left;
+        }
+        .md-preview-content th { background: var(--bg); }
+        .md-preview-content blockquote {
+            border-left: 4px solid var(--accent); padding: 8px 16px;
+            margin: 10px 0; background: var(--bg); border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+        .md-preview-content img { max-width: 100%; border-radius: 8px; }
+        .md-preview-content a { color: var(--accent); }
+
+        .md-placeholder { color: var(--text-secondary); text-align: center; padding: 40px 20px; }
+
+        @media (max-width: 900px) {
+            .md-main { flex-direction: column; }
+            .md-editor { max-height: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <script>(function(){var t=localStorage.getItem('devtools-theme')||'dark';document.body.className='theme-'+t;})()</script>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <div class="md-app">
+        <div class="md-toolbar">
+            <button onclick="insertSyntax('**粗体**')" title="粗体">B</button>
+            <button onclick="insertSyntax('*斜体*')"><i>I</i></button>
+            <button onclick="insertSyntax('`代码`')">&lt;/&gt;</button>
+            <button onclick="insertSyntax('[链接](https://)')">🔗</button>
+            <button onclick="insertSyntax('![图片](https://)')">🖼️</button>
+            <button onclick="insertBlock('> 引用')">💬</button>
+            <button onclick="insertBlock('- 列表项')">📋</button>
+            <button onclick="insertBlock('1. 列表项')">🔢</button>
+            <button onclick="insertBlock('```\n代码块\n```')">📦</button>
+            <button onclick="insertBlock('| 列1 | 列2 |\n|-----|-----|\n|     |     |')">📊</button>
+            <span class="md-gap"></span>
+            <select id="md-mode" onchange="toggleMode()">
+                <option value="split">分屏编辑</option>
+                <option value="edit">仅编辑</option>
+                <option value="preview">仅预览</option>
+            </select>
+            <button onclick="copyHTML()">📋 复制HTML</button>
+            <button onclick="exportMD()">📥 导出 .md</button>
+        </div>
+        <div class="md-main" id="md-main">
+            <div class="md-editor" id="md-editor-panel">
+                <div class="md-editor-header">
+                    <span>📝 Markdown</span>
+                    <span style="font-weight:400;font-size:11px;color:var(--text-secondary);" id="md-char-count">0 字符</span>
+                </div>
+                <textarea id="md-input" placeholder="在此输入 Markdown 内容，右侧实时预览..." oninput="onInput()"></textarea>
+            </div>
+            <div class="md-preview" id="md-preview-panel">
+                <div class="md-preview-header"><span>👁️ 预览</span></div>
+                <div class="md-preview-content" id="md-output">
+                    <div class="md-placeholder">← 在左侧输入 Markdown 来预览</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+<script>
+// ============ Markdown 渲染配置 ============
+marked.setOptions({
+    breaks: true,
+    gfm: true,
+    highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+            try { return hljs.highlight(code, {language: lang}).value; } catch(e) {}
+        }
+        return code;
+    }
+});
+
+// 暗色模式时切换高亮主题
+var themeObserver = new MutationObserver(function() {
+    var isDark = document.documentElement.className.indexOf('dark') > -1 ||
+                 document.documentElement.className.indexOf('theme-dark') > -1;
+    document.getElementById('hljs-light').disabled = isDark;
+    document.getElementById('hljs-dark').disabled = !isDark;
+});
+themeObserver.observe(document.documentElement, {attributes: true, attributeFilter: ['class']});
+// 初始化
+(function() {
+    var isDark = document.documentElement.className.indexOf('dark') > -1 ||
+                 document.documentElement.className.indexOf('theme-dark') > -1;
+    document.getElementById('hljs-light').disabled = isDark;
+    document.getElementById('hljs-dark').disabled = !isDark;
+})();
+
+// ============ 工具栏 ============
+var renderTimeout = null;
+
+function onInput() {
+    var ta = document.getElementById('md-input');
+    document.getElementById('md-char-count').textContent = ta.value.length + ' 字符';
+    clearTimeout(renderTimeout);
+    renderTimeout = setTimeout(renderPreview, 200);
+}
+
+function renderPreview() {
+    var input = document.getElementById('md-input').value;
+    var output = document.getElementById('md-output');
+    if (!input.trim()) {
+        output.innerHTML = '<div class="md-placeholder">← 在左侧输入 Markdown 来预览</div>';
+        return;
+    }
+    output.innerHTML = marked.parse(input);
+}
+
+function insertSyntax(wrapper) {
+    var ta = document.getElementById('md-input');
+    var s = ta.selectionStart, e = ta.selectionEnd;
+    var text = ta.value;
+    var sel = text.substring(s, e) || '文本';
+    ta.value = text.substring(0, s) + wrapper.replace('粗体', sel).replace('斜体', sel).replace('代码', sel) + text.substring(e);
+    ta.focus();
+    ta.selectionStart = s; ta.selectionEnd = s + wrapper.length;
+    onInput();
+}
+
+function insertBlock(template) {
+    var ta = document.getElementById('md-input');
+    var before = ta.value.substring(0, ta.selectionStart);
+    var after = ta.value.substring(ta.selectionEnd);
+    var prefix = before && !before.endsWith('\n') ? '\n' : '';
+    ta.value = before + prefix + template + '\n' + after;
+    ta.focus();
+    ta.selectionStart = ta.selectionEnd = ta.value.length;
+    onInput();
+}
+
+function toggleMode() {
+    var mode = document.getElementById('md-mode').value;
+    var editor = document.getElementById('md-editor-panel');
+    var preview = document.getElementById('md-preview-panel');
+    if (mode === 'edit') {
+        editor.style.display = ''; preview.style.display = 'none';
+        editor.style.flex = '1';
+    } else if (mode === 'preview') {
+        editor.style.display = 'none'; preview.style.display = '';
+        preview.style.flex = '1';
+    } else {
+        editor.style.display = ''; preview.style.display = '';
+        editor.style.flex = '1'; preview.style.flex = '1';
+    }
+    document.getElementById('md-input').style.height = 'calc(100% - 40px)';
+}
+
+function copyHTML() {
+    var input = document.getElementById('md-input').value;
+    if (!input.trim()) { alert('没有内容'); return; }
+    var html = marked.parse(input);
+    navigator.clipboard.writeText(html).then(function() {
+        var btn = event.target;
+        var orig = btn.textContent;
+        btn.textContent = '✅ 已复制!';
+        setTimeout(function() { btn.textContent = orig; }, 1500);
+    }).catch(function() {
+        // fallback
+        var ta = document.createElement('textarea');
+        ta.value = html; document.body.appendChild(ta);
+        ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+        alert('HTML 已复制');
+    });
+}
+
+function exportMD() {
+    var content = document.getElementById('md-input').value;
+    if (!content.trim()) { alert('没有内容'); return; }
+    var blob = new Blob([content], {type:'text/markdown'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'document.md';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+}
+
+// ============ 快捷键 ============
+document.addEventListener('keydown', function(e) {
+    if (e.target.tagName !== 'TEXTAREA') return;
+    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault(); insertSyntax('**粗体**');
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+        e.preventDefault(); insertSyntax('*斜体*');
+    }
+});
+</script>
+</body>
+</html>

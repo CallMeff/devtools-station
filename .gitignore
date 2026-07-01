@@ -1,18 +1,55 @@
 # Build output
 target/
 
-# Logs
-*.log
+# Node
+node_modules/
+package-lock.json
 
 # IDE
 .idea/
 *.iml
+.vscode/
 
 # OS
 .DS_Store
 Thumbs.db
 
+# Logs
+*.log
+
 # Temp scripts
 find_jdk.ps1
 install_jdk17.ps1
 git_output.txt
+
+# Test artifacts (temporary)
+test-docs/
+test-fill.js
+debug_test.ps1
+ocr-*.png
+homepage*.png
+auth-*.png
+js-format-*.png
+image-base64-*.png
+theme-*.png
+tool-*.png
+*-test.yml
+*-test.png
+after-theme.yml
+before-lang.yml
+english-home.yml
+english-theme.png
+home-snapshot.yml
+home-en.yml
+homepage.yml
+js-snap.yml
+ocr-page.yml
+ocr-running-test.png
+ocr-before-test.yml
+ocr-initial.png
+ocr-fix-verify.png
+ocr-local-verify.png
+
+# Build artifacts
+build.txt
+packaging/

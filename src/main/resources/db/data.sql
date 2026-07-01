@@ -16,8 +16,11 @@ INSERT INTO dt_category (name, icon, sort_order, description) VALUES
 ('开发者工具', '💻', 7, 'Cron 表达式、Git 命令、MIME 类型等'),
 ('编码解码', '📟', 8, 'Base64、URL、Unicode、HTML 实体编解码'),
 ('金融计算', '💰', 9, '贷款计算、投资回报、利率换算等金融工具'),
-('图像处理', '🖼️', 10, 'OCR 文字识别、图片处理等图像工具'),
-('本地工具', '💻', 11, '本地文档搜索、文件处理等纯本地工具，保障数据私密性');
+('图像处理', '🖼️', 10, '图片压缩、格式转换、配色方案、OCR 文字识别等图像工具'),
+('本地工具', '💻', 11, '本地文档搜索、文件处理等纯本地工具，保障数据私密性'),
+('AI 工具', '🤖', 12, 'AI 相关开发工具，热门开源项目发现、AI 辅助等'),
+('图表工具', '📈', 13, '基于 Excalidraw (⭐90k+) 手绘风格画图工具，秒开零延迟，拖拽作图'),
+('趣味休闲', '🎮', 14, '经典小游戏 + 趣味工具，工作之余摸鱼放松一下');
 
 -- 工具数据
 INSERT INTO dt_tool (category_id, name, description, icon, route, api_path, sort_order, is_hot, is_new) VALUES
@@ -35,6 +38,7 @@ INSERT INTO dt_tool (category_id, name, description, icon, route, api_path, sort
 (2, 'HTML 格式化', 'HTML 代码美化与压缩', '📋', '/tools/format/html', '/api/tools/format/html', 4, 0, 0),
 (2, 'XML 格式化', 'XML 代码美化与压缩', '📰', '/tools/format/xml', '/api/tools/format/xml', 5, 0, 0),
 (2, 'Markdown 预览', 'Markdown 实时预览与编辑，支持 GFM 语法高亮', '📝', '/tools/format/markdown', '/api/tools/client/markdown', 6, 0, 1),
+(2, 'JS 代码格式化', 'JavaScript 代码美化与压缩，支持缩进调整和单行压缩', '💛', '/tools/format/js', '/api/tools/client/js', 7, 0, 1),
 
 -- 转换工具
 (3, '时间戳转换', 'Unix 时间戳与日期互转', '⏰', '/tools/converter/timestamp', '/api/tools/convert/timestamp', 1, 1, 0),
@@ -45,6 +49,9 @@ INSERT INTO dt_tool (category_id, name, description, icon, route, api_path, sort
 (3, 'Excel转JSON', 'Excel文件(.xlsx/.xls)转换为JSON格式', '📊', '/tools/converter/excel2json', '/api/tools/convert/excel2json', 6, 0, 1),
 (3, 'JSON 转 YAML', 'JSON 与 YAML 格式互转', '🔄', '/tools/converter/json-yaml', '/api/tools/convert/json-yaml', 7, 0, 1),
 (3, 'JSON ↔ CSV', 'JSON 数组与 CSV 表格格式互转', '📋', '/tools/converter/json-csv', '/api/tools/client/json-csv', 8, 0, 1),
+(3, '图片转 Base64', '图片文件转 Base64 编码，支持预览和复制，适用于 CSS/HTML 内联图片', '🖼️', '/tools/converter/image-base64', '/api/tools/client/image-base64', 9, 0, 1),
+(3, 'JSON ↔ XML', 'JSON 与 XML 格式互转，支持双向转换和格式化输出', '🔄', '/tools/converter/json-xml', '/api/tools/client/json-xml', 10, 0, 1),
+(3, '数字转大写金额', '数字转中文大写金额（财务标准），支持整数和小数', '💰', '/tools/converter/rmb-upper', '/api/tools/convert/rmb-upper', 11, 0, 1),
 
 -- 生成器
 (4, 'UUID 生成', '批量生成 UUID/GUID', '🆔', '/tools/generator/uuid', '/api/tools/generate/uuid', 1, 1, 0),
@@ -52,6 +59,7 @@ INSERT INTO dt_tool (category_id, name, description, icon, route, api_path, sort
 (4, '随机数生成', '指定范围随机数生成', '🎰', '/tools/generator/random', '/api/tools/generate/random', 3, 0, 0),
 (4, 'Lorem Ipsum', '占位文本生成', '📝', '/tools/generator/lorem', '/api/tools/generate/lorem', 4, 0, 0),
 (4, '二维码生成', '文本/链接转二维码图片', '📱', '/tools/generator/qrcode', '/api/tools/generate/qrcode', 5, 0, 1),
+(4, 'Mock 数据生成器', '一键生成模拟数据：个人信息/公司/订单/商品模板，支持中英文、JSON/CSV 导出', '🎭', '/tools/generator/mock-data', '/api/tools/client/mock-data', 6, 0, 1),
 
 -- 文本处理
 (5, '文本对比', '两段文本差异对比（Diff）', '🔍', '/tools/text/diff', '/api/tools/text/diff', 1, 0, 1),
@@ -81,5 +89,21 @@ INSERT INTO dt_tool (category_id, name, description, icon, route, api_path, sort
 (9, '贷款计算器', '等额本息与等额本金对比计算，支持提前还款模拟和还款明细表导出', '🏦', '/tools/finance/loan-calculator', '', 1, 1, 1),
 -- 图像处理
 (10, 'OCR 文字识别', '图片文字识别，支持中文/英文/混合语言，支持单张和批量识别', '📸', '/tools/image/ocr', '/api/tools/ocr/single', 1, 1, 1),
+(10, '图片压缩器', '拖拽即可压缩图片，所见即所得。基于浏览器 Canvas 引擎，文件不上传服务器，安全私密', '🗜️', '/tools/image/compress', 'LOCAL_ONLY', 1, 1, 1),
+(10, '配色方案生成', '按空格键随机生成和谐配色方案，支持锁定颜色、一键复制色值。做 PPT/海报/文档不再为配色头疼', '🎨', '/tools/image/palette', 'LOCAL_ONLY', 1, 1, 1),
+(10, '图片格式转换', 'JPG / PNG / WebP 互转，支持批量处理，纯浏览器端运行。调整导出质量，即转即下载', '🔄', '/tools/image/convert', 'LOCAL_ONLY', 1, 1, 1),
 -- 本地工具
-(11, '本地文档瞬搜', '选择本地文件夹，纯浏览器端全文检索 Word/PDF/TXT 等文档，文件不上传，保障数据绝对私密', '🔍', '/tools/local-search/doc-search', 'LOCAL_ONLY', 1, 1, 1);
+(11, '本地文档瞬搜', '选择本地文件夹，纯浏览器端全文检索 Word/PDF/TXT 等文档，文件不上传，保障数据绝对私密', '🔍', '/tools/local-search/doc-search', 'LOCAL_ONLY', 1, 1, 1),
+-- AI 工具
+(12, 'GitHub AI 热门项目', '实时查看 GitHub 上最热门的 AI 开源项目，支持按日/周/月筛选和语言过滤，无需 Token，浏览器直连 GitHub API', '🤖', '/tools/github/trending', 'LOCAL_ONLY', 1, 1, 1),
+-- 图表工具
+(13, '在线画图工具', '基于 Excalidraw (⭐90k+) 手绘风格画图工具，秒开零延迟，支持流程图/草图/示意图，导出 PNG/SVG', '📈', '/tools/chart/drawio', 'LOCAL_ONLY', 1, 1, 1),
+-- 趣味休闲
+(14, '2048 经典游戏', '超上瘾的数字滑动游戏！方向键合并相同数字，挑战 2048。支持触屏滑动，记录最高分', '🔢', '/tools/fun/2048', 'LOCAL_ONLY', 1, 1, 1),
+(14, '贪吃蛇', '经典街机游戏！控制小蛇吃食物变长，别撞到自己。三档速度，支持键盘+触屏+手机虚拟按键', '🐍', '/tools/fun/snake', 'LOCAL_ONLY', 1, 1, 1),
+(14, '抽签转盘', '选择困难症救星！自定义选项转盘抽签，午餐吃什么/今天谁请客/周末去哪玩，一抽搞定', '🎯', '/tools/fun/spinner', 'LOCAL_ONLY', 1, 1, 1),
+(14, '表情包搜索', '300+ emoji 表情库，按分类浏览/关键词搜索，点一下复制到剪贴板，聊天发帖随时用', '😎', '/tools/fun/emoji', 'LOCAL_ONLY', 1, 1, 1),
+-- 开发者工具（追加 Monaco 编辑器）
+(7, '在线代码编辑器', '基于 VS Code 同款 Monaco Editor (⭐40k+)，支持 20+ 编程语言语法高亮、代码补全、对比(Diff)、格式化，可导入导出文件', '💻', '/tools/editor/monaco', 'LOCAL_ONLY', 5, 1, 1),
+-- 格式化工具（追加 Markdown 编辑器）
+(2, 'Markdown 编辑器', '基于 Marked.js (⭐35k+) 实时编辑器，支持分屏/仅编辑/仅预览模式，工具栏快速插入，代码高亮，导出 HTML/MD', '📝', '/tools/editor/markdown', 'LOCAL_ONLY', 8, 1, 1);

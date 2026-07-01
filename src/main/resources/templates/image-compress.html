@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">图片压缩器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh}
+        .container{max-width:900px;margin:0 auto;padding:20px 24px}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent,#7c3aed);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+
+        .drop-zone{border:2px dashed var(--border-color,#555);border-radius:16px;padding:60px 30px;text-align:center;cursor:pointer;transition:all .3s;margin:20px 0;background:var(--bg-secondary,#1e1e2e)}
+        .drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent,#7c3aed);background:rgba(124,58,237,.05)}
+        .drop-zone .icon{font-size:56px;margin-bottom:16px}
+        .drop-zone h3{font-size:18px;margin-bottom:8px;color:var(--text-primary,#ddd)}
+        .drop-zone p{color:var(--text-muted,#999);font-size:13px}
+
+        .compress-panel{display:none;margin:20px 0}
+        .compress-panel.show{display:block}
+
+        .preview-row{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px}
+        .preview-card{flex:1;min-width:280px;background:var(--bg-secondary,#1e1e2e);border-radius:12px;overflow:hidden;border:1px solid var(--border-color,#333)}
+        .preview-card .header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg-tertiary,#2a2a3a);font-size:13px}
+        .preview-card .header .badge{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--accent,#7c3aed);color:#fff}
+        .preview-card .img-wrap{display:flex;align-items:center;justify-content:center;padding:16px;min-height:200px;max-height:360px;overflow:hidden}
+        .preview-card .img-wrap img{max-width:100%;max-height:320px;object-fit:contain;border-radius:4px}
+        .preview-card .footer{padding:10px 16px;font-size:12px;color:var(--text-muted,#999);border-top:1px solid var(--border-color,#333)}
+        .preview-card .footer .saved{color:#10b981;font-weight:bold}
+        .preview-card.after .badge{background:#10b981}
+
+        .controls{background:var(--bg-secondary,#1e1e2e);border-radius:12px;padding:20px;border:1px solid var(--border-color,#333);margin-bottom:20px}
+        .controls label{display:block;margin-bottom:8px;font-size:13px;color:var(--text-muted,#999)}
+        .controls .slider-row{display:flex;align-items:center;gap:14px}
+        .controls input[type=range]{flex:1;accent-color:var(--accent,#7c3aed)}
+        .controls .val{min-width:42px;text-align:right;font-size:14px;font-weight:bold}
+        .controls .format-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+        .controls .format-btn{padding:6px 16px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s}
+        .controls .format-btn.active{border-color:var(--accent,#7c3aed);background:var(--accent,#7c3aed);color:#fff}
+        .controls .format-btn:hover:not(.active){border-color:var(--text-muted,#666)}
+
+        .actions{display:flex;gap:10px;flex-wrap:wrap}
+        .btn{padding:8px 20px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:14px;transition:all .15s;display:flex;align-items:center;gap:6px}
+        .btn:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .btn.primary{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .btn.primary:hover{opacity:.85}
+
+        .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#444);color:var(--text-primary,#ddd);padding:8px 20px;border-radius:20px;font-size:13px;z-index:100;opacity:0;transition:opacity .3s}
+        .toast.show{opacity:1}
+        .toast.success{border-color:#10b981;color:#10b981}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand">
+            <a href="/">🏠 DevTools</a>
+            <span class="sep">/</span>
+            <span class="tool-name" th:text="${tool.name}">图片压缩器</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 拖拽区 -->
+        <div class="drop-zone" id="dropZone">
+            <div class="icon">🖼️</div>
+            <h3>拖拽图片到这里，或点击选择</h3>
+            <p>支持 JPG / PNG / WebP / BMP，所有处理在浏览器本地完成</p>
+            <input type="file" id="fileInput" accept="image/*" hidden>
+        </div>
+
+        <!-- 压缩面板 -->
+        <div class="compress-panel" id="compressPanel">
+            <div class="preview-row">
+                <div class="preview-card before" id="beforeCard">
+                    <div class="header"><span>📷 原图</span><span class="badge" id="beforeSize">-</span></div>
+                    <div class="img-wrap"><img id="beforeImg" src="" alt="原图"></div>
+                    <div class="footer" id="beforeInfo">分辨率: -</div>
+                </div>
+                <div class="preview-card after" id="afterCard">
+                    <div class="header"><span>✨ 压缩后</span><span class="badge" id="afterSize">-</span></div>
+                    <div class="img-wrap"><img id="afterImg" src="" alt="压缩后"></div>
+                    <div class="footer"><span class="saved" id="savedPercent">-</span><span id="afterInfo"></span></div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <label>压缩质量: <strong id="qualityLabel">80%</strong></label>
+                <div class="slider-row">
+                    <span style="font-size:12px;color:var(--text-muted,#999)">小文件</span>
+                    <input type="range" id="qualitySlider" min="10" max="100" value="80" step="5">
+                    <span class="val" id="qualityVal">80</span>
+                    <span style="font-size:12px;color:var(--text-muted,#999)">高质量</span>
+                </div>
+                <label style="margin-top:12px">输出格式:</label>
+                <div class="format-row" id="formatRow">
+                    <button class="format-btn" data-fmt="image/jpeg">JPG</button>
+                    <button class="format-btn active" data-fmt="image/png">PNG</button>
+                    <button class="format-btn" data-fmt="image/webp">WebP</button>
+                    <button class="format-btn" data-fmt="auto">保持原格式</button>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn primary" id="btnDownload">💾 下载压缩图</button>
+                <button class="btn" id="btnReset">🔄 重新选择图片</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    (function(){
+        var dropZone = document.getElementById('dropZone');
+        var fileInput = document.getElementById('fileInput');
+        var compressPanel = document.getElementById('compressPanel');
+        var qualitySlider = document.getElementById('qualitySlider');
+        var qualityVal = document.getElementById('qualityVal');
+        var qualityLabel = document.getElementById('qualityLabel');
+        var beforeImg = document.getElementById('beforeImg');
+        var afterImg = document.getElementById('afterImg');
+        var beforeSize = document.getElementById('beforeSize');
+        var afterSize = document.getElementById('afterSize');
+        var savedPercent = document.getElementById('savedPercent');
+        var beforeInfo = document.getElementById('beforeInfo');
+        var afterInfo = document.getElementById('afterInfo');
+        var toast = document.getElementById('toast');
+        var beforeCard = document.getElementById('beforeCard');
+        var afterCard = document.getElementById('afterCard');
+
+        var currentFile = null;
+        var compressedBlob = null;
+        var outputFormat = 'image/png';
+        var originalDataUrl = '';
+
+        // 拖拽事件
+        ['dragenter','dragover','dragleave','drop'].forEach(function(evt){
+            document.addEventListener(evt, function(e){ e.preventDefault(); e.stopPropagation(); }, false);
+        });
+        ['dragenter','dragover'].forEach(function(evt){
+            document.addEventListener(evt, function(){ dropZone.classList.add('drag-over'); }, false);
+        });
+        ['dragleave','drop'].forEach(function(evt){
+            document.addEventListener(evt, function(){ dropZone.classList.remove('drag-over'); }, false);
+        });
+        document.addEventListener('drop', function(e){
+            var file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        }, false);
+
+        dropZone.addEventListener('click', function(){ fileInput.click(); });
+        fileInput.addEventListener('change', function(){
+            if (fileInput.files[0]) handleFile(fileInput.files[0]);
+        });
+
+        // 压缩质量滑块
+        qualitySlider.addEventListener('input', function(){
+            qualityVal.textContent = this.value;
+            qualityLabel.textContent = this.value + '%';
+            compressAndPreview();
+        });
+
+        // 格式选择
+        document.getElementById('formatRow').addEventListener('click', function(e){
+            if (e.target.classList.contains('format-btn')) {
+                document.querySelectorAll('.format-btn').forEach(function(b){ b.classList.remove('active'); });
+                e.target.classList.add('active');
+                outputFormat = e.target.dataset.fmt;
+                compressAndPreview();
+            }
+        });
+
+        function formatSize(bytes){
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
+            return (bytes/1048576).toFixed(2) + ' MB';
+        }
+
+        function handleFile(file){
+            if (!file.type.match(/image\/(jpeg|png|webp|bmp)/)) {
+                showToast('⚠️ 请选择 JPG / PNG / WebP / BMP 格式的图片', false);
+                return;
+            }
+            currentFile = file;
+            beforeSize.textContent = formatSize(file.size);
+
+            var reader = new FileReader();
+            reader.onload = function(e){
+                originalDataUrl = e.target.result;
+                beforeImg.src = originalDataUrl;
+                var img = new Image();
+                img.onload = function(){
+                    beforeInfo.textContent = '分辨率: ' + img.naturalWidth + '×' + img.naturalHeight + ' | ';
+                    // 自动设置输出格式
+                    if (outputFormat === 'auto') {
+                        outputFormat = file.type;
+                        document.querySelectorAll('.format-btn').forEach(function(b){ b.classList.remove('active'); });
+                        var autoBtn = document.querySelector('[data-fmt="auto"]');
+                        if (autoBtn) autoBtn.classList.add('active');
+                    }
+                    compressAndPreview();
+                };
+                img.src = originalDataUrl;
+                compressPanel.classList.add('show');
+                dropZone.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function compressAndPreview(){
+            if (!currentFile || !originalDataUrl) return;
+
+            var quality = parseInt(qualitySlider.value) / 100;
+            var fmt = outputFormat;
+
+            var img = new Image();
+            img.onload = function(){
+                var canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+
+                // 如果输出 PNG，使用无损质量
+                var mimeType = fmt === 'auto' ? currentFile.type : fmt;
+                var q = mimeType === 'image/png' ? undefined : quality;
+
+                canvas.toBlob(function(blob){
+                    compressedBlob = blob;
+                    var url = URL.createObjectURL(blob);
+                    afterImg.src = url;
+                    afterSize.textContent = formatSize(blob.size);
+
+                    var pct = ((1 - blob.size / currentFile.size) * 100).toFixed(1);
+                    if (pct > 0) {
+                        savedPercent.textContent = '🎉 节省 ' + pct + '%';
+                    } else {
+                        savedPercent.textContent = pct < 0 ? '📈 增大了 ' + Math.abs(pct) + '%' : '—';
+                        savedPercent.style.color = pct < 0 ? '#f59e0b' : '';
+                    }
+                    afterInfo.textContent = ' | ' + (mimeType === 'image/png' ? 'PNG 无损' : '质量 '+Math.round(quality*100)+'%');
+
+                    // 清理旧 URL
+                    setTimeout(function(){ URL.revokeObjectURL(url); }, 5000);
+                }, mimeType, q);
+            };
+            img.src = originalDataUrl;
+        }
+
+        document.getElementById('btnDownload').addEventListener('click', function(){
+            if (!compressedBlob) { showToast('⚠️ 请先选择一张图片', false); return; }
+            var ext = outputFormat === 'auto' ? 
+                (currentFile.type.split('/')[1] || 'png') :
+                outputFormat.split('/')[1];
+            if (ext === 'jpeg') ext = 'jpg';
+            var url = URL.createObjectURL(compressedBlob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'compressed.' + ext;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('✅ 已下载压缩图片', true);
+        });
+
+        document.getElementById('btnReset').addEventListener('click', function(){
+            currentFile = null;
+            compressedBlob = null;
+            originalDataUrl = '';
+            beforeImg.src = '';
+            afterImg.src = '';
+            beforeSize.textContent = '-';
+            afterSize.textContent = '-';
+            savedPercent.textContent = '-';
+            savedPercent.style.color = '';
+            beforeInfo.textContent = '分辨率: -';
+            afterInfo.textContent = '';
+            compressPanel.classList.remove('show');
+            dropZone.style.display = 'block';
+            qualitySlider.value = 80;
+            qualityVal.textContent = '80';
+            qualityLabel.textContent = '80%';
+            outputFormat = 'image/png';
+            document.querySelectorAll('.format-btn').forEach(function(b){ b.classList.remove('active'); });
+            document.querySelector('[data-fmt="image/png"]').classList.add('active');
+            fileInput.value = '';
+        });
+
+        // 快捷键
+        document.addEventListener('keydown', function(e){
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                document.getElementById('btnDownload').click();
+            }
+        });
+
+        function showToast(msg, success){
+            toast.textContent = msg;
+            toast.className = 'toast show' + (success ? ' success' : '');
+            clearTimeout(toast._t);
+            toast._t = setTimeout(function(){ toast.classList.remove('show'); }, 2500);
+        }
+    })();
+    </script>
+</body>
+</html>

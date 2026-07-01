@@ -77,6 +77,14 @@ public class ConverterController {
     }
 
     /**
+     * 数字转中文大写金额
+     */
+    @PostMapping("/rmb-upper")
+    public Result<Map<String, Object>> rmbUpper(@RequestParam String input) {
+        return Result.success(converterService.rmbUpper(input));
+    }
+
+    /**
      * JSON ↔ YAML 互转（统一入口）
      */
     @PostMapping("/json-yaml")
