@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">cURL 命令生成器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent,#7c3aed);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+        .topbar button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s}
+        .topbar button:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .page-content{flex:1;display:flex;max-width:1100px;margin:0 auto;width:100%;padding:20px;gap:20px}
+        @media (max-width:768px){.page-content{flex-direction:column}}
+
+        .form-panel{flex:1;display:flex;flex-direction:column;gap:16px}
+        .field-group{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:10px;padding:14px}
+        .field-group label{display:block;font-size:12px;font-weight:600;color:var(--text-muted,#888);margin-bottom:8px}
+        .field-group input,.field-group textarea,.field-group select{width:100%;padding:8px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);font-family:monospace;font-size:13px;outline:none;transition:border-color .2s}
+        .field-group input:focus,.field-group textarea:focus,.field-group select:focus{border-color:var(--accent,#7c3aed)}
+        .field-group textarea{resize:vertical;min-height:80px;font-size:13px}
+        .field-group input::placeholder,.field-group textarea::placeholder{color:var(--text-muted,#555)}
+        .field-group select{appearance:none;cursor:pointer}
+
+        .method-row{display:flex;gap:6px;flex-wrap:wrap}
+        .method-btn{padding:6px 14px;border:1px solid var(--border-color,#444);border-radius:20px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#888);cursor:pointer;font-size:12px;font-weight:600;font-family:monospace;transition:all .15s}
+        .method-btn:hover{border-color:var(--accent,#7c3aed);color:var(--text-primary,#ddd)}
+        .method-btn.active{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .method-btn.get.active{background:#10b981;border-color:#10b981}
+        .method-btn.post.active{background:#3b82f6;border-color:#3b82f6}
+        .method-btn.put.active{background:#f59e0b;border-color:#f59e0b}
+        .method-btn.delete.active{background:#ef4444;border-color:#ef4444}
+        .method-btn.patch.active{background:#8b5cf6;border-color:#8b5cf6}
+
+        .kv-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+        .kv-row input{flex:1;font-family:monospace;font-size:12px!important}
+        .kv-row button{padding:4px 8px;border:1px solid var(--border-color,#444);border-radius:4px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#888);cursor:pointer;font-size:11px;transition:all .15s}
+        .kv-row button:hover{background:#ef4444;border-color:#ef4444;color:#fff}
+        .add-row-btn{padding:4px 12px;border:1px dashed var(--border-color,#444);border-radius:4px;background:transparent;color:var(--text-muted,#888);cursor:pointer;font-size:11px;margin-top:6px;transition:all .15s}
+        .add-row-btn:hover{border-color:var(--accent,#7c3aed);color:var(--accent,#7c3aed)}
+
+        .result-panel{flex:1;display:flex;flex-direction:column;gap:12px;position:sticky;top:20px;align-self:flex-start}
+        .cmd-box{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:10px;overflow:hidden}
+        .cmd-box .cmd-header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border-color,#333)}
+        .cmd-box .cmd-header span{font-size:12px;font-weight:600;color:var(--text-muted,#888)}
+        .cmd-box .cmd-header button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:12px;transition:all .15s}
+        .cmd-box .cmd-header button:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .cmd-box pre{padding:14px;margin:0;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:13px;color:#a5d6ff;line-height:1.7;overflow-x:auto;white-space:pre-wrap;word-break:break-all;max-height:400px;overflow-y:auto}
+        .cmd-box pre .kw{color:#ff79c6}
+        .cmd-box pre .flag{color:#8be9fd}
+        .cmd-box pre .str{color:#f1fa8c}
+        .cmd-box pre .comment{color:#6272a4;font-style:italic}
+
+        .preset-list{display:flex;flex-wrap:wrap;gap:6px}
+        .preset-chip{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:16px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#888);cursor:pointer;font-size:11px;transition:all .15s}
+        .preset-chip:hover{color:var(--text-primary,#ddd);border-color:var(--accent,#7c3aed)}
+
+        .toast{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:var(--accent,#7c3aed);color:#fff;padding:10px 24px;border-radius:24px;font-size:13px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
+        .toast.show{opacity:1}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand">
+            <a href="/">🏠 DevTools</a>
+            <span class="sep">/</span>
+            <span class="tool-name" th:text="${tool.name}">cURL 命令生成器</span>
+        </div>
+        <button onclick="copyCmd()" title="Ctrl+C 复制">📋 复制命令</button>
+        <button onclick="downloadCmd()" title="下载 .sh">💾 下载 .sh</button>
+    </div>
+
+    <div class="page-content">
+        <div class="form-panel">
+            <!-- 请求方法和 URL -->
+            <div class="field-group">
+                <label>📡 请求方法</label>
+                <div class="method-row">
+                    <button class="method-btn get active" onclick="setMethod('GET',this)">GET</button>
+                    <button class="method-btn post" onclick="setMethod('POST',this)">POST</button>
+                    <button class="method-btn put" onclick="setMethod('PUT',this)">PUT</button>
+                    <button class="method-btn delete" onclick="setMethod('DELETE',this)">DELETE</button>
+                    <button class="method-btn patch" onclick="setMethod('PATCH',this)">PATCH</button>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label>🔗 请求 URL</label>
+                <input type="text" id="urlInput" placeholder="https://api.example.com/v1/users" oninput="generate()">
+            </div>
+
+            <!-- 请求头 -->
+            <div class="field-group">
+                <label>📋 请求头 (Headers) <span style="font-weight:400;font-size:10px;color:#666">— 自动添加 Content-Type</span></label>
+                <div id="headersList">
+                    <div class="kv-row"><input placeholder="Key (如 Authorization)" oninput="generate()"><input placeholder="Value (如 Bearer xxx)" oninput="generate()"><button onclick="this.parentElement.remove();generate()">✕</button></div>
+                </div>
+                <button class="add-row-btn" onclick="addHeaderRow()">+ 添加请求头</button>
+            </div>
+
+            <!-- 查询参数 -->
+            <div class="field-group">
+                <label>🔍 查询参数 (Query Params)</label>
+                <div id="paramsList">
+                    <div class="kv-row"><input placeholder="Key (如 page)" oninput="generate()"><input placeholder="Value (如 1)" oninput="generate()"><button onclick="this.parentElement.remove();generate()">✕</button></div>
+                </div>
+                <button class="add-row-btn" onclick="addParamRow()">+ 添加参数</button>
+            </div>
+
+            <!-- 请求体 -->
+            <div class="field-group" id="bodyGroup" style="display:none">
+                <label>📦 请求体 (Body)</label>
+                <textarea id="bodyInput" placeholder='{"name":"John","email":"john@example.com"}' oninput="generate()"></textarea>
+            </div>
+
+            <!-- 其他选项 -->
+            <div class="field-group">
+                <label>⚙️ 选项</label>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;color:var(--text-muted,#888)">
+                        <input type="checkbox" id="optFollow" onchange="generate()"> 跟随重定向 (-L)
+                    </label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;color:var(--text-muted,#888)">
+                        <input type="checkbox" id="optVerbose" onchange="generate()"> 详细输出 (-v)
+                    </label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;color:var(--text-muted,#888)">
+                        <input type="checkbox" id="optInsecure" onchange="generate()"> 忽略 SSL (-k)
+                    </label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;color:var(--text-muted,#888)">
+                        <input type="checkbox" id="optSilent" onchange="generate()"> 静默模式 (-s)
+                    </label>
+                </div>
+            </div>
+
+            <!-- 快捷预设 -->
+            <div class="field-group">
+                <label>📌 快捷预设</label>
+                <div class="preset-list" id="presets"></div>
+            </div>
+        </div>
+
+        <div class="result-panel">
+            <div class="cmd-box">
+                <div class="cmd-header">
+                    <span>🐚 cURL 命令</span>
+                    <button onclick="copyCmd()">📋 复制</button>
+                </div>
+                <pre id="cmdOutput">curl -X GET "https://api.example.com/v1/users"</pre>
+            </div>
+
+            <div class="cmd-box">
+                <div class="cmd-header">
+                    <span>🐍 Python (requests)</span>
+                    <button onclick="copyPython()">📋 复制</button>
+                </div>
+                <pre id="pyOutput">import requests
+resp = requests.get("https://api.example.com/v1/users")</pre>
+            </div>
+
+            <div class="cmd-box">
+                <div class="cmd-header">
+                    <span>📦 JavaScript (fetch)</span>
+                    <button onclick="copyJS()">📋 复制</button>
+                </div>
+                <pre id="jsOutput">fetch("https://api.example.com/v1/users")
+  .then(r => r.json())</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        var method='GET';
+
+        function setMethod(m,btn){
+            method=m;
+            document.querySelectorAll('.method-btn').forEach(function(b){b.classList.remove('active')});
+            btn.classList.add('active');
+            document.getElementById('bodyGroup').style.display=(m==='POST'||m==='PUT'||m==='PATCH')?'block':'none';
+            generate();
+        }
+
+        function addHeaderRow(){
+            var div=document.createElement('div');
+            div.className='kv-row';
+            div.innerHTML='<input placeholder="Key" oninput="generate()"><input placeholder="Value" oninput="generate()"><button onclick="this.parentElement.remove();generate()">✕</button>';
+            document.getElementById('headersList').appendChild(div);
+        }
+
+        function addParamRow(){
+            var div=document.createElement('div');
+            div.className='kv-row';
+            div.innerHTML='<input placeholder="Key" oninput="generate()"><input placeholder="Value" oninput="generate()"><button onclick="this.parentElement.remove();generate()">✕</button>';
+            document.getElementById('paramsList').appendChild(div);
+        }
+
+        function getKVs(containerId){
+            var result={};
+            document.querySelectorAll('#'+containerId+' .kv-row').forEach(function(row){
+                var inputs=row.querySelectorAll('input');
+                if(inputs[0].value.trim())result[inputs[0].value.trim()]=inputs[1].value.trim();
+            });
+            return result;
+        }
+
+        function escapeShell(s){return s.replace(/'/g,"'\\''");}
+
+        function buildCurl(){
+            var url=document.getElementById('urlInput').value.trim()||'https://api.example.com/v1/users';
+            var parts=['curl'];
+
+            if(document.getElementById('optSilent').checked)parts.push('-s');
+            if(document.getElementById('optVerbose').checked)parts.push('-v');
+            if(document.getElementById('optFollow').checked)parts.push('-L');
+            if(document.getElementById('optInsecure').checked)parts.push('-k');
+
+            if(method!=='GET')parts.push('-X '+method);
+
+            // Headers
+            var headers=getKVs('headersList');
+            var bodyInput=document.getElementById('bodyInput').value.trim();
+            if(bodyInput&&!headers['Content-Type']){
+                try{JSON.parse(bodyInput);headers['Content-Type']='application/json'}catch(e){}
+            }
+            Object.keys(headers).forEach(function(k){
+                parts.push("-H '"+escapeShell(k)+": "+escapeShell(headers[k])+"'");
+            });
+
+            // Body
+            if(bodyInput&&(method==='POST'||method==='PUT'||method==='PATCH')){
+                parts.push("-d '"+escapeShell(bodyInput)+"'");
+            }
+
+            // Query params
+            var params=getKVs('paramsList');
+            var paramStr=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k])}).join('&');
+            var fullUrl=paramStr?(url+(url.includes('?')?'&':'?')+paramStr):url;
+
+            parts.push("'"+escapeShell(fullUrl)+"'");
+            return parts.join(' \\\n  ');
+        }
+
+        function buildPython(){
+            var url=document.getElementById('urlInput').value.trim()||'https://api.example.com/v1/users';
+            var lines=['import requests'];
+            var headers=getKVs('headersList');
+            var params=getKVs('paramsList');
+            var bodyInput=document.getElementById('bodyInput').value.trim();
+
+            var headerStr=Object.keys(headers).length>0?'headers = '+JSON.stringify(headers):null;
+
+            var opts={};
+            if(headerStr)opts.headers='headers';
+            if(Object.keys(params).length>0)opts.params=JSON.stringify(params);
+            if(bodyInput&&(method==='POST'||method==='PUT'||method==='PATCH')){
+                try{var j=JSON.parse(bodyInput);opts.json=j}catch(e){opts.data="'''"+bodyInput+"'''"}
+            }
+
+            var optList=[];
+            Object.keys(opts).forEach(function(k){optList.push(k+'='+(typeof opts[k]==='string'?opts[k]:JSON.stringify(opts[k])))});
+            if(headerStr&&!optList.includes('headers=headers'))optList.unshift('headers=headers');
+
+            var call='resp = requests.'+method.toLowerCase()+'("'+url+'"';
+            if(optList.length>0)call+=', '+optList.join(', ');
+            call+=')';
+
+            if(headerStr)lines.push(headerStr);
+            if(optList.filter(function(o){return o!=='headers=headers'}).length>0&&Object.keys(params).length>0){
+                lines.push('params = '+JSON.stringify(params));
+            }
+            lines.push(call);
+            lines.push('print(resp.json())');
+            return lines.join('\n');
+        }
+
+        function buildJS(){
+            var url=document.getElementById('urlInput').value.trim()||'https://api.example.com/v1/users';
+            var lines=[];
+            var headers=getKVs('headersList');
+            var params=getKVs('paramsList');
+            var bodyInput=document.getElementById('bodyInput').value.trim();
+
+            var paramStr=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k])}).join('&');
+            var fetchUrl=paramStr?(url+(url.includes('?')?'&':'?')+paramStr):url;
+
+            var opts={};
+            if(method!=='GET')opts.method="'"+method+"'";
+            if(Object.keys(headers).length>0)opts.headers=JSON.stringify(headers).replace(/"/g,"'");
+            if(bodyInput&&(method==='POST'||method==='PUT'||method==='PATCH')){
+                try{JSON.parse(bodyInput);opts.body="JSON.stringify("+bodyInput+")"}catch(e){opts.body="'"+bodyInput+"'"}
+            }
+
+            var optStr=Object.keys(opts).map(function(k){return k+': '+opts[k]}).join(',\n    ');
+            if(optStr){
+                lines.push("fetch('"+fetchUrl+"', {\n    "+optStr+"\n  })");
+            }else{
+                lines.push("fetch('"+fetchUrl+"')");
+            }
+            lines.push("  .then(r => r.json())");
+            lines.push("  .then(data => console.log(data))");
+            return lines.join('\n');
+        }
+
+        function generate(){
+            document.getElementById('cmdOutput').textContent=buildCurl();
+            document.getElementById('pyOutput').textContent=buildPython();
+            document.getElementById('jsOutput').textContent=buildJS();
+        }
+
+        function copyCmd(){copyText(buildCurl(),'cURL 命令')}
+        function copyPython(){copyText(buildPython(),'Python 代码')}
+        function copyJS(){copyText(buildJS(),'JavaScript 代码')}
+
+        function copyText(text,label){
+            navigator.clipboard.writeText(text).then(function(){
+                showToast('✅ '+label+' 已复制到剪贴板');
+            });
+        }
+
+        function downloadCmd(){
+            var text='#!/bin/bash\n'+buildCurl()+'\n';
+            var blob=new Blob([text],{type:'text/plain'});
+            var a=document.createElement('a');
+            a.href=URL.createObjectURL(blob);
+            a.download='request.sh';
+            a.click();
+            showToast('💾 已下载 request.sh');
+        }
+
+        function showToast(msg){
+            var t=document.getElementById('toast');
+            t.textContent=msg;t.classList.add('show');
+            setTimeout(function(){t.classList.remove('show')},2000);
+        }
+
+        // 快捷预设
+        var presets=[
+            {label:'GitHub API',method:'GET',url:'https://api.github.com/repos/vercel/next.js',headers:{'Accept':'application/vnd.github+json'}},
+            {label:'JSONPlaceholder',method:'GET',url:'https://jsonplaceholder.typicode.com/posts/1'},
+            {label:'天气 API',method:'GET',url:'https://api.open-meteo.com/v1/forecast',params:{'latitude':'52.52','longitude':'13.41','current_weather':'true'}},
+            {label:'创建用户',method:'POST',url:'https://jsonplaceholder.typicode.com/users',body:'{"name":"John","email":"john@test.com"}'},
+            {label:'GraphQL',method:'POST',url:'https://api.example.com/graphql',body:'{"query":"{ user(id: 1) { name email } }"}'}
+        ];
+        document.getElementById('presets').innerHTML=presets.map(function(p,i){
+            return '<button class="preset-chip" onclick="applyPreset('+i+')">📌 '+p.label+'</button>';
+        }).join('');
+
+        function applyPreset(idx){
+            var p=presets[idx];
+            setMethodBtn(p.method);
+            method=p.method;
+            document.getElementById('urlInput').value=p.url||'';
+            document.getElementById('bodyInput').value=p.body||'';
+            document.getElementById('headersList').innerHTML='';
+            document.getElementById('paramsList').innerHTML='';
+            if(p.headers)Object.keys(p.headers).forEach(function(k){addHeaderRow();var rows=document.querySelectorAll('#headersList .kv-row');var r=rows[rows.length-1];r.querySelectorAll('input')[0].value=k;r.querySelectorAll('input')[1].value=p.headers[k]});
+            if(p.params)Object.keys(p.params).forEach(function(k){addParamRow();var rows=document.querySelectorAll('#paramsList .kv-row');var r=rows[rows.length-1];r.querySelectorAll('input')[0].value=k;r.querySelectorAll('input')[1].value=p.params[k]});
+            document.getElementById('bodyGroup').style.display=p.body?'block':'none';
+            generate();
+        }
+
+        function setMethodBtn(m){
+            document.querySelectorAll('.method-btn').forEach(function(b){b.classList.remove('active')});
+            var btn=document.querySelector('.method-btn.'+m.toLowerCase());
+            if(btn)btn.classList.add('active');
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown',function(e){
+            if(e.ctrlKey&&e.key==='c'&&document.activeElement===document.body){copyCmd()}
+            if(e.ctrlKey&&e.key==='s'){e.preventDefault();downloadCmd()}
+        });
+
+        generate();
+    </script>
+</body>
+</html>

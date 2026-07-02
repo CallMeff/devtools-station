@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">JSON Schema 生成器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent,#7c3aed);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+        .topbar button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s}
+        .topbar button:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .page-content{flex:1;display:flex;max-width:1600px;margin:0 auto;width:100%;padding:16px;gap:16px;height:calc(100vh - 42px)}
+        @media (max-width:900px){.page-content{flex-direction:column;height:auto}}
+
+        .input-panel{flex:1;display:flex;flex-direction:column;gap:8px;min-width:300px}
+        .output-panel{flex:1;display:flex;flex-direction:column;gap:8px;min-width:300px}
+        .panel-label{font-size:12px;font-weight:600;color:var(--text-muted,#888);text-transform:uppercase;letter-spacing:.5px}
+        textarea.json-area{flex:1;padding:14px;border:1px solid var(--border-color,#444);border-radius:10px;background:var(--bg-secondary,#1e1e2e);color:var(--text-primary,#ddd);font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:13px;line-height:1.6;outline:none;resize:none;min-height:200px}
+        textarea.json-area:focus{border-color:var(--accent,#7c3aed)}
+        .btn-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+        .btn-sm{padding:4px 10px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:12px;transition:all .15s;white-space:nowrap}
+        .btn-sm:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .btn-accent{padding:4px 10px;border-radius:6px;background:var(--accent,#7c3aed);border:1px solid var(--accent,#7c3aed);color:#fff;cursor:pointer;font-size:12px;transition:all .15s;white-space:nowrap}
+        .btn-accent:hover{opacity:.85}
+        .error-msg{color:#ff6b6b;font-size:12px;padding:8px 12px;background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.3);border-radius:8px;display:none}
+        .error-msg:not(:empty){display:block}
+        .success-msg{color:#4ecb71;font-size:12px;padding:8px 12px;background:rgba(78,203,113,.1);border:1px solid rgba(78,203,113,.3);border-radius:8px;display:none}
+        .success-msg:not(:empty){display:block}
+        .options-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:12px}
+        .options-row label{display:flex;align-items:center;gap:4px;color:var(--text-muted,#888);cursor:pointer}
+        .options-row input[type=checkbox]{accent-color:var(--accent,#7c3aed)}
+        .options-row input[type=text]{padding:4px 8px;border:1px solid var(--border-color,#444);border-radius:4px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);font-size:12px;width:140px;outline:none}
+        .options-row input[type=text]:focus{border-color:var(--accent,#7c3aed)}
+        .schema-stats{font-size:11px;color:var(--text-muted,#888);display:flex;gap:10px;flex-wrap:wrap}
+        .schema-stats span{padding:2px 8px;border-radius:10px;background:var(--bg-tertiary,#2a2a3a)}
+        .success-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:8px 20px;background:var(--accent,#7c3aed);color:#fff;border-radius:8px;font-size:13px;z-index:999;animation:fadeInUp .3s;pointer-events:none}
+        @keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+        .schema-key{color:#e06c75}
+        .schema-type{color:#61afef}
+        .schema-str{color:#98c379}
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <div class="brand">
+        <a href="/">DevTools Station</a>
+        <span class="sep">/</span>
+        <span class="tool-name" th:text="${tool.name}">JSON Schema 生成器</span>
+    </div>
+    <button onclick="copySchema()" title="复制 Schema">📋 复制</button>
+    <button onclick="downloadSchema()" title="下载 Schema">💾 下载</button>
+    <button onclick="validateJson()" title="验证 JSON">✅ 验证</button>
+</div>
+<div class="page-content">
+    <div class="input-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="panel-label">输入 JSON 数据</span>
+            <div class="btn-row">
+                <button class="btn-sm" onclick="loadSample('user')">示例-用户</button>
+                <button class="btn-sm" onclick="loadSample('product')">示例-商品</button>
+                <button class="btn-sm" onclick="loadSample('api')">示例-API响应</button>
+            </div>
+        </div>
+        <textarea id="jsonInput" class="json-area" spellcheck="false" placeholder='粘贴 JSON 数据，自动生成 JSON Schema…'>{
+  "id": 1,
+  "name": "张三",
+  "email": "zhangsan@example.com",
+  "age": 28,
+  "isActive": true,
+  "tags": ["developer", "designer"],
+  "address": {
+    "city": "北京",
+    "zipCode": "100000",
+    "country": "中国"
+  },
+  "scores": [95, 88, 92],
+  "metadata": null,
+  "createdAt": "2026-01-15T08:30:00Z"
+}</textarea>
+        <div class="error-msg" id="inputError"></div>
+        <div class="success-msg" id="inputSuccess"></div>
+    </div>
+    <div class="output-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="panel-label">生成的 JSON Schema</span>
+            <div class="options-row">
+                <label><input type="checkbox" id="optRequired" checked onchange="regen()"> 标记必填</label>
+                <label><input type="checkbox" id="optExamples" onchange="regen()"> 包含示例</label>
+                <label><input type="checkbox" id="optDescriptions" onchange="regen()"> 添加描述</label>
+                <input type="text" id="optTitle" placeholder="Schema 标题 (可选)" onchange="regen()">
+            </div>
+        </div>
+        <textarea id="schemaOutput" class="json-area" readonly spellcheck="false" style="color:var(--text-primary,#ddd)"></textarea>
+        <div class="schema-stats" id="schemaStats"></div>
+    </div>
+</div>
+<div id="toast" class="success-toast" style="display:none"></div>
+<script>
+(function(){
+    var jsonInput = document.getElementById('jsonInput');
+    var schemaOutput = document.getElementById('schemaOutput');
+    var inputError = document.getElementById('inputError');
+    var inputSuccess = document.getElementById('inputSuccess');
+    var schemaStats = document.getElementById('schemaStats');
+
+    function inferType(val){
+        if(val === null) return 'null';
+        if(Array.isArray(val)) return 'array';
+        var t = typeof val;
+        if(t === 'object') return 'object';
+        if(t === 'number'){
+            if(Number.isInteger(val)) return 'integer';
+            return 'number';
+        }
+        if(t === 'string'){
+            if(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(val)) return 'string'; // datetime string, keep as string
+            if(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(val)) return 'string'; // uuid
+            return 'string';
+        }
+        return t;
+    }
+
+    function getExample(val){
+        if(val === null) return null;
+        if(typeof val === 'boolean' || typeof val === 'number') return val;
+        if(typeof val === 'string'){
+            if(val.length > 100) return val.substring(0,97)+'...';
+            return val;
+        }
+        if(Array.isArray(val)) {
+            if(val.length === 0) return [];
+            if(val.length > 3) return [getExample(val[0]), getExample(val[1]), '…'];
+            return val.map(getExample);
+        }
+        return null;
+    }
+
+    function getDescription(key, val){
+        if(typeof val === 'boolean') return key + ' (布尔值)';
+        if(typeof val === 'number') return key + ' (数值)';
+        if(val === null) return key + ' (可为空)';
+        if(Array.isArray(val)) return key + ' (数组，共 '+val.length+' 项)';
+        if(typeof val === 'object') return key + ' (对象)';
+        return key;
+    }
+
+    function generateSchema(obj, opts){
+        opts = opts || {};
+        var includeRequired = opts.required !== false;
+        var includeExamples = opts.examples === true;
+        var includeDescriptions = opts.descriptions === true;
+
+        var schema = {
+            '$schema': 'https://json-schema.org/draft/2020-12/schema',
+            'type': inferType(obj)
+        };
+
+        if(opts.title) schema.title = opts.title;
+
+        if(schema.type === 'object'){
+            schema.properties = {};
+            var required = [];
+            var keys = Object.keys(obj);
+            keys.forEach(function(key){
+                var val = obj[key];
+                var t = inferType(val);
+                var prop = { type: t };
+                if(t === 'object'){
+                    var sub = generateSchema(val, opts);
+                    prop.properties = sub.properties;
+                    if(sub.required && sub.required.length > 0) prop.required = sub.required;
+                    if(sub.additionalProperties !== undefined) prop.additionalProperties = sub.additionalProperties;
+                } else if(t === 'array'){
+                    if(val.length > 0){
+                        var itemTypes = val.map(function(v){return inferType(v)});
+                        var uniqueTypes = itemTypes.filter(function(v,i,a){return a.indexOf(v)===i});
+                        if(uniqueTypes.length === 1){
+                            var itemType = uniqueTypes[0];
+                            prop.items = { type: itemType };
+                            if(itemType === 'object'){
+                                var merged = {};
+                                val.forEach(function(v){
+                                    if(typeof v === 'object' && v !== null){
+                                        Object.keys(v).forEach(function(k){merged[k]=v[k]});
+                                    }
+                                });
+                                var sub = generateSchema(merged, opts);
+                                prop.items.properties = sub.properties;
+                                if(sub.required && sub.required.length > 0) prop.items.required = sub.required;
+                            }
+                        } else {
+                            prop.items = { oneOf: uniqueTypes.map(function(t){return {type:t}}) };
+                        }
+                    }
+                    if(includeDescriptions) prop.description = key + ' 数组';
+                    if(includeExamples && val.length > 0) prop.examples = [val[0]];
+                } else if(t === 'null'){
+                    prop.type = ['string', 'null'];
+                } else if(t === 'integer'){
+                    prop.type = 'integer';
+                }
+                if(t !== 'null' && t !== undefined && val !== undefined){
+                    required.push(key);
+                }
+                if(includeDescriptions) prop.description = getDescription(key, val);
+                if(includeExamples && t !== 'object' && t !== 'array' && val !== null) prop.examples = [val];
+                schema.properties[key] = prop;
+            });
+            if(includeRequired && required.length > 0) schema.required = required;
+            schema.additionalProperties = false;
+        } else if(schema.type === 'array'){
+            if(obj.length > 0){
+                var itemTypes = obj.map(function(v){return inferType(v)});
+                var uniqueTypes = itemTypes.filter(function(v,i,a){return a.indexOf(v)===i});
+                if(uniqueTypes.length === 1 && uniqueTypes[0] === 'object'){
+                    var merged = {};
+                    obj.forEach(function(v){if(v && typeof v==='object') Object.keys(v).forEach(function(k){merged[k]=v[k]})});
+                    var sub = generateSchema(merged, opts);
+                    schema.items = { type:'object', properties: sub.properties };
+                    if(sub.required && sub.required.length > 0) schema.items.required = sub.required;
+                } else {
+                    schema.items = uniqueTypes.length === 1 ? {type:uniqueTypes[0]} : {oneOf:uniqueTypes.map(function(t){return{type:t}})};
+                }
+            }
+        }
+
+        if(includeExamples && schema.type !== 'object' && schema.type !== 'array'){
+            schema.examples = [obj];
+        }
+        return schema;
+    }
+
+    function collectStats(schema){
+        var stats = {objects:0,strings:0,numbers:0,integers:0,booleans:0,arrays:0,nulls:0,total:0};
+        function walk(s){
+            if(!s) return;
+            if(s.type === 'object' && s.properties){
+                stats.objects++;
+                Object.keys(s.properties).forEach(function(k){
+                    var p = s.properties[k];
+                    stats.total++;
+                    if(p.type === 'integer') stats.integers++;
+                    else if(p.type === 'number') stats.numbers++;
+                    else if(p.type === 'string') stats.strings++;
+                    else if(p.type === 'boolean') stats.booleans++;
+                    else if(p.type === 'array') stats.arrays++;
+                    else if(p.type === 'null' || (Array.isArray(p.type) && p.type.includes('null'))) stats.nulls++;
+                    else if(p.type === 'object') walk(p);
+                });
+            }
+        }
+        walk(schema);
+        return stats;
+    }
+
+    function formatStats(stats){
+        var parts = [];
+        if(stats.objects) parts.push('对象: '+stats.objects);
+        if(stats.strings) parts.push('字符串: '+stats.strings);
+        if(stats.numbers) parts.push('数值: '+stats.numbers);
+        if(stats.integers) parts.push('整数: '+stats.integers);
+        if(stats.booleans) parts.push('布尔: '+stats.booleans);
+        if(stats.arrays) parts.push('数组: '+stats.arrays);
+        if(stats.nulls) parts.push('可空: '+stats.nulls);
+        parts.push('总计: '+stats.total+' 字段');
+        return parts.map(function(p){return '<span>'+p+'</span>'}).join('');
+    }
+
+    window.regen = function(){
+        var text = jsonInput.value.trim();
+        inputError.textContent = '';
+        inputSuccess.textContent = '';
+        schemaOutput.value = '';
+        schemaStats.innerHTML = '';
+
+        if(!text){schemaOutput.value='';return}
+        try {
+            var obj = JSON.parse(text);
+            var opts = {
+                required: document.getElementById('optRequired').checked,
+                examples: document.getElementById('optExamples').checked,
+                descriptions: document.getElementById('optDescriptions').checked,
+                title: document.getElementById('optTitle').value.trim() || undefined
+            };
+            var schema = generateSchema(obj, opts);
+            schemaOutput.value = JSON.stringify(schema, null, 2);
+            var stats = collectStats(schema);
+            schemaStats.innerHTML = formatStats(stats);
+            inputSuccess.textContent = '✅ JSON 解析成功，Schema 已生成';
+        } catch(e){
+            inputError.textContent = '❌ JSON 解析错误: ' + e.message;
+        }
+    };
+
+    jsonInput.addEventListener('input', function(){
+        clearTimeout(jsonInput._timer);
+        jsonInput._timer = setTimeout(regen, 300);
+    });
+
+    window.copySchema = function(){
+        var text = schemaOutput.value;
+        if(!text.trim()){showToast('没有 Schema 可复制');return}
+        navigator.clipboard.writeText(text).then(function(){showToast('Schema 已复制到剪贴板')}).catch(function(){showToast('复制失败')});
+    };
+
+    window.downloadSchema = function(){
+        var text = schemaOutput.value;
+        if(!text.trim()){showToast('没有 Schema 可下载');return}
+        var blob = new Blob([text],{type:'application/json'});
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');a.href=url;a.download='schema.json';a.click();
+        URL.revokeObjectURL(url);showToast('Schema 已下载');
+    };
+
+    window.validateJson = function(){
+        var jsonText = jsonInput.value.trim();
+        var schemaText = schemaOutput.value.trim();
+        if(!jsonText){showToast('请先输入 JSON 数据');return}
+        if(!schemaText){showToast('请先生成 Schema');return}
+        try {
+            var json = JSON.parse(jsonText);
+            var schema = JSON.parse(schemaText);
+            var errors = [];
+            function validate(data, s, path){
+                path = path || '$';
+                if(!s || !s.type) return;
+                var expected = s.type;
+                var actualType = inferType(data);
+                var types = Array.isArray(expected) ? expected : [expected];
+                if(!types.includes(actualType)){
+                    errors.push(path+': 期望类型 '+types.join('|')+', 实际为 '+actualType);
+                    return;
+                }
+                if(actualType === 'object' && s.properties){
+                    Object.keys(s.properties).forEach(function(key){
+                        var prop = s.properties[key];
+                        if(s.required && s.required.includes(key) && !(key in data)){
+                            errors.push(path+'.'+key+': 必填字段缺失');
+                        }
+                        if(key in data) validate(data[key], prop, path+'.'+key);
+                    });
+                }
+                if(actualType === 'array' && s.items){
+                    data.forEach(function(item,i){
+                        validate(item, s.items, path+'['+i+']');
+                    });
+                }
+            }
+            validate(json, schema);
+            if(errors.length === 0){
+                showToast('✅ JSON 验证通过！数据符合 Schema 定义');
+            } else {
+                showToast('❌ 发现 '+errors.length+' 个问题（查看控制台）');
+                console.table(errors.map(function(e,i){return {序号:i+1,问题:e}}));
+            }
+        } catch(e){
+            showToast('验证失败: '+e.message);
+        }
+    };
+
+    window.loadSample = function(type){
+        var samples = {
+            user: '{"id":1,"name":"张三","email":"zhangsan@example.com","age":28,"isActive":true,"tags":["developer","designer"],"address":{"city":"北京","zipCode":"100000"}}',
+            product: '{"productId":"SKU-12345","name":"机械键盘","price":599.00,"currency":"CNY","inStock":true,"categories":["外设","电竞"],"specs":{"switch":"Cherry MX Red","layout":"87键","backlight":"RGB","weight_grams":980},"variants":[{"color":"黑色","stock":50},{"color":"白色","stock":30}],"rating":4.8}',
+            api: '{"code":200,"message":"success","data":{"page":1,"pageSize":20,"total":156,"items":[{"id":1,"title":"文章标题","author":{"name":"作者名","avatar":"https://example.com/avatar.png"},"createdAt":"2026-06-15T10:30:00Z","tags":["tech","news"]}],"hasMore":true}}'
+        };
+        jsonInput.value = samples[type] || samples.user;
+        regen();
+    };
+
+    function showToast(msg){
+        var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';
+        setTimeout(function(){t.style.display='none'},2000);
+    }
+
+    regen();
+})();
+</script>
+</body>
+</html>

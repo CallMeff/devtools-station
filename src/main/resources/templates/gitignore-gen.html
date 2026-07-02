@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">.gitignore 生成器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent,#7c3aed);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+        .topbar button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s}
+        .topbar button:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+
+        .page-content{flex:1;display:flex;max-width:1100px;margin:0 auto;width:100%;padding:20px;gap:20px}
+        .select-section{width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:16px}
+        .preview-section{flex:1;display:flex;flex-direction:column;min-width:0}
+
+        .section-title{font-size:13px;font-weight:600;color:var(--text-muted,#888);margin-bottom:4px}
+        .section-desc{font-size:11px;color:var(--text-muted,#666);margin-bottom:10px}
+
+        .category-group{margin-bottom:16px}
+        .category-label{font-size:12px;font-weight:600;color:var(--accent,#7c3aed);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border-color,#333)}
+        .template-grid{display:flex;flex-wrap:wrap;gap:6px}
+        .template-chip{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:16px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#888);cursor:pointer;font-size:11px;transition:all .15s;white-space:nowrap}
+        .template-chip:hover{color:var(--text-primary,#ddd);border-color:var(--accent,#7c3aed)}
+        .template-chip.active{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+
+        .preview-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:10px 10px 0 0;border-bottom:none}
+        .preview-header h3{font-size:13px;color:var(--text-muted,#888)}
+        .preview-header .stats{font-size:11px;color:var(--text-muted,#666);background:var(--bg-tertiary,#2a2a3a);padding:2px 10px;border-radius:10px}
+
+        .preview-body{flex:1;border:1px solid var(--border-color,#333);border-radius:0 0 10px 10px;background:var(--bg-secondary,#1e1e2e);position:relative;min-height:400px}
+        .preview-body textarea{position:absolute;inset:0;width:100%;height:100%;padding:16px;background:transparent;border:none;color:var(--text-primary,#ddd);font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:12px;line-height:1.6;resize:none;outline:none;tab-size:2}
+        .preview-body textarea::placeholder{color:var(--text-muted,#555)}
+
+        .action-bar{display:flex;gap:8px;padding-top:12px}
+        .action-bar button{padding:8px 18px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s;display:flex;align-items:center;gap:6px}
+        .action-bar button:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .action-bar button.accent{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .action-bar button.danger:hover{background:#e53e3e;border-color:#e53e3e}
+
+        .quick-actions{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+        .quick-actions button{padding:4px 10px;border:1px solid var(--border-color,#444);border-radius:12px;background:transparent;color:var(--text-muted,#888);cursor:pointer;font-size:11px;transition:all .15s}
+        .quick-actions button:hover{color:var(--text-primary,#ddd);border-color:var(--accent,#7c3aed)}
+
+        .toast{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#444);color:var(--text-primary,#ddd);padding:10px 24px;border-radius:24px;font-size:13px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
+        .toast.show{opacity:1}
+
+        @media (max-width:768px){
+            .page-content{flex-direction:column;padding:12px}
+            .select-section{width:100%}
+            .preview-body{min-height:300px}
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand">
+            <a href="/">🏠 DevTools</a>
+            <span class="sep">/</span>
+            <span class="tool-name" th:text="${tool.name}">.gitignore 生成器</span>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="select-section">
+            <div>
+                <div class="section-title">🎯 选择项目类型</div>
+                <div class="section-desc">选择需要的模板，自动合并生成</div>
+                <div class="quick-actions">
+                    <button onclick="selectPreset('web')">🌐 Web 全栈</button>
+                    <button onclick="selectPreset('mobile')">📱 移动端</button>
+                    <button onclick="selectPreset('data')">📊 数据科学</button>
+                    <button onclick="selectPreset('devops')">🐳 DevOps</button>
+                    <button onclick="clearAll()">🗑 清除选择</button>
+                </div>
+            </div>
+            <div id="categories"></div>
+        </div>
+        <div class="preview-section">
+            <div class="preview-header">
+                <h3>.gitignore</h3>
+                <span class="stats" id="stats">0 个模板</span>
+            </div>
+            <div class="preview-body">
+                <textarea id="output" readonly placeholder="请从左侧选择项目类型模板..."></textarea>
+            </div>
+            <div class="action-bar">
+                <button class="accent" onclick="copyOutput()">📋 复制内容</button>
+                <button onclick="downloadOutput()">💾 下载 .gitignore</button>
+                <button onclick="clearAll()">🗑 清空</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    (function(){
+        var toast = document.getElementById('toast');
+        var output = document.getElementById('output');
+        var stats = document.getElementById('stats');
+        var categoriesEl = document.getElementById('categories');
+        var selected = {};
+        var toastTimer;
+
+        function showToast(msg){
+            toast.textContent = msg; toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(function(){ toast.classList.remove('show'); }, 1500);
+        }
+
+        // .gitignore 模板数据
+        var templates = {
+            'Python': '# Byte-compiled\n__pycache__/\n*.py[cod]\n*$py.class\n*.so\n\n# Virtual Environment\nvenv/\n.venv/\nenv/\n.eggs/\n*.egg-info/\n\n# IDE\n.vscode/\n.idea/\n*.swp\n*.swo\n\n# Jupyter\n.ipynb_checkpoints/\n*.ipynb\n\n# Environment\n.env\n.env.local\n\n# Testing\n.pytest_cache/\n.coverage\nhtmlcov/\n.tox/\n\n# Distribution\n/dist/\n/build/\n*.egg',
+            'Node': '# Dependencies\nnode_modules/\n.npm/\n\n# Build\n/dist/\n/build/\n*.tsbuildinfo\n.next/\n.nuxt/\n\n# Env\n.env\n.env.local\n.env.*.local\n\n# IDE\n.vscode/\n.idea/\n*.swp\n*.swo\n\n# Logs\nlogs/\n*.log\nnpm-debug.log*\nyarn-debug.log*\nyarn-error.log*\n\n# OS\n.DS_Store\nThumbs.db\n\n# Coverage\ncoverage/\n.nyc_output/',
+            'Java': '# Compiled\n*.class\n*.jar\n*.war\n*.nar\n*.ear\n*.zip\n*.tar.gz\n\n# Build\ntarget/\n.gradle/\nbuild/\nout/\nbin/\n\n# IDE\n.idea/\n*.iml\n.classpath\n.project\n.settings/\n.vscode/\n*.swp\n\n# Maven\npom.xml.tag\npom.xml.releaseBackup\npom.xml.versionsBackup\n\n# OS\n.DS_Store\nThumbs.db\n\n# Logs\n*.log',
+            'Go': '# Binaries\n*.exe\n*.exe~\n*.dll\n*.so\n*.dylib\n\n# Test binary\n*.test\n\n# Output of go coverage\n*.out\n\n# Go workspace\ngo.work\n\n# Dependencies\n/vendor/\n\n# IDE\n.idea/\n.vscode/\n*.swp\n*.swo\n\n# OS\n.DS_Store\nThumbs.db\n\n# Env\n.env',
+            'Rust': '# Generated\n/target/\n\n# Dependencies\nCargo.lock\n\n# IDE\n.idea/\n.vscode/\n*.swp\n\n# OS\n.DS_Store\nThumbs.db\n\n# Env\n.env',
+            'C/C++': '# Prerequisites\n*.d\n\n# Compiled\n*.o\n*.ko\n*.obj\n*.elf\n*.exe\n*.out\n*.app\n\n# Libraries\n*.lib\n*.a\n*.la\n*.lo\n*.so.*\n*.dylib\n\n# Build\n/build/\n/cmake-build-*/',
+            'C#': '# Build\n[Dd]ebug/\n[Rr]elease/\n[Bb]in/\n[Oo]bj/\n\n# NuGet\n*.nupkg\n**/[Pp]ackages/*\n!**/[Pp]ackages/build/\n\n# IDE\n.idea/\n.vs/\n.vscode/\n*.suo\n*.user\n*.userosscache\n\n# Rider\n.idea/',
+            'VisualStudio': '# Visual Studio\n*.suo\n*.user\n*.userosscache\n*.sln.docstates\n*.userprefs\n\n# Build results\n[Dd]ebug/\n[Rr]elease/\nx64/\nx86/\n[Bb]in/\n[Oo]bj/\n\n# Roslyn\n*.ide/',
+            'JetBrains': '# JetBrains IDE\n.idea/\n*.iml\n*.iws\n*.ipr\nout/\n\n# Fleet\n.fleet/',
+            'VSCode': '# VS Code\n.vscode/\n*.code-workspace\n\n# History\n.history/\n*.vsix',
+            'macOS': '# macOS\n.DS_Store\n.AppleDouble\n.LSOverride\n\n# Icon\nIcon\n\n# Thumbnails\n._*\n\n# Files\n.DocumentRevisions-V100\n.fseventsd\n.Spotlight-V100\n.TemporaryItems\n.Trashes\n.VolumeIcon.icns\n.com.apple.timemachine.donotpresent',
+            'Windows': '# Windows\nThumbs.db\nThumbs.db:encryptable\nehthumbs.db\nehthumbs_vista.db\n\n# Folder config\n[Dd]esktop.ini\n$RECYCLE.BIN/\n\n# Windows shortcuts\n*.lnk',
+            'Linux': '# Linux\n*~\n\n# KDE\n.directory\n\n# Temporary files\n*.swp\n*.swo\n*~',
+            'Docker': '# Docker\ndocker-compose.override.yml\n.env\n\n# Build context\n.dockerignore\n\n# Data\n*.pid',
+            'Android': '# Android\n*.apk\n*.aab\n*.dex\n*.class\n\n# Gradle\n.gradle/\nbuild/\nlocal.properties\n\n# IDE\n.idea/\n*.iml\n\n# Generated\n/bin/\n/gen/\n/out/\n\n# OS\n.DS_Store\nThumbs.db',
+            'iOS': '# Xcode\n*.xcworkspace\nxcuserdata/\nDerivedData/\n*.ipa\n*.dSYM.zip\n*.dSYM\n\n# CocoaPods\nPods/\n\n# Carthage\nCarthage/Build\n\n# SwiftPM\n.build/\n.swiftpm/',
+            'Flutter': '# Flutter\n.dart_tool/\n.packages\n.pub/\nbuild/\n.flutter-plugins\n.flutter-plugins-dependencies\n*.iml\n\n# IDE\n.idea/\n.vscode/\n\n# OS\n.DS_Store\nThumbs.db',
+            'React': '# React / Next.js\nnode_modules/\n.next/\nout/\n\n# Env\n.env*.local\n\n# Debug\nnpm-debug.log*\nyarn-debug.log*\nyarn-error.log*\n\n# Production\n/build/\n/dist/\n\n# Misc\n.DS_Store\n*.pem\n\n# Vercel\n.vercel',
+            'Vue': '# Vue / Nuxt\nnode_modules/\n.nuxt/\n.output/\ndist/\n\n# Env\n.env\n.env.local\n\n# Logs\n*.log\n\n# IDE\n.vscode/\n.idea/\n*.swp',
+            'Angular': '# Angular\nnode_modules/\ndist/\n\n# Test\ncoverage/\n\n# Angular cache\n.angular/\n\n# Env\n.env',
+            'Django': '# Django\n*.pyc\n__pycache__/\ndb.sqlite3\n/media/\n/staticfiles/\n\n# Env\n.env\nvenv/\n\n# IDE\n.idea/\n.vscode/',
+            'Spring': '# Spring Boot\ntarget/\n!.mvn/wrapper/maven-wrapper.jar\n!**/src/main/**/target/\n!**/src/test/**/target/\n\n# STS\n.apt_generated\n.classpath\n.factorypath\n.project\n.settings/\n\n# IntelliJ\n.idea/\n*.iws\n*.iml\n*.ipr\n\n# NetBeans\n/nbproject/private/\n/nbbuild/\n/dist/\n/nbdist/',
+            'Terraform': '# Terraform\n*.tfstate\n*.tfstate.*\n.terraform/\n.terraform.lock.hcl\n\n# Override files\noverride.tf\noverride.tf.json\n*_override.tf\n*_override.tf.json\n\n# Crash logs\ncrash.log',
+            'Kubernetes': '# Kubernetes\n*.secret.yaml\n*.secret.yml\n\n# Kustomize\nkustomization.yaml\n\n# Helm\ncharts/\n*.tgz',
+            'Jekyll': '# Jekyll\n_site/\n.sass-cache/\n.jekyll-cache/\n.jekyll-metadata\nvendor/',
+            'Hugo': '# Hugo\n/public/\n/resources/\n.hugo_build.lock\n\n# Go workspace\ngo.sum',
+            'Svelte': '# Svelte\nnode_modules/\n/build/\n/.svelte-kit/\n/package/\n\n# Env\n.env\n.env.*\n!.env.example\n\n# Vite\nvite.config.js.timestamp-*\nvite.config.ts.timestamp-*',
+            'Deno': '# Deno\n/.deno/\n/.deno_plugins/\n/node_modules/\n\n# Env\n.env',
+            'Ruby': '# Ruby\n*.gem\n*.rbc\n/.config\n/coverage/\n/InstalledFiles\n/pkg/\n/spec/reports/\n/spec/examples.txt\n/test/tmp/\n/test/version_tmp/\n/tmp/\n\n# Bundler\n/.bundle/\n/vendor/bundle\n/.ruby-gemset\n/.ruby-version\n\n# IDE\n.idea/\n.vscode/',
+            'Rails': '# Rails\n*.rbc\ncapybara-*.html\n.rspec\n/db/*.sqlite3\n/db/*.sqlite3-journal\n/db/*.sqlite3-[0-9]*\n/public/system\n/coverage/\n/spec/tmp/\n/tmp/\n\n# Storage\n/storage/*\n!/storage/.keep\n/tmp/storage/*\n!/tmp/storage/.keep',
+            'Dart': '# Dart\n.dart_tool/\n.packages\n.pub/\nbuild/\n\n# Code generation\n*.g.dart\n*.freezed.dart\n',
+            'Elixir': '# Elixir\n/_build/\n/cover/\n/deps/\n/doc/\n/.fetch\nerl_crash.dump\n*.ez\n*.beam\n/config/*.secret.exs\n\n# Phoenix\nnpm-debug.log*\n/apps/*/priv/static/',
+            'Gatsby': '# Gatsby\n.cache/\npublic\nnode_modules/\n\n# Env\n.env.development\n.env.production',
+            'Unity': '# Unity\n/[Ll]ibrary/\n/[Tt]emp/\n/[Oo]bj/\n/[Bb]uild/\n/[Bb]uilds/\n/[Ll]ogs/\n/[Uu]ser[Ss]ettings/\n\n# Autogenerated\n*.csproj\n*.unityproj\n*.sln\n*.suo\n*.tmp\n*.user\n*.pidb\n*.pdb\n*.mdb\n*.apk\n*.aab\n\n# Crashlytics\ncrashlytics-build.properties',
+            'Godot': '# Godot\n.import/\nexport.cfg\nexport_presets.cfg\n\n# Mono\n.mono/\ndata_*/\nmono_crash.*\n\n# Autoload\n*.uid',
+            'Zig': '# Zig\n/zig-out/\n/zig-cache/\n\n# Build\n*.exe\n*.o',
+            'Sass': '# Sass\n.sass-cache/\n*.css.map\n*.scss.map',
+            'Gradle': '# Gradle\n.gradle/\nbuild/\n!gradle/wrapper/gradle-wrapper.jar\n\n# IDE\n!**/build/generated-sources/\nout/\n.gradle',
+            'Maven': '# Maven\ntarget/\npom.xml.tag\npom.xml.releaseBackup\npom.xml.versionsBackup\npom.xml.next\nrelease.properties\ndependency-reduced-pom.xml\nbuildNumber.properties\n.mvn/timing.properties',
+        };
+
+        var categories = {
+            '💻 语言 / 运行时': ['Python','Node','Java','Go','Rust','C/C++','C#','Ruby','Dart','Elixir','Deno','Zig','Sass'],
+            '🌐 前端框架': ['React','Vue','Angular','Svelte','Gatsby'],
+            '⚙️ 后端框架': ['Django','Spring','Rails','Hugo','Jekyll'],
+            '📱 移动端': ['Android','iOS','Flutter','Unity','Godot'],
+            '🛠️ IDE / 编辑器': ['VisualStudio','JetBrains','VSCode'],
+            '💻 操作系统': ['macOS','Windows','Linux'],
+            '🐳 DevOps / 容器': ['Docker','Terraform','Kubernetes'],
+            '📦 构建工具': ['Gradle','Maven'],
+        };
+
+        var presets = {
+            'web': ['Node','React','VSCode','macOS','Windows','Linux'],
+            'mobile': ['Android','iOS','Flutter','VSCode','macOS','Windows','Linux'],
+            'data': ['Python','Jupyter','VSCode','macOS','Windows','Linux'],
+            'devops': ['Docker','Terraform','Kubernetes','VSCode','macOS','Windows','Linux']
+        };
+
+        function renderCategories(){
+            var html = '';
+            for(var cat in categories){
+                html += '<div class="category-group">';
+                html += '<div class="category-label">' + cat + '</div>';
+                html += '<div class="template-grid">';
+                categories[cat].forEach(function(t){
+                    var active = selected[t] ? ' active' : '';
+                    html += '<span class="template-chip' + active + '" data-template="' + t + '" onclick="toggleTemplate(\'' + t + '\')">' + t + '</span>';
+                });
+                html += '</div></div>';
+            }
+            categoriesEl.innerHTML = html;
+        }
+
+        function updateOutput(){
+            var lines = ['# ========================================'];
+            var count = 0;
+            var hasSections = false;
+
+            // Always start with OS-common ignores
+            var osTemplates = [];
+            for(var t in selected){
+                if(t === 'macOS' || t === 'Windows' || t === 'Linux') osTemplates.push(t);
+            }
+            var nonOsTemplates = [];
+            for(var t in selected){
+                if(t !== 'macOS' && t !== 'Windows' && t !== 'Linux') nonOsTemplates.push(t);
+            }
+
+            // Non-OS templates first
+            nonOsTemplates.forEach(function(t){
+                lines.push('');
+                lines.push('# --- ' + t + ' ---');
+                lines.push(templates[t]);
+                count++;
+                hasSections = true;
+            });
+
+            // OS templates at the bottom
+            if(osTemplates.length > 0){
+                lines.push('');
+                lines.push('# --- Operating System ---');
+                osTemplates.forEach(function(t){
+                    lines.push('');
+                    lines.push('# ' + t);
+                    lines.push(templates[t]);
+                    count++;
+                });
+            }
+
+            if(count === 0){
+                lines = [];
+            }
+
+            lines.push('');
+            output.value = lines.join('\n');
+            stats.textContent = count + ' 个模板';
+        }
+
+        window.toggleTemplate = function(template){
+            if(selected[template]){
+                delete selected[template];
+            } else {
+                selected[template] = true;
+            }
+            updateOutput();
+            renderCategories();
+            saveState();
+        };
+
+        window.selectPreset = function(preset){
+            if(!presets[preset]) return;
+            selected = {};
+            presets[preset].forEach(function(t){ selected[t] = true; });
+            updateOutput();
+            renderCategories();
+            saveState();
+            showToast('已选择「' + preset + '」预设模板');
+        };
+
+        window.clearAll = function(){
+            selected = {};
+            output.value = '';
+            stats.textContent = '0 个模板';
+            renderCategories();
+            saveState();
+        };
+
+        window.copyOutput = function(){
+            if(!output.value){ showToast('没有可复制的内容'); return; }
+            if(navigator.clipboard){
+                navigator.clipboard.writeText(output.value).then(function(){ showToast('✓ 已复制 .gitignore 到剪贴板'); });
+            } else {
+                output.select(); document.execCommand('copy');
+                showToast('✓ 已复制');
+            }
+        };
+
+        window.downloadOutput = function(){
+            if(!output.value){ showToast('没有可下载的内容'); return; }
+            var blob = new Blob([output.value], {type:'text/plain;charset=utf-8'});
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url; a.download = '.gitignore';
+            a.click(); URL.revokeObjectURL(url);
+            showToast('已下载 .gitignore');
+        };
+
+        function saveState(){
+            localStorage.setItem('gitignore-selected', JSON.stringify(Object.keys(selected)));
+        }
+
+        function loadState(){
+            try {
+                var saved = JSON.parse(localStorage.getItem('gitignore-selected') || '[]');
+                saved.forEach(function(t){ if(templates[t]) selected[t] = true; });
+                updateOutput();
+                renderCategories();
+            } catch(e){}
+        }
+
+        // 初始化
+        function init(){
+            renderCategories();
+            loadState();
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e){
+            if((e.ctrlKey||e.metaKey) && e.key === 'c' && document.activeElement !== output){
+                e.preventDefault(); copyOutput();
+            }
+            if((e.ctrlKey||e.metaKey) && e.key === 's'){
+                e.preventDefault(); downloadOutput();
+            }
+        });
+
+        init();
+    })();
+    </script>
+</body>
+</html>

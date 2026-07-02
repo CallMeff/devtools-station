@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">开源许可证选择器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent,#7c3aed);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+        .topbar button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s}
+        .topbar button:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .page-content{flex:1;max-width:1200px;margin:0 auto;width:100%;padding:20px;display:flex;flex-direction:column;gap:20px}
+
+        .intro-box{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:12px;padding:20px;text-align:center}
+        .intro-box h2{font-size:20px;color:var(--accent,#7c3aed);margin-bottom:8px}
+        .intro-box p{color:var(--text-muted,#888);font-size:14px;line-height:1.6}
+        .quiz-section{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+        .quiz-card{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px}
+        .quiz-card .q-title{font-size:14px;font-weight:600;color:var(--text-primary,#ddd);display:flex;align-items:center;gap:8px}
+        .quiz-card .q-title .q-num{width:24px;height:24px;border-radius:50%;background:var(--accent,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;flex-shrink:0}
+        .quiz-card .q-options{display:flex;flex-direction:column;gap:6px}
+        .quiz-card .q-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border-color,#444);border-radius:8px;cursor:pointer;font-size:13px;transition:all .2s;color:var(--text-primary,#ddd)}
+        .quiz-card .q-opt:hover{border-color:var(--accent,#7c3aed);background:rgba(124,58,237,.08)}
+        .quiz-card .q-opt.selected{border-color:var(--accent,#7c3aed);background:rgba(124,58,237,.15);color:var(--accent,#7c3aed)}
+        .quiz-card .q-opt input[type=radio]{display:none}
+
+        .results-section{margin-top:4px}
+        .result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+        .license-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+        .license-card{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#444);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;position:relative}
+        .license-card:hover{border-color:var(--accent,#7c3aed)}
+        .license-card.recommended{border-color:var(--accent,#7c3aed);border-width:2px;box-shadow:0 0 20px rgba(124,58,237,.2)}
+        .license-card.recommended::before{content:'⭐ 推荐';position:absolute;top:-10px;right:12px;background:var(--accent,#7c3aed);color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600}
+        .license-card .lc-name{font-size:16px;font-weight:700;color:var(--text-primary,#ddd);margin-bottom:6px}
+        .license-card .lc-tagline{font-size:12px;color:var(--text-muted,#888);margin-bottom:10px;line-height:1.5}
+        .license-card .lc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+        .license-card .lc-tag{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+        .lc-tag.yes{background:rgba(78,203,113,.15);color:#4ecb71}
+        .lc-tag.no{background:rgba(255,107,107,.15);color:#ff6b6b}
+        .lc-tag.maybe{background:rgba(255,193,7,.15);color:#ffc107}
+        .license-card .lc-actions{display:flex;gap:6px;margin-top:8px}
+        .btn-xs{padding:3px 8px;border-radius:4px;border:1px solid var(--border-color,#444);background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:11px;transition:all .15s}
+        .btn-xs:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .btn-accent-sm{padding:3px 8px;border-radius:4px;background:var(--accent,#7c3aed);border:1px solid var(--accent,#7c3aed);color:#fff;cursor:pointer;font-size:11px;transition:all .15s}
+        .btn-accent-sm:hover{opacity:.85}
+
+        .compare-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}
+        .compare-table td,.compare-table th{padding:8px 12px;border:1px solid var(--border-color,#444);text-align:center}
+        .compare-table th{background:var(--bg-tertiary,#2a2a3a);font-weight:600;color:var(--text-muted,#888);font-size:11px;white-space:nowrap}
+        .compare-table td:first-child{text-align:left;font-weight:500;color:var(--text-muted,#888)}
+        .compare-table .check{color:#4ecb71}
+        .compare-table .cross{color:#ff6b6b}
+        .compare-table .warn{color:#ffc107}
+
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s}
+        .modal-box{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:16px;padding:24px;max-width:700px;width:90%;max-height:80vh;overflow:auto}
+        .modal-box h3{font-size:18px;color:var(--accent,#7c3aed);margin-bottom:10px}
+        .modal-box pre{background:var(--bg-tertiary,#2a2a3a);padding:14px;border-radius:8px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;max-height:50vh;overflow:auto;color:var(--text-primary,#ddd);line-height:1.6}
+        .modal-box .modal-close{margin-top:12px;float:right;padding:6px 16px}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+        .success-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:8px 20px;background:var(--accent,#7c3aed);color:#fff;border-radius:8px;font-size:13px;z-index:999;animation:fadeInUp .3s;pointer-events:none}
+        @keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+        .progress-bar{height:4px;background:var(--border-color,#444);border-radius:2px;margin-bottom:8px;overflow:hidden}
+        .progress-fill{height:100%;background:var(--accent,#7c3aed);border-radius:2px;transition:width .3s}
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <div class="brand">
+        <a href="/">DevTools Station</a>
+        <span class="sep">/</span>
+        <span class="tool-name" th:text="${tool.name}">开源许可证选择器</span>
+    </div>
+    <button onclick="resetQuiz()" title="重新选择">🔄 重新选择</button>
+</div>
+<div class="page-content">
+    <div class="intro-box">
+        <h2>📜 开源许可证选择器</h2>
+        <p>回答下面的问题，帮你找到最适合项目的开源许可证。选中的选项越多，推荐越精准。</p>
+        <div class="progress-bar"><div class="progress-fill" id="progressBar" style="width:0%"></div></div>
+        <span style="font-size:11px;color:var(--text-muted,#888)" id="progressText">0/6 问题已回答</span>
+    </div>
+
+    <div class="quiz-section" id="quizSection"></div>
+
+    <div class="results-section" id="resultsSection">
+        <div class="result-header">
+            <h3 style="font-size:16px;color:var(--text-primary,#ddd)">📊 推荐结果</h3>
+            <span style="font-size:12px;color:var(--text-muted,#888)" id="matchInfo"></span>
+        </div>
+        <div class="license-cards" id="licenseCards"></div>
+    </div>
+
+    <div style="background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:12px;padding:18px">
+        <h3 style="font-size:15px;color:var(--accent,#7c3aed);margin-bottom:12px">📋 许可证对比表</h3>
+        <div style="overflow-x:auto">
+            <table class="compare-table" id="compareTable"></table>
+        </div>
+    </div>
+</div>
+<div id="modal" class="modal-overlay" style="display:none"></div>
+<div id="toast" class="success-toast" style="display:none"></div>
+<script>
+(function(){
+    // License data
+    var licenses = {
+        MIT: {
+            name: 'MIT License',
+            tagline: '最宽松的许可证，允许任意使用、修改、分发，仅需保留版权声明',
+            fullName:'MIT',
+            score:0, tags:{permissive:true,copyleft:false,patent:false,liability:true,disclose:false,sameLicense:false,network:false,popular:true,tldr:'简单说：随便用，保留版权声明即可',usage:'商业软件、个人项目、开源库'},
+            text:'MIT License\n\nCopyright (c) [year] [fullname]\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the "Software"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.'
+        },
+        'Apache-2.0': {
+            name: 'Apache License 2.0',
+            tagline: '宽松许可证 + 专利授权，适合企业级项目，明确授予专利权',
+            fullName:'Apache-2.0',
+            score:0, tags:{permissive:true,copyleft:false,patent:true,liability:true,disclose:true,sameLicense:false,network:false,popular:true,tldr:'MIT 的升级版，额外提供专利保护，修改需声明',usage:'企业项目、大数据/云原生项目、需要专利保护的项目'},
+            text:'Apache License\nVersion 2.0, January 2004\nhttp://www.apache.org/licenses/\n\nTERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n1. Definitions.\n   "License" shall mean the terms and conditions for use, reproduction...\n\n[完整文本请访问 https://www.apache.org/licenses/LICENSE-2.0]'
+        },
+        'GPL-3.0': {
+            name: 'GNU GPL v3.0',
+            tagline: '强 Copyleft，修改/分发必须开源，防止专利化，适合自由软件运动',
+            fullName:'GPL-3.0',
+            score:0, tags:{permissive:false,copyleft:true,patent:true,liability:true,disclose:true,sameLicense:true,network:false,popular:true,tldr:'用了GPL代码，你的项目也必须用GPL开源',usage:'自由软件、开源社区项目、Linux 内核相关'},
+            text:'GNU GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007\n\nCopyright (C) 2007 Free Software Foundation, Inc.\nEveryone is permitted to copy and distribute verbatim copies...\n\n[完整文本请访问 https://www.gnu.org/licenses/gpl-3.0.txt]'
+        },
+        'LGPL-3.0': {
+            name: 'GNU LGPL v3.0',
+            tagline: '弱 Copyleft，库文件修改需开源，但调用方可以闭源',
+            fullName:'LGPL-3.0',
+            score:0, tags:{permissive:false,copyleft:true,patent:true,liability:true,disclose:true,sameLicense:false,network:false,popular:true,tldr:'改库要开源，用库可以闭源（比GPL宽松）',usage:'开源库/SDK、需要商业友好的库项目'},
+            text:'GNU LESSER GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007\n\n[完整文本请访问 https://www.gnu.org/licenses/lgpl-3.0.txt]'
+        },
+        'BSD-3': {
+            name: 'BSD 3-Clause',
+            tagline: '类 MIT 但禁止用作者名背书，学术/企业界常用',
+            fullName:'BSD-3-Clause',
+            score:0, tags:{permissive:true,copyleft:false,patent:false,liability:true,disclose:false,sameLicense:false,network:false,popular:true,tldr:'类似MIT，但不能用作者名字打广告',usage:'学术项目、框架、Go语言用此许可证'},
+            text:'BSD 3-Clause License\n\nCopyright (c) [year], [fullname]\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice...\n2. Redistributions in binary form must reproduce the above copyright notice...\n3. Neither the name of the copyright holder nor the names of its\n   contributors may be used to endorse or promote products derived from\n   this software without specific prior written permission...'
+        },
+        'MPL-2.0': {
+            name: 'Mozilla Public License 2.0',
+            tagline: '文件级 Copyleft，修改的 MPL 文件需开源，但可与闭源代码混合',
+            fullName:'MPL-2.0',
+            score:0, tags:{permissive:false,copyleft:true,patent:true,liability:true,disclose:true,sameLicense:false,network:false,popular:true,tldr:'改了我家文件要开源，其他文件可以闭源',usage:'混合开源/闭源项目、Rust 生态常用'},
+            text:'Mozilla Public License Version 2.0\n\n1. Definitions\n\n1.1. "Contributor"\n    means each individual or legal entity that creates...\n\n[完整文本请访问 https://www.mozilla.org/MPL/2.0/]'
+        },
+        Unlicense: {
+            name: 'The Unlicense',
+            tagline: '完全放弃版权，进入公共领域，任何人都可以任意使用',
+            fullName:'Unlicense',
+            score:0, tags:{permissive:true,copyleft:false,patent:false,liability:true,disclose:false,sameLicense:false,network:false,popular:false,tldr:'完全放弃所有权利，放进公共领域，爱怎么用怎么用',usage:'示例代码、教学项目、不想管版权的项目'},
+            text:'This is free and unencumbered software released into the public domain.\n\nAnyone is free to copy, modify, publish, use, compile, sell, or\ndistribute this software, either in source code form or as a compiled\nbinary, for any purpose, commercial or non-commercial, and by any\nmeans...'
+        },
+        'AGPL-3.0': {
+            name: 'GNU AGPL v3.0',
+            tagline: '最强 Copyleft，网络使用也算分发，SaaS 服务也必须开源',
+            fullName:'AGPL-3.0',
+            score:0, tags:{permissive:false,copyleft:true,patent:true,liability:true,disclose:true,sameLicense:true,network:true,popular:true,tldr:'GPL的网络版：你部署成SaaS服务也得开源！',usage:'SaaS/云服务项目、MongoDB/Nextcloud 使用'},
+            text:'GNU AFFERO GENERAL PUBLIC LICENSE\nVersion 3, 19 November 2007\n\n[完整文本请访问 https://www.gnu.org/licenses/agpl-3.0.txt]'
+        }
+    };
+
+    var questions = [
+        {id:'q1',title:'你的项目是开源还是闭源？',options:[
+            {id:'open',label:'🟢 完全开源',desc:'代码在 GitHub 等平台公开'},
+            {id:'mixed',label:'🟡 混合模式',desc:'部分开源，部分闭源'},
+            {id:'closed',label:'🔴 闭源/商业',desc:'不会公开源代码'}
+        ]},
+        {id:'q2',title:'你希望别人修改代码后必须开源吗？',options:[
+            {id:'yes',label:'✅ 是的，必须开源（Copyleft）',desc:'修改后的代码也要用相同许可证开源'},
+            {id:'no',label:'❌ 不要求（宽松许可证）',desc:'允许闭源使用和商用'}
+        ]},
+        {id:'q3',title:'你的代码会被用作 SaaS/云服务吗？',options:[
+            {id:'yes',label:'☁️ 是的，主要就是 SaaS',desc:'通过网络提供服务，用户不下载代码'},
+            {id:'maybe',label:'🤔 可能会',desc:'有网络服务的可能性'},
+            {id:'no',label:'📦 不会，主要分发客户端',desc:'用户直接下载安装使用'}
+        ]},
+        {id:'q4',title:'你需要专利保护吗？',options:[
+            {id:'yes',label:'🛡️ 需要明确专利授权',desc:'防止专利诉讼，保护贡献者'},
+            {id:'no',label:'➖ 不需要',desc:'不涉及专利问题'}
+        ]},
+        {id:'q5',title:'你介意别人用你的项目名做宣传吗？',options:[
+            {id:'yes',label:'⚠️ 介意，禁止背书',desc:'不允许未经许可使用我的名义推广'},
+            {id:'no',label:'😊 不介意',desc:'允许自由使用'}
+        ]},
+        {id:'q6',title:'项目规模和使用场景？',options:[
+            {id:'lib',label:'📚 开源库/SDK',desc:'给别人用的库、框架、工具包'},
+            {id:'app',label:'🖥️ 独立应用',desc:'完整的应用程序'},
+            {id:'corp',label:'🏢 企业项目',desc:'公司内部或在企业环境中使用'}
+        ]}
+    ];
+
+    var answers = {};
+
+    function buildQuiz(){
+        var html = '';
+        questions.forEach(function(q,i){
+            html += '<div class="quiz-card"><div class="q-title"><span class="q-num">'+(i+1)+'</span>'+q.title+'</div><div class="q-options">';
+            q.options.forEach(function(opt){
+                var sel = answers[q.id] === opt.id ? ' selected' : '';
+                html += '<label class="q-opt'+sel+'" onclick="selectAnswer(\''+q.id+'\',\''+opt.id+'\',this)"><input type="radio" name="'+q.id+'" value="'+opt.id+'"'+(sel?' checked':'')+'><span><strong>'+opt.label+'</strong><br><small style="color:var(--text-muted,#888)">'+opt.desc+'</small></span></label>';
+            });
+            html += '</div></div>';
+        });
+        document.getElementById('quizSection').innerHTML = html;
+        updateProgress();
+        calculateScores();
+    }
+
+    window.selectAnswer = function(qid, oid, el){
+        answers[qid] = oid;
+        document.querySelectorAll('.quiz-card .q-opt').forEach(function(o){o.classList.remove('selected')});
+        var card = el.closest('.quiz-card');
+        if(card) card.querySelectorAll('.q-opt').forEach(function(o){o.classList.remove('selected')});
+        el.classList.add('selected');
+        updateProgress();
+        calculateScores();
+    };
+
+    function updateProgress(){
+        var answered = Object.keys(answers).length;
+        var total = questions.length;
+        var pct = (answered/total*100);
+        document.getElementById('progressBar').style.width = pct+'%';
+        document.getElementById('progressText').textContent = answered+'/'+total+' 问题已回答';
+    }
+
+    function calculateScores(){
+        Object.keys(licenses).forEach(function(k){licenses[k].score=0});
+        var answered = Object.keys(answers).length;
+        if(answered===0){renderResults();return}
+
+        // Q1: open/closed
+        if(answers.q1==='closed'){addScore(['MIT','Apache-2.0','BSD-3'],2)}
+        // Q2: copyleft
+        if(answers.q2==='yes'){addScore(['GPL-3.0','AGPL-3.0'],3);addScore(['LGPL-3.0','MPL-2.0'],2)}
+        else {addScore(['MIT','Apache-2.0','BSD-3','Unlicense'],3)}
+        // Q3: SaaS/network
+        if(answers.q3==='yes'){addScore(['AGPL-3.0'],3);addScore(['GPL-3.0'],1)}
+        else {addScore(['MIT','Apache-2.0','BSD-3','Unlicense','LGPL-3.0','MPL-2.0'],2)}
+        // Q4: patent
+        if(answers.q4==='yes'){addScore(['Apache-2.0','GPL-3.0','AGPL-3.0','MPL-2.0'],3)}
+        else {addScore(['MIT','BSD-3','Unlicense'],1)}
+        // Q5: endorsement
+        if(answers.q5==='yes'){addScore(['BSD-3','Apache-2.0'],2)}
+        // Q6: usage type
+        if(answers.q6==='lib'){addScore(['MIT','Apache-2.0','BSD-3','LGPL-3.0','MPL-2.0'],2)}
+        if(answers.q6==='corp'){addScore(['Apache-2.0','MIT','BSD-3'],3)}
+        if(answers.q6==='app'){addScore(['GPL-3.0'],2)}
+
+        // Bonuses
+        if(answers.q1==='mixed'){addScore(['LGPL-3.0','MPL-2.0'],3);addScore(['MIT','Apache-2.0','BSD-3'],1)}
+        if(answers.q2==='yes' && answers.q3==='yes'){addScore(['AGPL-3.0'],5)}
+
+        renderResults();
+    }
+
+    function addScore(keys, pts){keys.forEach(function(k){if(licenses[k])licenses[k].score+=pts})}
+
+    function renderResults(){
+        var sorted = Object.keys(licenses).sort(function(a,b){return licenses[b].score-licenses[a].score});
+        var maxScore = sorted.length>0 ? licenses[sorted[0]].score : 1;
+        var html = '';
+        sorted.forEach(function(k,i){
+            var l = licenses[k];
+            var isRec = i===0 && l.score>0;
+            html += '<div class="license-card'+(isRec?' recommended':'')+'" onclick="viewLicense(\''+k+'\')">';
+            html += '<div class="lc-name">'+(i+1)+'. '+l.name+' <span style="font-size:11px;color:var(--text-muted,#888)">('+l.score+'分)</span></div>';
+            html += '<div class="lc-tagline">'+l.tagline+'</div>';
+            html += '<div class="lc-tags">';
+            html += '<span class="lc-tag '+(l.tags.permissive?'yes':'no')+'">'+(l.tags.permissive?'宽松':'限制')+'</span>';
+            html += '<span class="lc-tag '+(l.tags.copyleft?'no':'yes')+'">'+(l.tags.copyleft?'Copyleft':'商用友好')+'</span>';
+            html += '<span class="lc-tag '+(l.tags.patent?'yes':'maybe')+'">'+(l.tags.patent?'专利保护':'专利:无')+'</span>';
+            html += '</div>';
+            html += '<div style="font-size:11px;color:var(--text-muted,#888);margin-bottom:6px">💡 '+l.tags.tldr+'</div>';
+            html += '<div style="font-size:11px;color:var(--text-muted,#888);margin-bottom:6px">🎯 适用: '+l.tags.usage+'</div>';
+            html += '<div class="lc-actions">';
+            html += '<button class="btn-accent-sm" onclick="event.stopPropagation();copyLicense(\''+k+'\')">📋 复制</button>';
+            html += '<button class="btn-xs" onclick="event.stopPropagation();viewLicense(\''+k+'\')">👁 查看全文</button>';
+            html += '</div></div>';
+        });
+        document.getElementById('licenseCards').innerHTML = html;
+        document.getElementById('matchInfo').textContent = '共 '+sorted.length+' 个许可证（按匹配度排序）';
+
+        // Comparison table
+        var tableHtml = '<tr><th>特性</th>'+sorted.map(function(k){return '<th>'+k+'</th>'}).join('')+'</tr>';
+        var rows = [
+            {label:'商业使用',key:'permissive',yes:'✅',no:'❌'},
+            {label:'修改后闭源',key:'permissive',yes:'✅',no:'❌'},
+            {label:'Copyleft',key:'copyleft',yes:'⚠️',no:'✅'},
+            {label:'专利保护',key:'patent',yes:'✅',no:'❌'},
+            {label:'免责声明',key:'liability',yes:'✅',no:'❌'},
+            {label:'修改声明',key:'disclose',yes:'⚠️',no:'✅'},
+            {label:'同许可证',key:'sameLicense',yes:'⚠️',no:'✅'},
+            {label:'SaaS也需开源',key:'network',yes:'⚠️',no:'✅'}
+        ];
+        rows.forEach(function(r){
+            tableHtml += '<tr><td>'+r.label+'</td>'+sorted.map(function(k){
+                var val = licenses[k].tags[r.key];
+                var cls = val ? 'check' : 'cross';
+                var icon = val ? r.yes : r.no;
+                return '<td class="'+cls+'">'+icon+'</td>';
+            }).join('')+'</tr>';
+        });
+        document.getElementById('compareTable').innerHTML = tableHtml;
+    }
+
+    window.viewLicense = function(key){
+        var l = licenses[key];
+        if(!l) return;
+        var html = '<div class="modal-box"><h3>📜 '+l.name+'</h3><p style="color:var(--text-muted,#888);font-size:13px;margin-bottom:10px">'+l.tagline+'</p><pre>'+escapeHtml(l.text)+'</pre><button class="btn-sm modal-close" onclick="closeModal()">关闭</button></div>';
+        document.getElementById('modal').innerHTML = html;
+        document.getElementById('modal').style.display = 'flex';
+    };
+
+    window.copyLicense = function(key){
+        var l = licenses[key];
+        if(!l) return;
+        navigator.clipboard.writeText(l.text.replace('[year]',new Date().getFullYear()).replace('[fullname]','Your Name')).then(function(){showToast('✅ '+l.name+' 已复制到剪贴板')}).catch(function(){showToast('复制失败')});
+    };
+
+    window.closeModal = function(){
+        document.getElementById('modal').style.display = 'none';
+    };
+    document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+
+    window.resetQuiz = function(){
+        answers = {};
+        buildQuiz();
+    };
+
+    function escapeHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+    function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none'},2000)}
+
+    buildQuiz();
+})();
+</script>
+</body>
+</html>

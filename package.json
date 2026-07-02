@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "elasticlunr": "^0.9.5",
+    "playwright": "^1.61.1"
+  },
+  "dependencies": {
+    "mysql2": "^3.22.5"
+  }
+}

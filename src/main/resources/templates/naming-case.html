@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">命名风格转换器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent,#7c3aed);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+        .topbar button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s}
+        .topbar button:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+
+        .page-content{flex:1;display:flex;flex-direction:column;max-width:900px;margin:0 auto;width:100%;padding:20px;gap:20px}
+
+        .input-block{flex-shrink:0}
+        .input-block label{display:block;font-size:13px;font-weight:600;color:var(--text-muted,#888);margin-bottom:8px}
+        .input-block textarea{width:100%;padding:14px;border:1px solid var(--border-color,#444);border-radius:10px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:15px;line-height:1.5;resize:vertical;min-height:80px;outline:none;transition:border-color .2s}
+        .input-block textarea:focus{border-color:var(--accent,#7c3aed)}
+        .input-block textarea::placeholder{color:var(--text-muted,#666);font-size:13px}
+        .input-block .hint{font-size:11px;color:var(--text-muted,#666);margin-top:6px}
+        .input-block .hint code{background:var(--bg-tertiary,#2a2a3a);padding:1px 5px;border-radius:3px;font-size:11px}
+
+        .results-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;align-content:start}
+        .result-card{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:10px;padding:12px 16px;transition:all .15s;position:relative}
+        .result-card:hover{border-color:var(--accent,#7c3aed)}
+        .result-card .card-label{font-size:11px;font-weight:600;color:var(--accent,#7c3aed);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+        .result-card .card-label .badge{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--accent,#7c3aed);color:#fff;opacity:.8}
+        .result-card .card-value{font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:14px;color:var(--text-primary,#ddd);word-break:break-all;line-height:1.4}
+        .result-card .card-value.empty{color:var(--text-muted,#555);font-style:italic}
+        .result-card .copy-btn{position:absolute;right:12px;top:12px;padding:3px 8px;border:1px solid var(--border-color,#444);border-radius:4px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#888);cursor:pointer;font-size:11px;transition:all .15s;opacity:0}
+        .result-card:hover .copy-btn{opacity:1}
+        .result-card .copy-btn:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+
+        .mode-tabs{display:flex;gap:6px;flex-wrap:wrap}
+        .mode-tab{padding:6px 14px;border:1px solid var(--border-color,#444);border-radius:20px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#888);cursor:pointer;font-size:12px;transition:all .15s}
+        .mode-tab:hover{color:var(--text-primary,#ddd);border-color:var(--accent,#7c3aed)}
+        .mode-tab.active{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+
+        .toast{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#444);color:var(--text-primary,#ddd);padding:10px 24px;border-radius:24px;font-size:13px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
+        .toast.show{opacity:1}
+
+        @media (max-width:640px){
+            .results-grid{grid-template-columns:1fr}
+            .page-content{padding:12px}
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand">
+            <a href="/">🏠 DevTools</a>
+            <span class="sep">/</span>
+            <span class="tool-name" th:text="${tool.name}">命名风格转换</span>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="input-block">
+            <label>📝 输入文本 <span style="font-weight:400;font-size:11px;color:#666">— 自动识别分隔符并转换</span></label>
+            <textarea id="inputText" placeholder="输入任意文本，自动转换为各种命名风格&#10;&#10;示例: hello world example&#10;或: hello_world_example&#10;或: hello-world-example&#10;或: helloWorldExample&#10;或: HelloWorldExample&#10;或: HELLO_WORLD_EXAMPLE&#10;或: Hello World Example" oninput="convert()"></textarea>
+            <div class="hint">
+                自动识别输入风格：<code>空格</code> <code>snake_case</code> <code>kebab-case</code> <code>camelCase</code> <code>PascalCase</code> <code>CONSTANT_CASE</code>
+            </div>
+        </div>
+
+        <div class="results-grid" id="results"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    (function(){
+        var inputText = document.getElementById('inputText');
+        var resultsEl = document.getElementById('results');
+        var toast = document.getElementById('toast');
+        var toastTimer;
+
+        function showToast(msg){
+            toast.textContent = msg;
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(function(){ toast.classList.remove('show'); }, 1500);
+        }
+
+        // 分割输入为单词数组
+        function splitWords(input){
+            var text = input.trim();
+            if(!text) return [];
+
+            // 检测输入风格
+            if(text.includes('_') && /^[a-z0-9_]+$/i.test(text.replace(/ /g,''))) {
+                // snake_case or CONSTANT_CASE
+                return text.split('_').filter(Boolean).map(function(w){ return w.toLowerCase(); });
+            }
+            if(text.includes('-') && !text.includes(' ')) {
+                // kebab-case
+                return text.split('-').filter(Boolean).map(function(w){ return w.toLowerCase(); });
+            }
+            if(text.includes(' ')) {
+                // space separated
+                return text.split(/\s+/).filter(Boolean).map(function(w){ return w.toLowerCase(); });
+            }
+            // camelCase or PascalCase - split by uppercase
+            var words = [];
+            var word = '';
+            for(var i = 0; i < text.length; i++){
+                var ch = text[i];
+                if(ch === ch.toUpperCase() && ch !== ch.toLowerCase() && word.length > 0){
+                    words.push(word.toLowerCase());
+                    word = ch;
+                } else {
+                    word += ch;
+                }
+            }
+            if(word) words.push(word.toLowerCase());
+            return words;
+        }
+
+        // 各种命名风格转换
+        var styles = [
+            { id:'camelCase', name:'🐫 camelCase', desc:'小驼峰命名', fn:function(w){ return w.map(function(w,i){ return i===0?w:w.charAt(0).toUpperCase()+w.slice(1); }).join(''); }},
+            { id:'PascalCase', name:'🐪 PascalCase', desc:'大驼峰命名', fn:function(w){ return w.map(function(w){ return w.charAt(0).toUpperCase()+w.slice(1); }).join(''); }},
+            { id:'snake_case', name:'🐍 snake_case', desc:'蛇形命名', fn:function(w){ return w.join('_'); }},
+            { id:'CONSTANT_CASE', name:'🔠 CONSTANT_CASE', desc:'常量命名', fn:function(w){ return w.join('_').toUpperCase(); }},
+            { id:'kebab-case', name:'🍢 kebab-case', desc:'短横线命名', fn:function(w){ return w.join('-'); }},
+            { id:'dot.notation', name:'🔘 dot.notation', desc:'点号命名', fn:function(w){ return w.join('.'); }},
+            { id:'Title Case', name:'📰 Title Case', desc:'标题大写', fn:function(w){ return w.map(function(w){ return w.charAt(0).toUpperCase()+w.slice(1); }).join(' '); }},
+            { id:'Sentence case', name:'✍️ Sentence case', desc:'句首大写', fn:function(w){ var r=w.join(' '); return r.charAt(0).toUpperCase() + r.slice(1); }},
+            { id:'lower case', name:'🔡 lower case', desc:'全小写空格', fn:function(w){ return w.join(' '); }},
+            { id:'UPPER CASE', name:'🔊 UPPER CASE', desc:'全大写空格', fn:function(w){ return w.join(' ').toUpperCase(); }},
+        ];
+
+        function renderResults(words){
+            if(words.length === 0) {
+                resultsEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted,#666)">输入文本查看所有命名风格转换结果</div>';
+                return;
+            }
+            var html = '';
+            for(var i=0;i<styles.length;i++){
+                var s = styles[i];
+                var result = s.fn(words.slice());
+                html += '<div class="result-card">';
+                html += '<div class="card-label"><span>' + s.name + '</span><span class="badge">' + s.desc + '</span></div>';
+                html += '<div class="card-value' + (result?'':' empty') + '">' + (result || '—') + '</div>';
+                if(result) html += '<button class="copy-btn" onclick="copyStyle(\'' + result.replace(/'/g,"\\'") + '\')">📋 复制</button>';
+                html += '</div>';
+            }
+            resultsEl.innerHTML = html;
+        }
+
+        window.convert = function(){
+            var words = splitWords(inputText.value);
+            renderResults(words);
+            localStorage.setItem('naming-case-input', inputText.value);
+        };
+
+        window.copyStyle = function(text){
+            if(navigator.clipboard){
+                navigator.clipboard.writeText(text).then(function(){
+                    showToast('✓ 已复制: ' + text);
+                });
+            } else {
+                var ta = document.createElement('textarea');
+                ta.value = text; ta.style.position='fixed';ta.style.opacity='0';
+                document.body.appendChild(ta);ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast('✓ 已复制');
+            }
+        };
+
+        // 恢复保存的内容
+        var saved = localStorage.getItem('naming-case-input');
+        if(saved){ inputText.value = saved; convert(); }
+
+        // 示例
+        inputText.addEventListener('focus', function(){
+            if(!inputText.value) { inputText.value = 'hello world example'; convert(); }
+        });
+    })();
+    </script>
+</body>
+</html>

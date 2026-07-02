@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">Docker Compose 生成器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent,#7c3aed);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+        .topbar button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s}
+        .topbar button:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .page-content{flex:1;display:flex;max-width:1200px;margin:0 auto;width:100%;padding:20px;gap:20px}
+        @media (max-width:900px){.page-content{flex-direction:column}}
+
+        .select-panel{flex:1;display:flex;flex-direction:column;gap:16px;min-width:0}
+        .section-title{font-size:12px;font-weight:600;color:var(--text-muted,#888);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+        .section-title .count{font-size:10px;background:var(--accent,#7c3aed);color:#fff;padding:1px 6px;border-radius:8px}
+
+        .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+        .service-card{background:var(--bg-secondary,#1e1e2e);border:2px solid var(--border-color,#333);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;position:relative}
+        .service-card:hover{border-color:var(--text-muted,#555)}
+        .service-card.selected{border-color:var(--accent,#7c3aed);background:var(--bg-tertiary,#2a2a3a)}
+        .service-card .svc-icon{font-size:24px;margin-bottom:6px}
+        .service-card .svc-name{font-size:13px;font-weight:600;color:var(--text-primary,#ddd);margin-bottom:2px}
+        .service-card .svc-port{font-size:10px;color:var(--text-muted,#666)}
+        .service-card .check-badge{position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;background:var(--accent,#7c3aed);color:#fff;opacity:0;transition:opacity .2s}
+        .service-card.selected .check-badge{opacity:1}
+        .service-card .svc-tag{display:inline-block;font-size:9px;padding:1px 5px;border-radius:3px;margin-right:4px;margin-top:4px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#777)}
+
+        .config-panel{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:10px;padding:14px;display:none}
+        .config-panel.show{display:block}
+        .config-panel label{display:block;font-size:11px;font-weight:600;color:var(--text-muted,#888);margin-bottom:4px}
+        .config-panel input,.config-panel select{width:100%;padding:6px 10px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);font-size:12px;font-family:monospace;outline:none;margin-bottom:8px}
+        .config-panel input:focus,.config-panel select:focus{border-color:var(--accent,#7c3aed)}
+        .config-row{display:flex;gap:8px}
+        .config-row>div{flex:1}
+
+        .output-panel{flex:1;display:flex;flex-direction:column;gap:12px;min-width:0;position:sticky;top:20px;align-self:flex-start}
+        .yaml-box{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:10px;overflow:hidden}
+        .yaml-box .yaml-header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border-color,#333)}
+        .yaml-box .yaml-header span{font-size:12px;font-weight:600;color:var(--text-muted,#888)}
+        .yaml-box .yaml-header .btns{display:flex;gap:6px}
+        .yaml-box .yaml-header button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:12px;transition:all .15s}
+        .yaml-box .yaml-header button:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .yaml-box pre{padding:14px;margin:0;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:12px;line-height:1.6;color:#a5d6ff;overflow-x:auto;white-space:pre;max-height:500px;overflow-y:auto}
+        .yaml-box pre .ykey{color:#ff79c6}
+        .yaml-box pre .yval{color:#f1fa8c}
+        .yaml-box pre .ycomment{color:#6272a4;font-style:italic}
+
+        .preset-btns{display:flex;flex-wrap:wrap;gap:6px}
+        .preset-btn{padding:5px 14px;border:1px solid var(--border-color,#444);border-radius:16px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#888);cursor:pointer;font-size:11px;transition:all .15s}
+        .preset-btn:hover{color:var(--text-primary,#ddd);border-color:var(--accent,#7c3aed)}
+
+        .version-select{font-size:11px;margin-left:6px;padding:2px 6px;border:1px solid var(--border-color,#444);border-radius:4px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#888);font-family:monospace;cursor:pointer}
+
+        .toast{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:var(--accent,#7c3aed);color:#fff;padding:10px 24px;border-radius:24px;font-size:13px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
+        .toast.show{opacity:1}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand">
+            <a href="/">🏠 DevTools</a>
+            <span class="sep">/</span>
+            <span class="tool-name" th:text="${tool.name}">Docker Compose 生成器</span>
+        </div>
+        <button onclick="copyYaml()" title="Ctrl+C 复制">📋 复制</button>
+        <button onclick="downloadYaml()" title="Ctrl+S 下载">💾 下载 .yml</button>
+    </div>
+
+    <div class="page-content">
+        <div class="select-panel">
+            <!-- 快捷预设 -->
+            <div>
+                <div class="section-title">📌 快捷预设</div>
+                <div class="preset-btns">
+                    <button class="preset-btn" onclick="applyPreset('web')">🌐 Web 全栈 (Nginx+Node+MySQL+Redis)</button>
+                    <button class="preset-btn" onclick="applyPreset('microservice')">🔧 微服务 (Nginx+Java+MySQL+Redis+RabbitMQ)</button>
+                    <button class="preset-btn" onclick="applyPreset('data')">📊 数据平台 (PostgreSQL+Redis+Elasticsearch+MongoDB)</button>
+                    <button class="preset-btn" onclick="applyPreset('devops')">⚙️ DevOps (Jenkins+GitLab+Kafka+Prometheus+Grafana)</button>
+                    <button class="preset-btn" onclick="clearAll()">🗑 清空重选</button>
+                </div>
+            </div>
+
+            <!-- 数据库 -->
+            <div>
+                <div class="section-title">🗄️ 数据库 <span class="count" id="dbCount">0</span></div>
+                <div class="services-grid" id="dbGrid"></div>
+            </div>
+
+            <!-- 缓存/消息队列 -->
+            <div>
+                <div class="section-title">⚡ 缓存 & 消息队列 <span class="count" id="cacheCount">0</span></div>
+                <div class="services-grid" id="cacheGrid"></div>
+            </div>
+
+            <!-- Web 服务器/反向代理 -->
+            <div>
+                <div class="section-title">🌐 Web & 代理 <span class="count" id="webCount">0</span></div>
+                <div class="services-grid" id="webGrid"></div>
+            </div>
+
+            <!-- 搜索/监控 -->
+            <div>
+                <div class="section-title">🔍 搜索 & 监控 <span class="count" id="monitorCount">0</span></div>
+                <div class="services-grid" id="monitorGrid"></div>
+            </div>
+
+            <!-- 配置面板 -->
+            <div class="config-panel" id="configPanel">
+                <div class="section-title">⚙️ <span id="configTitle">全局配置</span></div>
+                <div class="config-row">
+                    <div><label>项目名称</label><input id="cfgProject" value="my-project" oninput="generate()"></div>
+                    <div><label>网络名称</label><input id="cfgNetwork" value="app-network" oninput="generate()"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="output-panel">
+            <div class="yaml-box">
+                <div class="yaml-header">
+                    <span>🐳 docker-compose.yml</span>
+                    <div class="btns">
+                        <button onclick="copyYaml()">📋 复制</button>
+                        <button onclick="downloadYaml()">💾 下载</button>
+                    </div>
+                </div>
+                <pre id="yamlOutput"><span class="ycomment"># 请从左侧选择需要的服务</span></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 服务定义
+        var services={
+            db:[
+                {id:'mysql',name:'MySQL',icon:'🐬',port:3306,defaultVersion:'8.0',versions:['5.7','8.0','8.4'],
+                    env:{MYSQL_ROOT_PASSWORD:'root123',MYSQL_DATABASE:'app_db',MYSQL_USER:'app_user',MYSQL_PASSWORD:'user123'},
+                    tag:'关系型'},
+                {id:'postgres',name:'PostgreSQL',icon:'🐘',port:5432,defaultVersion:'16',versions:['14','15','16','17'],
+                    env:{POSTGRES_PASSWORD:'postgres123',POSTGRES_DB:'app_db',POSTGRES_USER:'app_user'},
+                    tag:'关系型'},
+                {id:'mariadb',name:'MariaDB',icon:'🦭',port:3307,defaultVersion:'11',versions:['10.11','11.4'],
+                    env:{MARIADB_ROOT_PASSWORD:'root123',MARIADB_DATABASE:'app_db',MARIADB_USER:'app_user',MARIADB_PASSWORD:'user123'},
+                    tag:'关系型'},
+                {id:'mongodb',name:'MongoDB',icon:'🍃',port:27017,defaultVersion:'7',versions:['6','7','8'],
+                    env:{MONGO_INITDB_ROOT_USERNAME:'admin',MONGO_INITDB_ROOT_PASSWORD:'admin123',MONGO_INITDB_DATABASE:'app_db'},
+                    tag:'NoSQL'},
+                {id:'redis',name:'Redis',icon:'🔴',port:6379,defaultVersion:'7',versions:['6','7','7.4'],
+                    env:{},tag:'缓存',cmd:'redis-server --appendonly yes'},
+                {id:'elasticsearch',name:'Elasticsearch',icon:'🔎',port:9200,defaultVersion:'8.15.0',versions:['7.17','8.15'],
+                    env:{'discovery.type':'single-node','xpack.security.enabled':'false','ES_JAVA_OPTS':'-Xms512m -Xmx512m'},
+                    tag:'搜索引擎'},
+            ],
+            cache:[
+                {id:'redis',name:'Redis',icon:'🔴',port:6379,defaultVersion:'7',versions:['6','7','7.4'],
+                    env:{},tag:'缓存',cmd:'redis-server --appendonly yes'},
+                {id:'rabbitmq',name:'RabbitMQ',icon:'🐰',port:5672,defaultVersion:'3-management',versions:['3','3-management','4-management'],
+                    env:{RABBITMQ_DEFAULT_USER:'admin',RABBITMQ_DEFAULT_PASS:'admin123'},
+                    mgmtPort:15672,tag:'消息队列'},
+                {id:'kafka',name:'Kafka',icon:'📨',port:9092,defaultVersion:'latest',versions:['latest','3.7'],
+                    env:{KAFKA_ADVERTISED_LISTENERS:'PLAINTEXT://kafka:9092',KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR:'1'},
+                    tag:'消息队列',dependsOn:'zookeeper'},
+                {id:'zookeeper',name:'ZooKeeper',icon:'🦓',port:2181,defaultVersion:'latest',versions:['3.8','latest'],
+                    env:{},tag:'协调服务'},
+                {id:'memcached',name:'Memcached',icon:'💾',port:11211,defaultVersion:'latest',versions:['1.6','latest'],
+                    env:{},tag:'缓存'},
+            ],
+            web:[
+                {id:'nginx',name:'Nginx',icon:'🟢',port:80,defaultVersion:'alpine',versions:['latest','alpine','stable'],
+                    env:{},tag:'反向代理',volumes:{'./nginx.conf':'/etc/nginx/nginx.conf:ro','./html':'/usr/share/nginx/html'}},
+                {id:'traefik',name:'Traefik',icon:'🔀',port:80,defaultVersion:'latest',versions:['v2','v3','latest'],
+                    env:{},mgmtPort:8080,tag:'反向代理'},
+                {id:'caddy',name:'Caddy',icon:'🦊',port:80,defaultVersion:'latest',versions:['2','latest'],
+                    env:{},tag:'Web服务器'},
+            ],
+            monitor:[
+                {id:'elasticsearch',name:'Elasticsearch',icon:'🔎',port:9200,defaultVersion:'8.15.0',versions:['7.17','8.15'],
+                    env:{'discovery.type':'single-node','xpack.security.enabled':'false','ES_JAVA_OPTS':'-Xms512m -Xmx512m'},
+                    tag:'搜索引擎'},
+                {id:'kibana',name:'Kibana',icon:'📊',port:5601,defaultVersion:'8.15.0',versions:['8.15','8'],
+                    env:{ELASTICSEARCH_HOSTS:'http://elasticsearch:9200'},tag:'可视化',dependsOn:'elasticsearch'},
+                {id:'prometheus',name:'Prometheus',icon:'🔥',port:9090,defaultVersion:'latest',versions:['latest','v2.53'],
+                    env:{},tag:'监控',volumes:{'./prometheus.yml':'/etc/prometheus/prometheus.yml'}},
+                {id:'grafana',name:'Grafana',icon:'📈',port:3000,defaultVersion:'latest',versions:['latest','11'],
+                    env:{},tag:'仪表盘'},
+                {id:'jaeger',name:'Jaeger',icon:'🔬',port:16686,defaultVersion:'latest',versions:['1','2','latest'],
+                    env:{COLLECTOR_OTLP_ENABLED:'true'},tag:'链路追踪'},
+            ]
+        };
+
+        var selected={};
+        var versions={};
+
+        function renderServiceCards(){
+            Object.keys(services).forEach(function(cat){
+                var grid=document.getElementById(cat+'Grid');
+                var svcs=services[cat];
+                // 去重（redis 在 db 和 cache 都出现）
+                grid.innerHTML=svcs.map(function(s){
+                    var sel=selected[s.id]?' selected':'';
+                    var ver=versions[s.id]||s.defaultVersion;
+                    return '<div class="service-card'+sel+'" onclick="toggleService(\''+s.id+'\',\''+cat+'\')" id="card-'+cat+'-'+s.id+'">'+
+                        '<div class="check-badge">✓</div>'+
+                        '<div class="svc-icon">'+s.icon+'</div>'+
+                        '<div class="svc-name">'+s.name+'</div>'+
+                        '<div class="svc-port">📌 :'+s.port+
+                        (ver?' <select class="version-select" onclick="event.stopPropagation()" onchange="setVersion(\''+s.id+'\',this.value)">'+s.versions.map(function(v){return '<option'+(v===ver?' selected':'')+'>'+v+'</option>'}).join('')+'</select>':'')+
+                        '</div>'+
+                        (s.tag?'<div class="svc-tag">'+s.tag+'</div>':'')+
+                    '</div>';
+                }).join('');
+				updateCounts();
+            });
+            generate();
+        }
+
+        function toggleService(id,cat){
+            if(selected[id]){
+                delete selected[id];
+                delete versions[id];
+            }else{
+                selected[id]=services[cat].find(function(s){return s.id===id})||Object.values(services).flat().find(function(s){return s.id===id});
+                if(!versions[id])versions[id]=selected[id].defaultVersion;
+            }
+            renderServiceCards();
+        }
+
+        function setVersion(id,ver){versions[id]=ver;generate()}
+
+        function applyPreset(type){
+            selected={};versions={};
+            var flatAll=Object.values(services).flat();
+            var ids=[];
+            if(type==='web')ids=['mysql','redis','nginx'];
+            else if(type==='microservice')ids=['mysql','redis','rabbitmq','nginx'];
+            else if(type==='data')ids=['postgres','redis','elasticsearch','mongodb'];
+            else if(type==='devops')ids=['kafka','zookeeper','prometheus','grafana'];
+            ids.forEach(function(id){
+                var s=flatAll.find(function(x){return x.id===id});
+                if(s){selected[id]=s;versions[id]=s.defaultVersion}
+            });
+            renderServiceCards();
+        }
+
+        function clearAll(){selected={};versions={};renderServiceCards()}
+
+        function updateCounts(){
+            var counts={db:0,cache:0,web:0,monitor:0};
+            Object.keys(selected).forEach(function(id){
+                Object.keys(services).forEach(function(cat){
+                    if(services[cat].some(function(s){return s.id===id}))counts[cat]++;
+                });
+            });
+            Object.keys(counts).forEach(function(c){document.getElementById(c+'Count').textContent=counts[c]});
+        }
+
+        function generateYAML(){
+            var project=document.getElementById('cfgProject').value||'my-project';
+            var network=document.getElementById('cfgNetwork').value||'app-network';
+
+            if(Object.keys(selected).length===0)return '# 请从左侧选择需要的服务\n# 点击服务卡片即可添加/移除';
+
+            var lines=[];
+            lines.push('version: "3.8"');
+            lines.push('');
+            lines.push('services:');
+
+            var selectedIds=Object.keys(selected);
+            // 确保依赖服务先出现
+            var ordered=[];
+            selectedIds.forEach(function(id){
+                var s=selected[id];
+                if(s.dependsOn&&!ordered.includes(s.dependsOn))ordered.push(s.dependsOn);
+                if(!ordered.includes(id))ordered.push(id);
+            });
+            // 补上可能缺失的依赖
+            ordered.forEach(function(dep){
+                if(!selected[dep]){
+                    var flat=Object.values(services).flat();
+                    var found=flat.find(function(s){return s.id===dep});
+                    if(found){selected[dep]=found;if(!versions[dep])versions[dep]=found.defaultVersion}
+                }
+            });
+
+            ordered.forEach(function(id){
+                var s=selected[id];
+                if(!s)return;
+                var ver=versions[id]||s.defaultVersion;
+                var image=s.id+(ver&&ver!=='latest'?':'+ver:'');
+                lines.push('  '+id+':');
+                lines.push('    image: '+image);
+                lines.push('    container_name: '+project+'-'+id);
+
+                // 端口
+                var ports=[];
+                if(s.port)ports.push('"'+s.port+':'+s.port+'"');
+                if(s.mgmtPort)ports.push('"'+s.mgmtPort+':'+s.mgmtPort+'"');
+                if(ports.length>0)lines.push('    ports:');
+                ports.forEach(function(p){lines.push('      - '+p)});
+
+                // 环境变量
+                if(s.env&&Object.keys(s.env).length>0){
+                    lines.push('    environment:');
+                    Object.keys(s.env).forEach(function(k){lines.push('      '+k+': '+s.env[k])});
+                }
+
+                // 卷
+                if(s.volumes){
+                    lines.push('    volumes:');
+                    Object.keys(s.volumes).forEach(function(src){
+                        lines.push('      - '+src+':'+s.volumes[src]);
+                    });
+                }
+
+                // 数据卷（自动）
+                var hasData=!['nginx','traefik','caddy','zookeeper','memcached','prometheus','grafana','jaeger'].includes(s.id);
+                if(hasData){
+                    if(!s.volumes)lines.push('    volumes:');
+                    lines.push('      - '+id+'_data:/var/lib/'+(s.id==='mongodb'?'mongodb':s.id==='postgres'?'postgresql/data':s.id==='elasticsearch'?'elasticsearch/data':s.id)||'data');
+                }
+
+                // 命令
+                if(s.cmd)lines.push('    command: '+s.cmd);
+
+                // 依赖
+                if(s.dependsOn){
+                    lines.push('    depends_on:');
+                    lines.push('      - '+s.dependsOn);
+                }
+
+                // 网络
+                lines.push('    networks:');
+                lines.push('      - '+network);
+
+                // 重启策略
+                if(!['zookeeper'].includes(s.id)&&s.id!=='memcached'){
+                    lines.push('    restart: unless-stopped');
+                }
+                lines.push('');
+            });
+
+            // 卷声明
+            var volLines=[];
+            selectedIds.forEach(function(id){
+                var s=selected[id];
+                var hasData=!['nginx','traefik','caddy','zookeeper','memcached','prometheus','grafana','jaeger'].includes(s.id);
+                if(hasData)volLines.push('  '+id+'_data:');
+            });
+            if(volLines.length>0){
+                lines.push('volumes:');
+                lines=lines.concat(volLines);
+                lines.push('');
+            }
+
+            lines.push('networks:');
+            lines.push('  '+network+':');
+            lines.push('    driver: bridge');
+
+            return lines.join('\n');
+        }
+
+        function generate(){
+            document.getElementById('yamlOutput').textContent=generateYAML();
+        }
+
+        function copyYaml(){
+            navigator.clipboard.writeText(generateYAML()).then(function(){showToast('✅ docker-compose.yml 已复制')});
+        }
+
+        function downloadYaml(){
+            var blob=new Blob([generateYAML()],{type:'text/yaml'});
+            var a=document.createElement('a');
+            a.href=URL.createObjectURL(blob);
+            a.download='docker-compose.yml';
+            a.click();
+            showToast('💾 已下载 docker-compose.yml');
+        }
+
+        function showToast(msg){
+            var t=document.getElementById('toast');
+            t.textContent=msg;t.classList.add('show');
+            setTimeout(function(){t.classList.remove('show')},2000);
+        }
+
+        document.addEventListener('keydown',function(e){
+            if(e.ctrlKey&&e.key==='c'&&document.activeElement===document.body)copyYaml();
+            if(e.ctrlKey&&e.key==='s'){e.preventDefault();downloadYaml()}
+        });
+
+        // 显示配置面板
+        document.getElementById('configPanel').classList.add('show');
+
+        // 初始渲染
+        renderServiceCards();
+    </script>
+</body>
+</html>

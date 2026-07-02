@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">正则可视化 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent,#7c3aed);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+        .topbar button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s}
+        .topbar button:hover{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+        .page-content{flex:1;display:flex;flex-direction:column;max-width:1000px;margin:0 auto;width:100%;padding:20px;gap:16px}
+
+        .panel{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:12px;padding:16px}
+        .panel-title{font-size:13px;font-weight:600;color:var(--accent,#7c3aed);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+        .panel-title .badge{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--accent,#7c3aed);color:#fff;opacity:.8}
+
+        .regex-input-wrap{display:flex;gap:8px;align-items:stretch}
+        .regex-input-wrap textarea{flex:1;padding:10px 14px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-tertiary,#2a2a3a);color:var(--accent,#7c3aed);font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:15px;outline:none;resize:none;min-height:44px;line-height:24px}
+        .regex-input-wrap textarea:focus{border-color:var(--accent,#7c3aed)}
+        .regex-flags{display:flex;gap:4px;align-items:center}
+        .flag-btn{padding:6px 10px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#888);cursor:pointer;font-size:12px;font-family:monospace;transition:all .15s;min-width:36px;text-align:center}
+        .flag-btn:hover{color:var(--text-primary,#ddd)}
+        .flag-btn.active{background:var(--accent,#7c3aed);border-color:var(--accent,#7c3aed);color:#fff}
+
+        .test-input-wrap textarea{width:100%;padding:10px 14px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);font-family:monospace;font-size:14px;outline:none;resize:vertical;min-height:60px}
+        .test-input-wrap textarea:focus{border-color:var(--accent,#7c3aed)}
+        .test-input-wrap textarea::placeholder{color:var(--text-muted,#666)}
+
+        .viz-tree{display:flex;flex-direction:column;gap:6px}
+        .viz-node{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;font-family:monospace;font-size:13px;transition:background .15s}
+        .viz-node:hover{background:var(--bg-tertiary,#2a2a3a)}
+        .viz-node .token{background:var(--accent,#7c3aed);color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;white-space:pre-wrap;word-break:break-all}
+        .viz-node .token.quantifier{background:#f59e0b;color:#000}
+        .viz-node .token.group{background:#10b981;color:#fff}
+        .viz-node .token.anchor{background:#ef4444;color:#fff}
+        .viz-node .token.charclass{background:#8b5cf6;color:#fff}
+        .viz-node .token.escape{background:#ec4899;color:#fff}
+        .viz-node .token.alternation{background:#06b6d4;color:#000}
+        .viz-node .arrow{color:var(--text-muted,#666);font-size:14px}
+
+        .highlight-text{background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:8px;padding:12px;font-family:monospace;font-size:14px;line-height:1.8;min-height:40px;word-break:break-all}
+        .highlight-text .match{background:rgba(124,58,237,.3);border-radius:3px;padding:1px 2px;color:#fff}
+        .highlight-text .match-group{background:rgba(16,185,129,.3);border-radius:3px;padding:1px 2px;color:#a7f3d0}
+        .no-match{color:var(--text-muted,#666);font-style:italic}
+
+        .quick-patterns{display:flex;flex-wrap:wrap;gap:6px}
+        .quick-pat{padding:4px 10px;border:1px solid var(--border-color,#444);border-radius:16px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#888);cursor:pointer;font-size:12px;font-family:monospace;transition:all .15s}
+        .quick-pat:hover{color:var(--text-primary,#ddd);border-color:var(--accent,#7c3aed)}
+
+        .groups-list{display:flex;flex-wrap:wrap;gap:6px}
+        .group-chip{padding:4px 10px;border-radius:16px;background:var(--bg-tertiary,#2a2a3a);font-size:12px;font-family:monospace}
+        .group-chip .gname{color:var(--accent,#7c3aed);font-weight:600}
+        .group-chip .gval{color:var(--text-primary,#ddd);margin-left:4px}
+
+        .toast{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:var(--accent,#7c3aed);color:#fff;padding:10px 24px;border-radius:24px;font-size:13px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
+        .toast.show{opacity:1}
+
+        .error-msg{color:#ef4444;font-size:12px;margin-top:4px;display:none}
+        .error-msg.show{display:block}
+
+        @media (max-width:640px){.page-content{padding:12px}}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand">
+            <a href="/">🏠 DevTools</a>
+            <span class="sep">/</span>
+            <span class="tool-name" th:text="${tool.name}">正则可视化</span>
+        </div>
+        <button onclick="copyVizResult()" title="Ctrl+C">📋 复制说明</button>
+    </div>
+
+    <div class="page-content">
+        <!-- 快捷模式 -->
+        <div class="quick-patterns" id="quickPatterns"></div>
+
+        <!-- 正则输入 -->
+        <div class="panel">
+            <div class="panel-title">🧩 正则表达式</div>
+            <div class="regex-input-wrap">
+                <textarea id="regexInput" placeholder="输入正则表达式，如: (\d{3})-(\d{4})-(\d{4})" oninput="analyze()">(\d{3})-(\d{4})-(\d{4})</textarea>
+                <div class="regex-flags">
+                    <button class="flag-btn active" onclick="toggleFlag(this,'g')" title="全局匹配">g</button>
+                    <button class="flag-btn" onclick="toggleFlag(this,'i')" title="忽略大小写">i</button>
+                    <button class="flag-btn" onclick="toggleFlag(this,'m')" title="多行模式">m</button>
+                    <button class="flag-btn" onclick="toggleFlag(this,'s')" title="点号匹配换行">s</button>
+                    <button class="flag-btn" onclick="toggleFlag(this,'u')" title="Unicode">u</button>
+                </div>
+            </div>
+            <div class="error-msg" id="regexError"></div>
+        </div>
+
+        <!-- 可视化 -->
+        <div class="panel" id="vizPanel" style="display:none">
+            <div class="panel-title">🔍 结构可视化 <span class="badge" id="nodeCount"></span></div>
+            <div class="viz-tree" id="vizTree"></div>
+        </div>
+
+        <!-- 测试文本 -->
+        <div class="panel">
+            <div class="panel-title">📝 测试文本</div>
+            <div class="test-input-wrap">
+                <textarea id="testInput" placeholder="输入测试文本，实时高亮匹配结果...&#10;&#10;示例: 我的电话 010-1234-5678 和 021-9876-5432" oninput="highlight()">我的电话 010-1234-5678 和 021-9876-5432</textarea>
+            </div>
+            <div class="highlight-text" id="highlightArea">
+                <span class="no-match">输入测试文本后自动高亮显示匹配结果</span>
+            </div>
+        </div>
+
+        <!-- 匹配结果 -->
+        <div class="panel" id="matchPanel" style="display:none">
+            <div class="panel-title">✅ 匹配结果 <span class="badge" id="matchCount"></span></div>
+            <div class="groups-list" id="matchGroups"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        var flags='g';
+
+        // 快捷模式
+        var quickPatterns=[
+            {label:'手机号',pat:'1[3-9]\\d{9}'},
+            {label:'邮箱',pat:'[\\w.-]+@[\\w.-]+\\.\\w+'},
+            {label:'身份证',pat:'\\d{17}[\\dXx]'},
+            {label:'IP地址',pat:'\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}'},
+            {label:'URL',pat:'https?://[^\\s]+'},
+            {label:'日期',pat:'\\d{4}-\\d{2}-\\d{2}'},
+            {label:'中文',pat:'[\\u4e00-\\u9fa5]+'},
+            {label:'金额',pat:'\\d+\\.?\\d{0,2}'}
+        ];
+        var qhtml=quickPatterns.map(function(q){return '<button class="quick-pat" onclick="setPattern(\''+q.pat+'\')" title="'+q.label+'">'+q.label+'</button>'}).join('');
+        document.getElementById('quickPatterns').innerHTML='<span style="font-size:12px;color:var(--text-muted,#888);margin-right:4px;line-height:24px">📍 快捷模式:</span>'+qhtml;
+
+        function setPattern(p){
+            document.getElementById('regexInput').value=p;
+            analyze();
+        }
+
+        function toggleFlag(btn,f){
+            btn.classList.toggle('active');
+            flags='';
+            document.querySelectorAll('.flag-btn.active').forEach(function(b){flags+=b.textContent.trim()});
+            analyze();
+            highlight();
+        }
+
+        function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+        // 解析正则结构
+        function tokenize(pattern){
+            var tokens=[];
+            var i=0;
+            while(i<pattern.length){
+                var ch=pattern[i];
+                if(ch==='\\'){
+                    var esc=pattern[i+1]||'';
+                    var labels={d:'数字',D:'非数字',w:'单词字符',W:'非单词字符',s:'空白',S:'非空白',b:'单词边界',B:'非单词边界',n:'换行',t:'制表',r:'回车'};
+                    tokens.push({type:'escape',token:'\\'+esc,desc:labels[esc]||('转义 '+esc)});
+                    i+=2;
+                }else if(ch==='^'){tokens.push({type:'anchor',token:'^',desc:'字符串开头'});i++}
+                else if(ch==='$'){tokens.push({type:'anchor',token:'$',desc:'字符串结尾'});i++}
+                else if(ch==='.'){tokens.push({type:'escape',token:'.',desc:'任意字符(除换行)'});i++}
+                else if(ch==='*'){tokens.push({type:'quantifier',token:'*',desc:'0次或多次'});i++}
+                else if(ch==='+'){tokens.push({type:'quantifier',token:'+',desc:'1次或多次'});i++}
+                else if(ch==='?'){tokens.push({type:'quantifier',token:'?',desc:'0次或1次'});i++}
+                else if(ch==='|'){tokens.push({type:'alternation',token:'|',desc:'或'});i++}
+                else if(ch==='('){
+                    var gtype='捕获组';
+                    if(pattern[i+1]==='?'&&pattern[i+2]===':'){
+                        gtype='非捕获组';
+                        var end=pattern.indexOf(')',i+3);
+                        if(end===-1){tokens.push({type:'group',token:'(?:...)',desc:'非捕获组 (语法错误?)'});i=pattern.length}
+                        else{tokens.push({type:'group',token:pattern.substring(i,end+1),desc:'非捕获组'});i=end+1}
+                    }else if(pattern[i+1]==='?'&&pattern[i+2]==='<'){
+                        gtype='命名组';
+                        var end=pattern.indexOf(')',i+3);
+                        if(end===-1){tokens.push({type:'group',token:'(?<name>...)',desc:'命名捕获组(未闭合?)'});i=pattern.length}
+                        else{tokens.push({type:'group',token:pattern.substring(i,end+1),desc:'命名捕获组'});i=end+1}
+                    }else if(pattern[i+1]==='?'&&pattern[i+2]==='='){
+                        var end=pattern.indexOf(')',i+3);
+                        if(end===-1){tokens.push({type:'group',token:'(?=...)',desc:'正向先行断言(未闭合?)'});i=pattern.length}
+                        else{tokens.push({type:'group',token:pattern.substring(i,end+1),desc:'正向先行断言'});i=end+1}
+                    }else{
+                        tokens.push({type:'group',token:'(',desc:gtype+' 开始'});
+                        i++;
+                    }
+                }else if(ch===')'){
+                    tokens.push({type:'group',token:')',desc:'组结束'});i++
+                }else if(ch==='['){
+                    var end=pattern.indexOf(']',i);
+                    if(end===-1){tokens.push({type:'charclass',token:'['+pattern.substring(i+1),desc:'字符类(未闭合)'});i=pattern.length}
+                    else{tokens.push({type:'charclass',token:pattern.substring(i,end+1),desc:'字符类 '+pattern.substring(i,end+1)});i=end+1}
+                }else if(ch==='{'){
+                    var end=pattern.indexOf('}',i);
+                    if(end===-1){tokens.push({type:'quantifier',token:'{...',desc:'量词(未闭合)'});i=pattern.length}
+                    else{tokens.push({type:'quantifier',token:pattern.substring(i,end+1),desc:'重复 '+pattern.substring(i,end+1)});i=end+1}
+                }else{
+                    tokens.push({type:'literal',token:ch,desc:'文字 '+ch});i++
+                }
+            }
+            return tokens;
+        }
+
+        function analyze(){
+            var pattern=document.getElementById('regexInput').value.trim();
+            var vizPanel=document.getElementById('vizPanel');
+            var vizTree=document.getElementById('vizTree');
+            var errEl=document.getElementById('regexError');
+
+            if(!pattern){vizPanel.style.display='none';errEl.classList.remove('show');return}
+
+            // 检测语法错误
+            try{new RegExp(pattern,flags.replace('g',''))}catch(e){
+                errEl.textContent='⚠️ '+e.message;errEl.classList.add('show');
+                vizPanel.style.display='none';highlight();return
+            }
+            errEl.classList.remove('show');
+
+            var tokens=tokenize(pattern);
+            document.getElementById('nodeCount').textContent=tokens.length+' 个节点';
+            vizTree.innerHTML=tokens.map(function(t,i){
+                return '<div class="viz-node">'+
+                    '<span style="font-size:10px;color:var(--text-muted,#555);min-width:20px">#'+(i+1)+'</span>'+
+                    '<span class="token '+t.type+'">'+escapeHtml(t.token)+'</span>'+
+                    '<span class="arrow">→</span>'+
+                    '<span style="font-size:12px;color:var(--text-muted,#888)">'+escapeHtml(t.desc)+'</span>'+
+                '</div>';
+            }).join('');
+            vizPanel.style.display='block';
+            highlight();
+        }
+
+        function highlight(){
+            var pattern=document.getElementById('regexInput').value.trim();
+            var text=document.getElementById('testInput').value;
+            var area=document.getElementById('highlightArea');
+            var matchPanel=document.getElementById('matchPanel');
+            var matchGroups=document.getElementById('matchGroups');
+            var matchCount=document.getElementById('matchCount');
+
+            if(!pattern){
+                area.innerHTML='<span class="no-match">请输入正则表达式和测试文本</span>';
+                matchPanel.style.display='none';return
+            }
+
+            try{
+                var re=new RegExp(pattern,flags);
+                var allMatches=[];
+                var m;
+                while((m=re.exec(text))!==null){
+                    allMatches.push({index:m.index,text:m[0],groups:m.slice(1)});
+                    if(!re.global&&!re.sticky)break;
+                    if(m[0].length===0){re.lastIndex++;if(re.lastIndex>text.length)break}
+                }
+            }catch(e){
+                area.innerHTML='<span class="no-match">正则表达式语法错误</span>';
+                matchPanel.style.display='none';return
+            }
+
+            if(allMatches.length===0){
+                area.innerHTML=text?escapeHtml(text):'<span class="no-match">无匹配</span>';
+                matchPanel.style.display='none';return
+            }
+
+            // 构建高亮 HTML
+            var result='',lastIdx=0;
+            allMatches.forEach(function(m){
+                result+=escapeHtml(text.substring(lastIdx,m.index));
+                result+='<span class="match">'+escapeHtml(m.text)+'</span>';
+                lastIdx=m.index+m.text.length;
+            });
+            result+=escapeHtml(text.substring(lastIdx));
+            area.innerHTML=result;
+
+            // 匹配结果
+            matchCount.textContent=allMatches.length+' 处匹配';
+            var allGroups=[];
+            allMatches.forEach(function(m,i){
+                if(m.groups.length>0){
+                    m.groups.forEach(function(g,j){
+                        allGroups.push({matchIdx:i+1,groupIdx:j+1,value:g||'(空)',className:j===0?'match':'match-group'});
+                    });
+                }
+            });
+            if(allGroups.length>0){
+                matchGroups.innerHTML=allGroups.map(function(g){
+                    return '<div class="group-chip"><span class="gname">['+g.matchIdx+','+g.groupIdx+']</span><span class="gval">'+escapeHtml(g.value)+'</span></div>';
+                }).join('');
+            }else{
+                matchGroups.innerHTML='<span style="font-size:12px;color:var(--text-muted,#666)">无捕获组</span>';
+            }
+            matchPanel.style.display='block';
+        }
+
+        function copyVizResult(){
+            var vizTree=document.getElementById('vizTree');
+            var pattern=document.getElementById('regexInput').value.trim();
+            var text='正则表达式: '+pattern+'\n\n结构分析:\n';
+            vizTree.querySelectorAll('.viz-node').forEach(function(n){
+                text+=n.textContent.trim().replace(/\s+/g,' ')+'\n';
+            });
+            navigator.clipboard.writeText(text).then(function(){
+                showToast('✅ 已复制到剪贴板');
+            });
+        }
+
+        function showToast(msg){
+            var t=document.getElementById('toast');
+            t.textContent=msg;t.classList.add('show');
+            setTimeout(function(){t.classList.remove('show')},2000);
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown',function(e){
+            if(e.ctrlKey&&e.key==='c'&&document.activeElement===document.body){
+                copyVizResult();
+            }
+        });
+
+        // 初始分析
+        analyze();
+    </script>
+</body>
+</html>

@@ -79,7 +79,7 @@ INSERT INTO dt_tool (category_id, name, description, icon, route, api_path, sort
 (7, 'Cron 表达式', 'Cron 表达式解析与生成', '⏱️', '/tools/devtools/cron', '/api/tools/dev/cron', 1, 1, 0),
 (7, 'Git 命令速查', '常用 Git 命令速查表', '📚', '/tools/devtools/git', '/api/tools/dev/git', 2, 0, 0),
 (7, 'MIME 类型', '文件扩展名与 MIME 类型对照', '📁', '/tools/devtools/mime', '/api/tools/dev/mime', 3, 0, 0),
-(7, 'JWT 调试器', 'JWT Token 解析与字段分析（不验证签名）', '🎫', '/tools/devtools/jwt', '/api/tools/dev/jwt', 4, 0, 1),
+(7, 'JWT 调试器', 'JWT Token 解析与签名签发（纯前端 HS256/384/512 签名，密钥不上传服务器）', '🎫', '/tools/devtools/jwt', '/api/tools/dev/jwt', 4, 0, 1),
 
 -- 编码解码
 (8, 'URL 编解码', 'URL Encode / Decode', '🔗', '/tools/encode/url', '/api/tools/encode/url', 1, 0, 0),
@@ -105,5 +105,22 @@ INSERT INTO dt_tool (category_id, name, description, icon, route, api_path, sort
 (14, '表情包搜索', '300+ emoji 表情库，按分类浏览/关键词搜索，点一下复制到剪贴板，聊天发帖随时用', '😎', '/tools/fun/emoji', 'LOCAL_ONLY', 1, 1, 1),
 -- 开发者工具（追加 Monaco 编辑器）
 (7, '在线代码编辑器', '基于 VS Code 同款 Monaco Editor (⭐40k+)，支持 20+ 编程语言语法高亮、代码补全、对比(Diff)、格式化，可导入导出文件', '💻', '/tools/editor/monaco', 'LOCAL_ONLY', 5, 1, 1),
+-- 文本处理（追加）
+(5, '文本行操作', '排序/去重/反转/编号/添加前后缀，一键处理多行文本，支持复制和下载', '📋', '/tools/text/line-ops', 'LOCAL_ONLY', 6, 0, 1),
+(5, '命名风格转换', '一行输入，自动转换 camelCase/PascalCase/snake_case/kebab-case/CONSTANT_CASE 等 10 种命名风格，一键复制', '🔤', '/tools/text/naming-case', 'LOCAL_ONLY', 7, 0, 1),
+-- 开发者工具（追加）
+(7, '.gitignore 生成器', '按项目类型多选生成 .gitignore，覆盖 40+ 模板：Python/Node/Java/Go/Docker/IDE/OS 等，一键下载', '📁', '/tools/devtools/gitignore', 'LOCAL_ONLY', 6, 1, 1),
 -- 格式化工具（追加 Markdown 编辑器）
-(2, 'Markdown 编辑器', '基于 Marked.js (⭐35k+) 实时编辑器，支持分屏/仅编辑/仅预览模式，工具栏快速插入，代码高亮，导出 HTML/MD', '📝', '/tools/editor/markdown', 'LOCAL_ONLY', 8, 1, 1);
+(2, 'Markdown 编辑器', '基于 Marked.js (⭐35k+) 实时编辑器，支持分屏/仅编辑/仅预览模式，工具栏快速插入，代码高亮，导出 HTML/MD', '📝', '/tools/editor/markdown', 'LOCAL_ONLY', 8, 1, 1),
+-- 文本处理（追加正则可视化）
+(5, '正则表达式可视化', '把正则表达式变成彩色的结构树：量化符、字符类、捕获组一目了然，支持实时测试高亮匹配结果', '🧩', '/tools/text/regex-visual', 'LOCAL_ONLY', 8, 0, 1),
+-- 网络工具（追加 curl 生成器）
+(6, 'cURL 命令生成器', '可视化构建 HTTP 请求 - 选方法、填 URL、加请求头/参数/Body，一键生成 curl/Python/JavaScript 代码，支持快捷预设', '🐚', '/tools/network/curl-builder', 'LOCAL_ONLY', 6, 0, 1),
+-- 开发者工具（追加 Docker Compose 生成器）
+(7, 'Docker Compose 生成器', '点选 MySQL/Redis/Nginx/RabbitMQ/Kafka/ES 等服务，自动生成带端口/环境变量/数据卷/网络的 docker-compose.yml，一键复制下载', '🐳', '/tools/devtools/docker-compose', 'LOCAL_ONLY', 7, 0, 1),
+-- 开源许可证选择器
+(7, '开源许可证选择器', '6 道题帮你选出最适合项目的开源许可证 — MIT/Apache/GPL/BSD/AGPL…含对比表，一键复制 LICENSE 文件', '📜', '/tools/devtools/license-chooser', 'LOCAL_ONLY', 8, 0, 1),
+-- 图表工具（追加 Mermaid 编辑器）
+(13, 'Mermaid 图表编辑器', '在线 Mermaid 实时编辑器，支持流程图/时序图/类图/ER图/甘特图/饼图/Git图/思维导图，导出 SVG / 复制代码 / 分享链接', '📐', '/tools/chart/mermaid-live', 'LOCAL_ONLY', 2, 0, 1),
+-- 格式化工具（追加 JSON Schema 生成器）
+(2, 'JSON Schema 生成器', '输入 JSON 数据自动生成 JSON Schema (Draft 2020-12)，支持类型推断/必填标记/示例/描述/Schema 验证，一键复制下载', '🧬', '/tools/format/json-schema', 'LOCAL_ONLY', 9, 0, 1);

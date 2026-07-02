@@ -76,6 +76,11 @@ public class PageController {
         return "changelog";
     }
 
+    @GetMapping("/theme-store")
+    public String themeStore() {
+        return "theme-store";
+    }
+
     @GetMapping("/doc.html")
     public String doc() {
         return "doc";
@@ -120,6 +125,15 @@ public class PageController {
             if (route.contains("/fun/snake")) return "game-snake";
             if (route.contains("/fun/spinner")) return "wheel-spinner";
             if (route.contains("/fun/emoji")) return "emoji-picker";
+            if (route.contains("/text/line-ops")) return "line-ops";
+            if (route.contains("/text/naming-case")) return "naming-case";
+            if (route.contains("/devtools/gitignore")) return "gitignore-gen";
+            if (route.contains("/devtools/docker-compose")) return "docker-compose-gen";
+            if (route.contains("/text/regex-visual")) return "regex-visual";
+            if (route.contains("/network/curl-builder")) return "curl-builder";
+            if (route.contains("/chart/mermaid-live")) return "mermaid-live";
+            if (route.contains("/format/json-schema")) return "json-schema-gen";
+            if (route.contains("/devtools/license-chooser")) return "license-chooser";
             return "docs-search";
         }
 

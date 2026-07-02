@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="theme_store.page_title">主题商店 - DevTools Station</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="app-password-min-length" th:content="${passwordMinLength}">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/themes.css">
+    <script src="/js/i18n.js" defer></script>
+    <script src="/js/auth.js" defer></script>
+    <style>
+        /* ========== 主题商店页面专用样式 ========== */
+        .store-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        /* 页面头部 */
+        .store-header {
+            text-align: center;
+            padding: 48px 0 32px;
+        }
+        .store-header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 0 0 8px;
+            color: var(--text-primary);
+        }
+        .store-header .gradient-text {
+            background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .store-header p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            margin: 0;
+        }
+
+        /* 积分展示栏 */
+        .points-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            margin-bottom: 32px;
+            font-size: 1.05rem;
+            color: var(--text-primary);
+        }
+        .points-bar .points-icon {
+            font-size: 1.3rem;
+        }
+        .points-bar .points-value {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--accent-color);
+        }
+        .points-bar.no-login {
+            opacity: 0.6;
+        }
+        .points-bar .login-hint {
+            color: var(--accent-color);
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        /* Tab 切换 */
+        .store-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 32px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .store-tab {
+            padding: 12px 28px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+        .store-tab:hover { color: var(--text-primary); }
+        .store-tab.active {
+            color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+        }
+        .store-tab .tab-count {
+            font-size: 0.8rem;
+            font-weight: 400;
+            margin-left: 4px;
+            opacity: 0.7;
+        }
+
+        /* 主题卡片网格 */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding-bottom: 48px;
+            min-height: 200px;
+        }
+
+        /* 主题卡片 */
+        .theme-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+            cursor: default;
+        }
+        .theme-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+            border-color: var(--accent-color);
+        }
+        .theme-card.purchased {
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+        .theme-card.purchased:hover {
+            border-color: #4ade80;
+        }
+
+        /* 预览区域 */
+        .theme-card-preview {
+            height: 160px;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+            overflow: hidden;
+        }
+        .theme-card-preview::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.15;
+            background: 
+                linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%),
+                repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.03) 20px, rgba(255,255,255,0.03) 21px);
+        }
+        .theme-preview-window {
+            position: relative;
+            z-index: 1;
+            background: rgba(0,0,0,0.25);
+            border-radius: 8px;
+            padding: 10px 14px;
+            width: 100%;
+            backdrop-filter: blur(4px);
+        }
+        .preview-dots {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .preview-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+        }
+        .preview-dot:nth-child(1) { background: #ff5f57; }
+        .preview-dot:nth-child(2) { background: #febc2e; }
+        .preview-dot:nth-child(3) { background: #28c840; }
+        .preview-lines { display: flex; flex-direction: column; gap: 6px; }
+        .preview-line {
+            height: 4px;
+            border-radius: 2px;
+        }
+        .preview-line.short { width: 60%; }
+        .preview-line.medium { width: 80%; }
+        .preview-line.long { width: 95%; }
+
+        /* 免费标签 */
+        .free-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 2;
+            background: rgba(74, 222, 128, 0.9);
+            color: #000;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        /* 已购标记 */
+        .owned-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 2;
+            background: rgba(74, 222, 128, 0.15);
+            color: #4ade80;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 卡片信息 */
+        .theme-card-body {
+            padding: 18px 20px 20px;
+        }
+        .theme-card-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        .theme-card-name .theme-icon {
+            font-size: 1.3rem;
+        }
+        .theme-card-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        /* 颜色预览条 */
+        .color-strip {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+        .color-dot {
+            width: 20px; height: 20px;
+            border-radius: 6px;
+            border: 2px solid rgba(255,255,255,0.15);
+        }
+
+        /* 卡片底部操作 */
+        .theme-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .theme-price {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .theme-price.free {
+            color: #4ade80;
+        }
+        .theme-price.paid {
+            color: var(--accent-color);
+        }
+        .price-coin {
+            font-size: 1.1rem;
+        }
+
+        .btn-buy, .btn-preview, .btn-owned {
+            padding: 8px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-buy {
+            background: var(--accent-color);
+            color: #000;
+        }
+        .btn-buy:hover {
+            filter: brightness(1.15);
+            transform: scale(1.03);
+        }
+        .btn-buy:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-preview {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        .btn-preview:hover {
+            background: var(--surface-hover);
+            border-color: var(--accent-color);
+        }
+        .btn-owned {
+            background: rgba(74, 222, 128, 0.12);
+            color: #4ade80;
+            cursor: default;
+        }
+
+        /* 预览通知栏 */
+        .preview-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            transform: translateY(-100%);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 24px rgba(99, 102, 241, 0.3);
+        }
+        .preview-bar.show {
+            transform: translateY(0);
+        }
+        /* 预览栏展开时，下推导航栏 */
+        body:has(.preview-bar.show) .navbar {
+            margin-top: 48px;
+        }
+        .preview-bar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .preview-bar-icon {
+            font-size: 1.2rem;
+        }
+        .preview-bar-inner strong {
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+        .preview-bar-exit {
+            margin-left: 12px;
+            padding: 6px 18px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .preview-bar-exit:hover {
+            background: rgba(255, 255, 255, 0.35);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* 双按钮布局（预览 + 购买/获取） */
+        .theme-card-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .btn-sm {
+            padding: 8px 14px !important;
+            font-size: 0.82rem !important;
+        }
+
+        /* Toast */
+        .store-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .store-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .store-toast.success { border-color: rgba(74, 222, 128, 0.4); }
+        .store-toast.error { border-color: rgba(248, 113, 113, 0.4); }
+
+        /* 空状态 */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+        .empty-state p {
+            font-size: 1.05rem;
+            margin: 0 0 8px;
+        }
+        .empty-state .empty-hint {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* 响应式 */
+        @media (max-width: 640px) {
+            .store-header h1 { font-size: 1.6rem; }
+            .theme-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <script>(function(){var t=localStorage.getItem('devtools-theme')||'dark';document.body.className='theme-'+t;})()</script>
+
+    <header class="navbar">
+        <div class="nav-inner">
+            <a href="/" class="logo">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect width="28" height="28" rx="6" fill="url(#logo-grad)"/>
+                    <path d="M7 9h3l4 10-4-10h3l4 10-4-10h3l4 10" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+                </svg>
+                <span class="logo-text">DevTools</span>
+                <span class="logo-badge">STATION</span>
+            </a>
+            <div class="nav-actions">
+                <div class="theme-switcher"></div>
+                <div class="lang-switcher"></div>
+                <a href="/" class="btn-ghost" data-i18n="nav.home">首页</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 预览通知栏 -->
+    <div class="preview-bar" id="previewBar">
+        <div class="preview-bar-inner">
+            <span class="preview-bar-icon">👁️</span>
+            <span data-i18n="theme_store.previewing">正在预览：</span>
+            <strong id="previewThemeName"></strong>
+            <button class="preview-bar-exit" id="previewBarExit" onclick="window.__storeExitPreview && window.__storeExitPreview()" data-i18n="theme_store.exit_preview">退出预览</button>
+        </div>
+    </div>
+
+    <main class="store-container">
+        <!-- 头部 -->
+        <div class="store-header">
+            <h1>🎨 <span class="gradient-text">主题商店</span></h1>
+            <p data-i18n="theme_store.subtitle">探索精美主题，打造专属开发环境</p>
+        </div>
+
+        <!-- 积分展示 -->
+        <div class="points-bar" id="pointsBar">
+            <span class="points-icon">💎</span>
+            <span data-i18n="theme_store.points">我的积分：</span>
+            <span class="points-value" id="pointsValue">--</span>
+        </div>
+
+        <!-- Tab 切换 -->
+        <div class="store-tabs">
+            <button class="store-tab active" data-tab="mine" id="tabMine">
+                <span data-i18n="theme_store.my_themes">我的主题</span>
+                <span class="tab-count" id="mineCount">0</span>
+            </button>
+            <button class="store-tab" data-tab="all" id="tabAll">
+                <span data-i18n="theme_store.all_themes">其他主题</span>
+                <span class="tab-count" id="allCount">0</span>
+            </button>
+        </div>
+
+        <!-- 主题卡片网格 -->
+        <div class="theme-grid" id="themeGrid"></div>
+    </main>
+
+    <!-- Toast -->
+    <div class="store-toast" id="storeToast"></div>
+
+    <script src="/js/theme.js" defer></script>
+    <script src="/js/page-theme-store.js" defer></script>
+</body>
+</html>
