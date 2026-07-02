@@ -67,6 +67,19 @@ public class NetworkController {
     }
 
     /**
+     * 批量发送 HTTP 请求（直接粘贴 JSON 对象文本）
+     */
+    @PostMapping("/batch-http-json")
+    public Result<Map<String, Object>> batchHttpJson(
+            @RequestParam("jsonText") String jsonText,
+            @RequestParam("url") String url,
+            @RequestParam(defaultValue = "POST") String method,
+            @RequestParam(defaultValue = "") String headers,
+            @RequestParam(defaultValue = "one_per_row") String sendMode) {
+        return Result.success(networkService.batchHttpJsonRequest(jsonText, url, method, headers, sendMode));
+    }
+
+    /**
      * 批量 HTTP 测试回显接口 —— 供本地测试使用
      * 支持单 JSON 对象（逐行模式）和 JSON 数组（一次性模式）
      * 直接回显接收到的数据，方便验证批量请求工具是否正常工作

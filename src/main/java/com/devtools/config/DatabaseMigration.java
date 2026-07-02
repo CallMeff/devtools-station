@@ -50,5 +50,66 @@ public class DatabaseMigration {
         try {
             jdbcTemplate.execute("CREATE INDEX idx_favorite_user_tool ON dt_favorite(user_id, tool_id)");
         } catch (Exception e) { /* 索引已存在忽略 */ }
+
+        // 给 dt_user 添加 points 列
+        addColumnIfNotExists("dt_user", "points", "INT DEFAULT 0");
+
+        // 创建 dt_theme_store 表
+        createTableIfNotExists("dt_theme_store",
+            "CREATE TABLE dt_theme_store (" +
+            "id BIGINT AUTO_INCREMENT PRIMARY KEY, " +
+            "theme_key VARCHAR(64) NOT NULL, " +
+            "name VARCHAR(64) NOT NULL, " +
+            "description VARCHAR(256) DEFAULT '', " +
+            "icon VARCHAR(16) DEFAULT '', " +
+            "price INT DEFAULT 0, " +
+            "category VARCHAR(16) DEFAULT 'free', " +
+            "accent_color VARCHAR(16) DEFAULT '', " +
+            "bg_primary VARCHAR(16) DEFAULT '', " +
+            "preview_colors VARCHAR(512) DEFAULT '', " +
+            "sort_order INT DEFAULT 0, " +
+            "enabled TINYINT DEFAULT 1, " +
+            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+            ")"
+        );
+
+        // 创建 dt_user_theme 表
+        createTableIfNotExists("dt_user_theme",
+            "CREATE TABLE dt_user_theme (" +
+            "id BIGINT AUTO_INCREMENT PRIMARY KEY, " +
+            "user_id BIGINT NOT NULL, " +
+            "theme_id BIGINT NOT NULL, " +
+            "purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+            "FOREIGN KEY (user_id) REFERENCES dt_user(id), " +
+            "FOREIGN KEY (theme_id) REFERENCES dt_theme_store(id)" +
+            ")"
+        );
+    }
+
+    private void addColumnIfNotExists(String tableName, String columnName, String columnDef) {
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS " +
+                "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?",
+                Integer.class, tableName, columnName
+            );
+            if (count != null && count == 0) {
+                jdbcTemplate.execute("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnDef);
+                log.info("数据库迁移: {}.{} 添加成功", tableName, columnName);
+            } else {
+                log.info("数据库迁移: {}.{} 已存在，跳过", tableName, columnName);
+            }
+        } catch (Exception e) {
+            log.warn("数据库迁移: 添加 {}.{} 异常: {}", tableName, columnName, e.getMessage());
+        }
+    }
+
+    private void createTableIfNotExists(String tableName, String createSql) {
+        try {
+            jdbcTemplate.execute(createSql);
+            log.info("数据库迁移: {} 表创建成功", tableName);
+        } catch (Exception e) {
+            log.warn("数据库迁移: {} 表创建异常（可能已存在）: {}", tableName, e.getMessage());
+        }
     }
 }

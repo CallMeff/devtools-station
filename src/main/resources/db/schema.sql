@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS dt_user (
     salt VARCHAR(64) DEFAULT '',
     nickname VARCHAR(64) DEFAULT '',
     avatar VARCHAR(256) DEFAULT '',
+    points INT DEFAULT 0,
     status TINYINT DEFAULT 1,
     last_login_at TIMESTAMP DEFAULT NULL,
     last_login_ip VARCHAR(64) DEFAULT '',
@@ -134,6 +135,33 @@ CREATE TABLE IF NOT EXISTS dt_user_skin (
     fit_mode VARCHAR(16) DEFAULT 'cover' COMMENT '填充模式',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES dt_user(id)
+);
+
+-- 主题商店 - 主题定义表
+CREATE TABLE IF NOT EXISTS dt_theme_store (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    theme_key VARCHAR(64) NOT NULL COMMENT '主题 key（对应 CSS 类名 theme-xxx）',
+    name VARCHAR(64) NOT NULL COMMENT '主题显示名称',
+    description VARCHAR(256) DEFAULT '' COMMENT '描述',
+    icon VARCHAR(16) DEFAULT '' COMMENT 'emoji 图标',
+    price INT DEFAULT 0 COMMENT '价格（积分）',
+    category VARCHAR(16) DEFAULT 'free' COMMENT '分类: free/premium',
+    accent_color VARCHAR(16) DEFAULT '' COMMENT '强调色',
+    bg_primary VARCHAR(16) DEFAULT '' COMMENT '背景主色',
+    preview_colors VARCHAR(512) DEFAULT '' COMMENT '预览色块 JSON',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    enabled TINYINT DEFAULT 1 COMMENT '是否启用',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 用户已购主题表
+CREATE TABLE IF NOT EXISTS dt_user_theme (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    theme_id BIGINT NOT NULL COMMENT '主题ID',
+    purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '购买时间',
+    FOREIGN KEY (user_id) REFERENCES dt_user(id),
+    FOREIGN KEY (theme_id) REFERENCES dt_theme_store(id)
 );
 
 -- 邮箱验证码表

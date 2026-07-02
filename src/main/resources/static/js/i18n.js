@@ -673,6 +673,14 @@
             'batch_http.collapse': '收起',
             'batch_http.template_tip': '还没有 Excel 数据？下载模板试试',
             'batch_http.download_template': '下载模板',
+            'batch_http.input_mode': '数据来源',
+            'batch_http.mode_excel': 'Excel 文件',
+            'batch_http.mode_json': 'JSON 文本',
+            'batch_http.json_text': 'JSON 对象文本',
+            'batch_http.json_text_ph': '粘贴多个 JSON 对象（无需分隔符），每个 {...} 发一条请求',
+            'batch_http.json_preview': '预览请求',
+            'batch_http.json_preview_title': '将发送以下请求',
+            'batch_http.json_parse_error': 'JSON 解析失败，请检查格式',
             'engine.error_title': '处理出错',
 
             // ---- 工具名称 (tool_name.*) 和描述 (tool_desc.*) ----
@@ -1632,6 +1640,14 @@
             'batch_http.collapse': 'Collapse',
             'batch_http.template_tip': 'No Excel data yet? Download the template',
             'batch_http.download_template': 'Download Template',
+            'batch_http.input_mode': 'Data Source',
+            'batch_http.mode_excel': 'Excel File',
+            'batch_http.mode_json': 'JSON Text',
+            'batch_http.json_text': 'JSON Object Text',
+            'batch_http.json_text_ph': 'Paste multiple JSON objects (no separator needed), each {...} is one request',
+            'batch_http.json_preview': 'Preview Requests',
+            'batch_http.json_preview_title': 'The following requests will be sent',
+            'batch_http.json_parse_error': 'JSON parsing failed, please check format',
             'engine.error_title': 'Error',
 
             // ---- Tool Names & Descriptions ----
@@ -2570,6 +2586,14 @@
             'batch_http.collapse': '折りたたむ',
             'batch_http.template_tip': 'Excelデータがまだない？テンプレートをダウンロード',
             'batch_http.download_template': 'テンプレートダウンロード',
+            'batch_http.input_mode': 'データソース',
+            'batch_http.mode_excel': 'Excel ファイル',
+            'batch_http.mode_json': 'JSON テキスト',
+            'batch_http.json_text': 'JSON オブジェクトテキスト',
+            'batch_http.json_text_ph': '複数のJSONオブジェクトを貼り付け（区切り不要）、各{...}が1回のリクエスト',
+            'batch_http.json_preview': 'リクエストプレビュー',
+            'batch_http.json_preview_title': '以下のリクエストが送信されます',
+            'batch_http.json_parse_error': 'JSON解析失敗、フォーマットを確認してください',
             'engine.error_title': 'エラー',
 
             // ---- ツール名と説明 ----
@@ -3305,6 +3329,14 @@
             'batch_http.collapse': '접기',
             'batch_http.template_tip': '아직 Excel 데이터가 없나요？ 템플릿 다운로드',
             'batch_http.download_template': '템플릿 다운로드',
+            'batch_http.input_mode': '데이터 소스',
+            'batch_http.mode_excel': 'Excel 파일',
+            'batch_http.mode_json': 'JSON 텍스트',
+            'batch_http.json_text': 'JSON 객체 텍스트',
+            'batch_http.json_text_ph': '여러 JSON 객체를 붙여넣기 (구분자 불필요), 각 {...}이 하나의 요청',
+            'batch_http.json_preview': '요청 미리보기',
+            'batch_http.json_preview_title': '다음 요청이 전송됩니다',
+            'batch_http.json_parse_error': 'JSON 파싱 실패, 형식을 확인하세요',
             'engine.error_title': '오류',
 
             // ---- 도구 이름과 설명 ----

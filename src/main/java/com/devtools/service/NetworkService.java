@@ -197,6 +197,163 @@ public class NetworkService {
     }
 
     /**
+     * 批量发送 HTTP 请求（直接粘贴 JSON 对象文本作为数据源）
+     *
+     * @param jsonText 连续的 JSON 对象文本，无分隔符，如 {}{}{}
+     * @param url      目标 URL
+     * @param method   HTTP 方法
+     * @param headers  请求头
+     * @param sendMode 发送模式
+     */
+    public Map<String, Object> batchHttpJsonRequest(String jsonText, String url, String method,
+                                                     String headers, String sendMode) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("url", url);
+        result.put("method", method.toUpperCase());
+        result.put("sendMode", sendMode);
+
+        // 1. 解析连续的 JSON 对象（无分隔符）
+        List<Map<String, Object>> rows;
+        try {
+            rows = parseConcatenatedJson(jsonText);
+            if (rows.isEmpty()) {
+                result.put("error", "未识别到有效的 JSON 对象");
+                return result;
+            }
+            result.put("rowCount", rows.size());
+            if (!rows.isEmpty()) {
+                result.put("headers", new ArrayList<>(rows.get(0).keySet()));
+                result.put("columnCount", rows.get(0).size());
+            }
+        } catch (Exception e) {
+            result.put("error", "JSON 解析失败: " + e.getMessage());
+            return result;
+        }
+
+        // 2. 解析请求头
+        Map<String, String> headerMap = parseHeaders(headers);
+
+        // 3. 构建 HttpClient
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(15))
+                .build();
+
+        // 4. 发送请求
+        List<Map<String, Object>> requestResults = new ArrayList<>();
+        long totalStart = System.currentTimeMillis();
+        int successCount = 0;
+        int failCount = 0;
+
+        if ("all_at_once".equals(sendMode)) {
+            String jsonBody = toJsonArray(rows);
+            Map<String, Object> singleResult = sendSingleRequest(client, url, method.toUpperCase(), headerMap, jsonBody);
+            singleResult.put("rowIndex", -1);
+            singleResult.put("dataCount", rows.size());
+            requestResults.add(singleResult);
+            if ((int) singleResult.get("status") >= 200 && (int) singleResult.get("status") < 300) {
+                successCount = 1;
+            } else {
+                failCount = 1;
+            }
+        } else {
+            for (int i = 0; i < rows.size(); i++) {
+                Map<String, Object> rowData = rows.get(i);
+                String jsonBody = toJson(rowData);
+                Map<String, Object> rowResult = sendSingleRequest(client, url, method.toUpperCase(), headerMap, jsonBody);
+                rowResult.put("rowIndex", i + 1);
+                rowResult.put("dataCount", 1);
+                rowResult.put("rowData", rowData);
+                requestResults.add(rowResult);
+                if ((int) rowResult.get("status") >= 200 && (int) rowResult.get("status") < 300) {
+                    successCount++;
+                } else {
+                    failCount++;
+                }
+            }
+        }
+
+        long totalEnd = System.currentTimeMillis();
+        result.put("totalTime", totalEnd - totalStart);
+        result.put("successCount", successCount);
+        result.put("failCount", failCount);
+        result.put("totalCount", requestResults.size());
+        result.put("results", requestResults);
+
+        return result;
+    }
+
+    /**
+     * 解析连续的 JSON 对象文本（无分隔符的 {}{}{} 格式）
+     */
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> parseConcatenatedJson(String text) {
+        List<Map<String, Object>> objects = new ArrayList<>();
+        if (text == null || text.trim().isEmpty()) return objects;
+
+        // 按 } 和 { 的边界拆分为独立 JSON 字符串
+        List<String> segments = splitJsonObjects(text);
+        for (String seg : segments) {
+            String trimmed = seg.trim();
+            if (trimmed.isEmpty()) continue;
+            try {
+                Map<String, Object> obj = gson.fromJson(trimmed, Map.class);
+                if (obj != null && !obj.isEmpty()) {
+                    objects.add(obj);
+                }
+            } catch (Exception ignored) {
+                // 跳过无法解析的片段
+            }
+        }
+        return objects;
+    }
+
+    /**
+     * 按 JSON 对象边界拆分文本
+     * 在每次找到匹配的 } 闭合时作为一个对象
+     */
+    private List<String> splitJsonObjects(String text) {
+        List<String> parts = new ArrayList<>();
+        int depth = 0;
+        boolean inString = false;
+        boolean escape = false;
+        int start = -1;
+
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+
+            if (escape) {
+                escape = false;
+                continue;
+            }
+
+            if (c == '\\') {
+                escape = true;
+                continue;
+            }
+
+            if (c == '"') {
+                inString = !inString;
+                continue;
+            }
+
+            if (inString) continue;
+
+            if (c == '{') {
+                if (depth == 0) start = i;
+                depth++;
+            } else if (c == '}') {
+                depth--;
+                if (depth == 0 && start >= 0) {
+                    parts.add(text.substring(start, i + 1));
+                    start = -1;
+                }
+            }
+        }
+
+        return parts;
+    }
+
+    /**
      * 发送单次 HTTP 请求
      */
     private Map<String, Object> sendSingleRequest(HttpClient client, String url, String method,
