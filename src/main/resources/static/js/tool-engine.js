@@ -900,10 +900,6 @@
                 { name: 'headers', i18n: 'batch_http.headers', type: 'textarea', rows: 3, ph_i18n: 'batch_http.headers_ph' }
             ],
             options: [
-                { name: 'inputMode', i18n: 'batch_http.input_mode', type: 'select', options: [
-                    { value: 'excel', i18n: 'batch_http.mode_excel' },
-                    { value: 'json', i18n: 'batch_http.mode_json' }
-                ], default: 'excel' },
                 { name: 'method', i18n: 'batch_http.method', type: 'select', options: [
                     { value: 'GET', i18n: 'batch_http.method_get' },
                     { value: 'POST', i18n: 'batch_http.method_post' },
@@ -1287,7 +1283,8 @@
                 html += '</div>';
             }
 
-            // 文件上传类型
+
+            // 文件上传区域
             config.inputs.forEach(function(inp) {
                 html += '<div class="input-group">';
                 html += '<label data-i18n="' + inp.i18n + '">' + __(inp.i18n) + '</label>';
@@ -1308,9 +1305,9 @@
                 html += '</div>';
             });
 
-            // JSON 文本输入模式（默认隐藏）
+            // JSON 文本输入（始终显示）
             if (config.enableJsonMode) {
-                html += '<div id="batchHttpJsonArea" style="display:none;">';
+                html += '<div id="batchHttpJsonArea">';
                 html += '<div class="input-group">';
                 html += '<label data-i18n="batch_http.json_text">' + __('batch_http.json_text') + '</label>';
                 html += '<textarea name="jsonText" id="batchHttpJsonText" rows="12" style="width:100%;font-family:monospace;font-size:13px;background:rgba(0,0,0,0.25);color:#e2e8f0;border:1px solid rgba(148,163,184,0.2);border-radius:6px;padding:10px;resize:vertical;"';
@@ -1628,30 +1625,6 @@
             }
         }
 
-        // 批量HTTP：Excel ↔ JSON 输入模式切换
-        if (config.enableJsonMode) {
-            var inputModeSelect = document.getElementById('option_inputMode');
-            var fileArea = document.getElementById('fileUploadArea');
-            var jsonArea = document.getElementById('batchHttpJsonArea');
-            if (inputModeSelect && fileArea && jsonArea) {
-                var toggleBatchHttpMode = function() {
-                    if (inputModeSelect.value === 'json') {
-                        fileArea.style.display = 'none';
-                        var fileInfo = document.getElementById('fileSelectedInfo');
-                        if (fileInfo) fileInfo.style.display = 'none';
-                        jsonArea.style.display = 'block';
-                    } else {
-                        fileArea.style.display = 'block';
-                        jsonArea.style.display = 'none';
-                        var previewArea = document.getElementById('batchHttpPreviewArea');
-                        if (previewArea) previewArea.style.display = 'none';
-                    }
-                };
-                inputModeSelect.addEventListener('change', toggleBatchHttpMode);
-                toggleBatchHttpMode();
-            }
-        }
-
         // 只读类型自动加载
         if (config.type === 'readonly' && config.autoLoad) {
             executeTool();
@@ -1750,13 +1723,11 @@
         // 文件上传类型：使用 FormData + multipart/form-data
         if (config.type === 'file-upload') {
 
-            // JSON 文本模式：直接发送 JSON 文本到专用端点
+            // JSON 文本模式：如果文本输入框有内容，优先用 JSON 方式
             if (config.enableJsonMode) {
-                var inputModeEl = document.getElementById('option_inputMode');
-                var isJsonMode = inputModeEl && inputModeEl.value === 'json';
-                if (isJsonMode) {
-                    var jsonTextEl = document.getElementById('batchHttpJsonText');
-                    var jsonText = jsonTextEl ? jsonTextEl.value.trim() : '';
+                var jsonTextEl = document.getElementById('batchHttpJsonText');
+                if (jsonTextEl && jsonTextEl.value.trim()) {
+                    var jsonText = jsonTextEl.value.trim();
                     if (!jsonText) {
                         if (btn) { btn.disabled = false; btn.innerHTML = __('engine.execute'); }
                         errorDiv.style.display = 'block';
