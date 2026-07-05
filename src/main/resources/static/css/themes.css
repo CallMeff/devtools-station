@@ -148,6 +148,138 @@ body.theme-light {
     --auth-left-error: #dc2626;
 }
 
+/* ========== 马卡龙主题 (Figma Pastel Block) 🌈 ========== */
+html.theme-pastel,
+body.theme-pastel {
+    /* Base */
+    --bg-primary: #f7f7f5;
+    --bg-secondary: #f0f0ee;
+    --bg-tertiary: #e8e8e5;
+    --text-primary: #000000;
+    --text-secondary: #3c3c3c;
+    --text-muted: #8e8e8e;
+    /* Cards & Surfaces */
+    --card-bg: #ffffff;
+    --card-border: rgba(0, 0, 0, 0.06);
+    --card-shadow: rgba(0, 0, 0, 0.04);
+    --input-bg: #f7f7f5;
+    --input-border: rgba(0, 0, 0, 0.08);
+    --output-bg: #f7f7f5;
+    --icon-bg: #f0f0ee;
+    --hover-bg: rgba(0, 0, 0, 0.04);
+    --kbd-bg: rgba(0, 0, 0, 0.06);
+    --badge-bg: rgba(0, 0, 0, 0.06);
+    /* Borders */
+    --border-color: #e6e6e6;
+    --border-light: #f1f1f1;
+    /* Nav & Chrome */
+    --nav-bg: rgba(247, 247, 245, 0.92);
+    --code-bg: #f0f0ee;
+    --code-header-bg: #e8e8e5;
+    --accent-color: #000000;
+    --accent-light: #3c3c3c;
+    --accent-shadow: rgba(0, 0, 0, 0.08);
+    --accent-hover: #1a1a1a;
+    --footer-bg: #000000;
+    /* Surfaces */
+    --surface-bg: #ffffff;
+    --surface-border: #e6e6e6;
+    --surface-hover: rgba(0, 0, 0, 0.02);
+    /* Tags */
+    --tag-feature-bg: #dceeb1;
+    --tag-feature-color: #3c5a00;
+    --tag-fix-bg: #efd4d4;
+    --tag-fix-color: #8b0000;
+    --tag-improve-bg: #c5b0f4;
+    --tag-improve-color: #4a1d96;
+    /* Table */
+    --table-header-bg: #f0f0ee;
+    --table-header-color: #000000;
+    --table-cell-color: #3c3c3c;
+    /* Diff */
+    --diff-added-bg: #c8e6cd;
+    --diff-added-color: #155724;
+    --diff-removed-bg: #efd4d4;
+    --diff-removed-color: #8b0000;
+    --diff-changed-bg: #f4ecd6;
+    --diff-changed-color: #7c6a00;
+    --diff-same-color: #8e8e8e;
+    /* Errors */
+    --error-bg: #efd4d4;
+    --error-border: #e6c0c0;
+    --error-color: #8b0000;
+    /* JSON */
+    --json-key: #4a1d96;
+    --json-string: #155724;
+    --json-number: #7c6a00;
+    --json-boolean: #ff3d8b;
+    --json-null: #8b0000;
+    /* Sidebar */
+    --sidebar-active-bg: #000000;
+    --sidebar-active-color: #ffffff;
+    --sidebar-hover-bg: #f0f0ee;
+    --sidebar-hover-color: #000000;
+    --tag-hot-bg: #000000;
+    --tag-hot-color: #ffffff;
+    --tool-icon-bg: #f0f0ee;
+    --card-list-bg: rgba(0, 0, 0, 0.04);
+    /* Auth */
+    --auth-left-bg: #000000;
+    --auth-left-text: #ffffff;
+    --auth-left-muted: #8e8e8e;
+    --auth-left-accent: #dceeb1;
+    --auth-left-error: #ff3d8b;
+}
+/* ========== 马卡龙色彩方案（仅在 pastel 主题下生效） ========== */
+/* 青柠 Lime */
+body.theme-pastel.pastel-lime {
+    --pastel-block: #dceeb1;
+    --card-bg: #f2f6e4; --accent-color: #6b8a00; --accent-light: #9ab83a; --accent-hover: #5a7a00;
+    --badge-bg: #dceeb1; --tag-feature-bg: #dceeb1; --tag-feature-color: #3c5a00;
+    --sidebar-active-bg: #6b8a00; --sidebar-active-color: #ffffff; --tag-hot-bg: #6b8a00; --tag-hot-color: #fff;
+    --tool-icon-bg: #eef3db; --btn-primary-gradient: linear-gradient(135deg, #6b8a00, #8ba832);
+}
+/* 薰衣草 Lavender */
+body.theme-pastel.pastel-lavender {
+    --pastel-block: #c5b0f4;
+    --card-bg: #f3effc; --accent-color: #5c3db8; --accent-light: #8b6fd4; --accent-hover: #4a2da0;
+    --badge-bg: #c5b0f4; --tag-feature-bg: #c5b0f4; --tag-feature-color: #4a1d96;
+    --sidebar-active-bg: #5c3db8; --sidebar-active-color: #ffffff; --tag-hot-bg: #5c3db8; --tag-hot-color: #fff;
+    --tool-icon-bg: #ede7f9; --btn-primary-gradient: linear-gradient(135deg, #5c3db8, #7c5ed4);
+}
+/* 奶油 Cream */
+body.theme-pastel.pastel-cream {
+    --pastel-block: #f4ecd6;
+    --card-bg: #faf7ee; --accent-color: #8a7a30; --accent-light: #b8a84e; --accent-hover: #6a5a20;
+    --badge-bg: #f4ecd6; --tag-feature-bg: #f4ecd6; --tag-feature-color: #5c4a00;
+    --sidebar-active-bg: #8a7a30; --sidebar-active-color: #ffffff; --tag-hot-bg: #8a7a30; --tag-hot-color: #fff;
+    --tool-icon-bg: #f7f2e4; --btn-primary-gradient: linear-gradient(135deg, #8a7a30, #a89840);
+}
+/* 薄荷 Mint */
+body.theme-pastel.pastel-mint {
+    --pastel-block: #c8e6cd;
+    --card-bg: #eef7f0; --accent-color: #2d6b3a; --accent-light: #529e5e; --accent-hover: #1d5b2a;
+    --badge-bg: #c8e6cd; --tag-feature-bg: #c8e6cd; --tag-feature-color: #155724;
+    --sidebar-active-bg: #2d6b3a; --sidebar-active-color: #ffffff; --tag-hot-bg: #2d6b3a; --tag-hot-color: #fff;
+    --tool-icon-bg: #e2f2e5; --btn-primary-gradient: linear-gradient(135deg, #2d6b3a, #42984e);
+}
+/* 樱花 Pink */
+body.theme-pastel.pastel-pink {
+    --pastel-block: #efd4d4;
+    --card-bg: #faf2f2; --accent-color: #b84a5a; --accent-light: #d46a7a; --accent-hover: #983a4a;
+    --badge-bg: #efd4d4; --tag-feature-bg: #efd4d4; --tag-feature-color: #8b1a2b;
+    --sidebar-active-bg: #b84a5a; --sidebar-active-color: #ffffff; --tag-hot-bg: #b84a5a; --tag-hot-color: #fff;
+    --tool-icon-bg: #f6e8e8; --btn-primary-gradient: linear-gradient(135deg, #b84a5a, #cc5a6a);
+}
+/* 珊瑚 Coral */
+body.theme-pastel.pastel-coral {
+    --pastel-block: #f3c9b6;
+    --card-bg: #fbf3ee; --accent-color: #c45a3a; --accent-light: #e07a5a; --accent-hover: #a44a2a;
+    --badge-bg: #f3c9b6; --tag-feature-bg: #f3c9b6; --tag-feature-color: #8b3a1a;
+    --sidebar-active-bg: #c45a3a; --sidebar-active-color: #ffffff; --tag-hot-bg: #c45a3a; --tag-hot-color: #fff;
+    --tool-icon-bg: #f8ece6; --btn-primary-gradient: linear-gradient(135deg, #c45a3a, #d46a4a);
+}
+
 /* ========== 二次元主题 (Sakura) ========== */
 html.theme-anime,
 body.theme-anime {
@@ -333,6 +465,222 @@ body.theme-anime .category-header::before {
     color: #ff6b9d;
 }
 
+/* ========== 马卡龙主题 (Pastel) 特殊效果 ========== */
+body.theme-pastel .navbar {
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid #e6e6e6;
+    background: rgba(247, 247, 245, 0.95);
+}
+body.theme-pastel .logo-badge {
+    background: #000000 !important;
+    color: #ffffff;
+}
+body.theme-pastel .gradient-text {
+    background: #000000;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    /* Override: use solid black in pastel */
+    -webkit-text-fill-color: #000000;
+}
+body.theme-pastel .btn-primary {
+    background: var(--accent-color) !important;
+    color: #ffffff !important;
+    border-radius: 50px !important;
+    box-shadow: none !important;
+    transition: all 0.2s;
+}
+body.theme-pastel .btn-primary:hover {
+    background: var(--accent-hover) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+}
+body.theme-pastel .btn-execute {
+    background: var(--accent-color) !important;
+    border-radius: 50px !important;
+}
+body.theme-pastel .btn-execute:hover {
+    background: var(--accent-hover) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+}
+body.theme-pastel .tag-new {
+    background: var(--accent-color) !important;
+    color: #ffffff !important;
+}
+body.theme-pastel .hero-badge {
+    background: #f7f7f5;
+    border-color: #e6e6e6;
+    border-radius: 50px;
+}
+body.theme-pastel .tool-card:hover,
+body.theme-pastel .hot-tool-card:hover {
+    border-color: var(--accent-color);
+    box-shadow: none;
+    transform: translateY(-1px);
+}
+body.theme-pastel .hot-tool-card:hover {
+    border-color: var(--accent-color);
+    box-shadow: none;
+}
+body.theme-pastel .nav-search input:focus,
+body.theme-pastel .input-group textarea:focus,
+body.theme-pastel .input-group input:focus,
+body.theme-pastel .input-group select:focus {
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08) !important;
+}
+/* Pastel: color block sections for tool categories */
+body.theme-pastel .category-section:nth-child(4n+1) .category-header { background: linear-gradient(to right, #dceeb1 0%, #f7f7f5 100%); border-radius: 50px; padding-left: 8px; }
+body.theme-pastel .category-section:nth-child(4n+2) .category-header { background: linear-gradient(to right, #c5b0f4 0%, #f7f7f5 100%); border-radius: 50px; padding-left: 8px; }
+body.theme-pastel .category-section:nth-child(4n+3) .category-header { background: linear-gradient(to right, #f4ecd6 0%, #f7f7f5 100%); border-radius: 50px; padding-left: 8px; }
+body.theme-pastel .category-section:nth-child(4n+0) .category-header { background: linear-gradient(to right, #c8e6cd 0%, #f7f7f5 100%); border-radius: 50px; padding-left: 8px; }
+/* Pastel: footer in black */
+body.theme-pastel .footer {
+    background: #000000 !important;
+    color: #ffffff;
+}
+body.theme-pastel .footer-inner,
+body.theme-pastel .footer-bottom {
+    color: #ffffff;
+}
+body.theme-pastel .footer * {
+    color: #ffffff !important;
+}
+/* Pastel: desktop grid */
+body.theme-pastel .desktop-bg {
+    background: #f7f7f5 !important;
+}
+body.theme-pastel .desktop-bg::after {
+    display: none;
+}
+/* Pastel: tool-page container */
+body.theme-pastel .tool-container {
+    border-radius: 24px;
+    box-shadow: none;
+    border-color: #e6e6e6;
+}
+/* Pastel: buttons all pill shape */
+body.theme-pastel .btn-ghost,
+body.theme-pastel .btn-icon,
+body.theme-pastel .skin-control-btn,
+body.theme-pastel .store-close {
+    border-radius: 50px;
+}
+/* Pastel: scrollbar */
+body.theme-pastel ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 50px;
+}
+body.theme-pastel ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+/* Pastel: selection */
+body.theme-pastel ::selection {
+    background: #c5b0f4;
+    color: #000000;
+}
+/* Pastel: sidebar */
+body.theme-pastel .sidebar-active {
+    background: var(--accent-color);
+    color: #ffffff;
+}
+/* Pastel: tool cards without box shadow, only border on hover */
+body.theme-pastel .tool-card:hover,
+body.theme-pastel .hot-tool-card:hover {
+    box-shadow: none;
+}
+/* Pastel: category header accent */
+body.theme-pastel .category-header::before {
+    color: var(--accent-color);
+}
+/* Pastel: desktop empty */
+body.theme-pastel .desktop-empty {
+    box-shadow: none;
+    border-color: #e6e6e6;
+}
+/* Pastel schemes: category headers use scheme color for all sections */
+body.theme-pastel.pastel-lime .category-section .category-header     { background: linear-gradient(to right, #dceeb1 0%, #f7f7f5 100%) !important; border-radius: 50px; padding-left: 8px; }
+body.theme-pastel.pastel-lavender .category-section .category-header { background: linear-gradient(to right, #c5b0f4 0%, #f7f7f5 100%) !important; border-radius: 50px; padding-left: 8px; }
+body.theme-pastel.pastel-cream .category-section .category-header    { background: linear-gradient(to right, #f4ecd6 0%, #f7f7f5 100%) !important; border-radius: 50px; padding-left: 8px; }
+body.theme-pastel.pastel-mint .category-section .category-header     { background: linear-gradient(to right, #c8e6cd 0%, #f7f7f5 100%) !important; border-radius: 50px; padding-left: 8px; }
+body.theme-pastel.pastel-pink .category-section .category-header     { background: linear-gradient(to right, #efd4d4 0%, #f7f7f5 100%) !important; border-radius: 50px; padding-left: 8px; }
+body.theme-pastel.pastel-coral .category-section .category-header    { background: linear-gradient(to right, #f3c9b6 0%, #f7f7f5 100%) !important; border-radius: 50px; padding-left: 8px; }
+
+/* ========== 主题预览横幅（来自主题商店，2分钟自动恢复） ========== */
+.theme-preview-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #fff;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    animation: previewBannerIn 0.3s ease;
+}
+
+@keyframes previewBannerIn {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+body.theme-light .theme-preview-banner {
+    background: rgba(255, 255, 255, 0.92);
+    color: #333;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.preview-banner-icon { font-size: 16px; }
+.preview-banner-text strong { color: var(--accent-color, #6366f1); }
+
+.preview-banner-btn {
+    padding: 4px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+body.theme-light .preview-banner-btn {
+    border-color: rgba(0, 0, 0, 0.2);
+    color: #333;
+    background: rgba(0, 0, 0, 0.05);
+}
+.preview-banner-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+body.theme-light .preview-banner-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.preview-banner-close {
+    padding: 0 6px;
+    border: none;
+    background: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+}
+body.theme-light .preview-banner-close { color: rgba(0, 0, 0, 0.4); }
+.preview-banner-close:hover { color: #fff; }
+body.theme-light .preview-banner-close:hover { color: #333; }
+
+/* 预览期间导航栏下移 */
+.navbar.preview-active {
+    top: 42px;
+}
+
 /* ========== 主题切换器 UI ========== */
 .theme-switcher {
     position: relative;
@@ -448,6 +796,17 @@ body.theme-anime .category-header::before {
     right: 2px;
     font-size: 10px;
 }
+.theme-preview-pastel {
+    background: linear-gradient(135deg, #ffffff 30%, #dceeb1 50%, #c5b0f4 80%, #efd4d4 100%);
+    position: relative;
+}
+.theme-preview-pastel::after {
+    content: '🎨';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 10px;
+}
 .theme-option-info {
     flex: 1;
     min-width: 0;
@@ -483,6 +842,26 @@ body.theme-anime .category-header::before {
     stroke: var(--accent-color);
     fill: none;
     stroke-width: 3;
+}
+/* ========== 「查看更多」链接 ========== */
+.theme-more-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 12px;
+    margin-top: 4px;
+    border-top: 1px solid var(--border-color);
+    border-radius: 0 0 8px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+.theme-more-link:hover {
+    background: var(--hover-bg);
+    color: var(--accent-hover, var(--accent-color));
 }
 .theme-dropdown-backdrop {
     display: none;

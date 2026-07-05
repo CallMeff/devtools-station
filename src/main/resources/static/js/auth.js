@@ -66,7 +66,21 @@
         }
         var opts = { method: method, headers: headers };
         if (body) opts.body = JSON.stringify(body);
-        return fetch(API_BASE + path, opts).then(function(r) { return r.json(); });
+        
+        console.log('[DevAuth API] ' + method + ' ' + path, body ? JSON.parse(JSON.stringify(body)) : '');
+        
+        return fetch(API_BASE + path, opts)
+            .then(function(r) {
+                console.log('[DevAuth API] 响应状态:', r.status, path);
+                if (!r.ok) {
+                    throw new Error('HTTP ' + r.status + ': ' + r.statusText);
+                }
+                return r.json();
+            })
+            .catch(function(err) {
+                console.error('[DevAuth API] 请求失败:', method, path, err);
+                throw err;
+            });
     }
 
     function apiGet(path) { return api('GET', path); }
@@ -85,7 +99,12 @@
         overlay.innerHTML = innerHTML;
         document.body.appendChild(overlay);
 
-        // 不点击遮罩层关闭（用户只能通过关闭按钮关闭弹窗）
+        // 点击遮罩层关闭
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay || e.target.classList.contains('auth-overlay')) {
+                closeOverlay();
+            }
+        });
 
         // 阻止弹窗内所有 form 的原生提交（防止页面刷新）
         overlay.addEventListener('submit', function(e) {
@@ -98,12 +117,102 @@
             modal.addEventListener('click', function(e) {
                 e.stopPropagation();
             });
+            // 启用弹窗拖拽
+            enableModalDrag(modal, overlay);
         }
 
         _currentOverlay = overlay;
         // 锁定 body 滚动
         document.body.style.overflow = 'hidden';
         return overlay;
+    }
+
+    // ============ 弹窗拖拽支持 ============
+    function enableModalDrag(modal, overlay) {
+        var isDragging = false;
+        var startX, startY, startLeft, startTop;
+        var dragHandle = null;
+
+        // 创建拖拽手柄（顶部的细条）
+        dragHandle = document.createElement('div');
+        dragHandle.className = 'modal-drag-handle';
+        dragHandle.innerHTML = '<span class="modal-drag-dot"></span><span class="modal-drag-dot"></span><span class="modal-drag-dot"></span>';
+        modal.insertBefore(dragHandle, modal.firstChild);
+
+        function onDragStart(e) {
+            // 只在拖拽手柄或左侧面板空白处触发拖拽
+            var target = e.target;
+            if (!target.closest('.modal-drag-handle') && !target.closest('.auth-left') || target.closest('button') || target.closest('input') || target.closest('.auth-qr-box') || target.closest('.auth-qr-refresh-btn')) {
+                return;
+            }
+            e.preventDefault();
+            isDragging = true;
+
+            var rect = modal.getBoundingClientRect();
+            startX = e.clientX || (e.touches && e.touches[0].clientX);
+            startY = e.clientY || (e.touches && e.touches[0].clientY);
+            startLeft = rect.left;
+            startTop = rect.top;
+
+            // 切换到 fixed 定位
+            modal.style.position = 'fixed';
+            modal.style.left = startLeft + 'px';
+            modal.style.top = startTop + 'px';
+            modal.style.margin = '0';
+            modal.style.animation = 'none';
+            modal.classList.add('modal-dragging');
+
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
+            document.addEventListener('touchmove', onDragMove, { passive: false });
+            document.addEventListener('touchend', onDragEnd);
+        }
+
+        function onDragMove(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            var clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            var clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            var dx = clientX - startX;
+            var dy = clientY - startY;
+            var newLeft = startLeft + dx;
+            var newTop = startTop + dy;
+
+            // 边界限制：保留至少 60px 在屏幕内
+            var minLeft = 60 - modal.offsetWidth;
+            var maxLeft = window.innerWidth - 60;
+            var minTop = 0;
+            var maxTop = window.innerHeight - 60;
+            newLeft = Math.max(minLeft, Math.min(newLeft, maxLeft));
+            newTop = Math.max(minTop, Math.min(newTop, maxTop));
+
+            modal.style.left = newLeft + 'px';
+            modal.style.top = newTop + 'px';
+        }
+
+        function onDragEnd() {
+            if (!isDragging) return;
+            isDragging = false;
+            modal.classList.remove('modal-dragging');
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            document.removeEventListener('touchmove', onDragMove);
+            document.removeEventListener('touchend', onDragEnd);
+        }
+
+        // 拖拽开始
+        modal.addEventListener('mousedown', onDragStart);
+        modal.addEventListener('touchstart', onDragStart, { passive: false });
+
+        // 双击标题栏/左侧面板恢复居中
+        modal.addEventListener('dblclick', function(e) {
+            if (!e.target.closest('.modal-drag-handle') && !e.target.closest('.auth-left') || e.target.closest('button') || e.target.closest('input')) return;
+            modal.style.position = '';
+            modal.style.left = '';
+            modal.style.top = '';
+            modal.style.margin = '';
+            modal.style.animation = '';
+        });
     }
 
     function closeOverlay() {
@@ -373,32 +482,46 @@
             btn.classList.add('loading');
             btn.querySelector('span').textContent = __('toast.logging_in');
 
+            console.log('[DevAuth] 尝试登录:', username);
             apiPost('/api/auth/login', { username: username, password: password })
                 .then(function(res) {
+                    console.log('[DevAuth] 登录响应:', res);
                     btn.classList.remove('loading');
                     btn.querySelector('span').textContent = __('auth.btn_login');
-                    if (res.code === 200) {
-                        saveAuth(res.data.token, {
-                            id: res.data.id,
-                            username: res.data.username,
-                            nickname: res.data.nickname,
-                            email: res.data.email,
-                            avatar: res.data.avatar,
-                            theme: res.data.theme,
-                            language: res.data.language
-                        });
-                        if (res.data.theme && window.DevTheme) {
-                            window.DevTheme.set(res.data.theme);
+                    // 使用宽松比较，兼容数字和字符串类型的code
+                    if (res.code == 200) {
+                        console.log('[DevAuth] 登录成功，保存认证信息');
+                        try {
+                            saveAuth(res.data.token, {
+                                id: res.data.id,
+                                username: res.data.username,
+                                nickname: res.data.nickname,
+                                email: res.data.email,
+                                avatar: res.data.avatar,
+                                theme: res.data.theme,
+                                language: res.data.language
+                            });
+                            if (res.data.theme && window.DevTheme) {
+                                window.DevTheme.set(res.data.theme);
+                            }
+                            closeOverlay();
+                            updateUI();
+                            if (window.DevFavorites) window.DevFavorites.refresh();
+                            showToast(__('toast.login_success'));
+                            console.log('[DevAuth] 登录流程完成');
+                        } catch (e) {
+                            console.error('[DevAuth] 登录成功但处理失败:', e);
+                            showToast('登录成功，请刷新页面查看');
+                            // 兜底：直接刷新页面
+                            setTimeout(function() { location.reload(); }, 1000);
                         }
-                        closeOverlay();
-                        updateUI();
-                        if (window.DevFavorites) window.DevFavorites.refresh();
-                        showToast(__('toast.login_success'));
                     } else {
                         errEl.textContent = res.message || __('validate.login_failed');
+                        console.error('[DevAuth] 登录失败, code=' + res.code + ', message=' + res.message);
                     }
                 })
-                .catch(function() {
+                .catch(function(err) {
+                    console.error('[DevAuth] 登录请求异常:', err);
                     btn.classList.remove('loading');
                     btn.querySelector('span').textContent = __('auth.btn_login');
                     errEl.textContent = __('toast.network_error');
@@ -827,15 +950,18 @@
                         '<button class="user-btn" id="userMenuBtn">' +
                             '<span class="user-avatar">' + initial + '</span>' +
                             '<span class="user-name">' + (currentUser.nickname || currentUser.username) + '</span>' +
-                            '<svg class="user-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>' +
                         '</button>' +
                         // 悬停浮窗
                         '<div class="user-hover-card" id="userHoverCard">' +
                             '<div class="user-hover-top">' +
                                 '<span class="user-avatar user-avatar-lg">' + initial + '</span>' +
-                                '<div>' +
+                                '<div class="user-hover-name-wrap">' +
                                     '<div class="user-hover-name">' + (currentUser.nickname || currentUser.username) + '</div>' +
                                     '<div class="user-hover-username">@' + currentUser.username + '</div>' +
+                                '</div>' +
+                                '<div class="user-hover-points-inline" id="userHoverPoints">' +
+                                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.26 8.09 12 2"/></svg>' +
+                                    '<span data-i18n="nav.points_label">积分加载中...</span>' +
                                 '</div>' +
                             '</div>' +
                             '<div class="user-hover-info">' +
@@ -848,45 +974,46 @@
                                     '<span>' + (loginTime ? (window.__I18N__ ? window.__I18N__.t('nav.last_login') : '最近登录') + ' ' + loginTime : (window.__I18N__ ? window.__I18N__.t('nav.last_login') : '最近登录') + ' --') + '</span>' +
                                 '</div>' +
                             '</div>' +
+                            '<div class="user-hover-extra">' +
+                                '<div class="user-hover-item" onclick="DevAuth.showChangePassword()">' +
+                                    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
+                                    '<span data-i18n="nav.change_pwd">' + (window.__I18N__ ? window.__I18N__.t('nav.change_pwd') : '修改密码') + '</span>' +
+                                '</div>' +
+                                '<div class="user-hover-item user-hover-logout" onclick="DevAuth.logout()">' +
+                                    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
+                                    '<span data-i18n="nav.logout">' + (window.__I18N__ ? window.__I18N__.t('nav.logout') : '退出登录') + '</span>' +
+                                '</div>' +
+                            '</div>' +
                             '<div class="user-hover-actions">' +
-                                '<a href="/profile" class="user-hover-btn" data-i18n="nav.user_card">' + (window.__I18N__ ? window.__I18N__.t('nav.user_card') : '查看个人主页') + '</a>' +
+                                '<a href="/profile" class="user-hover-btn user-hover-btn-primary" data-i18n="nav.user_card">' + (window.__I18N__ ? window.__I18N__.t('nav.user_card') : '查看个人主页') + '</a>' +
                             '</div>' +
-                        '</div>' +
-                        // 点击下拉菜单
-                        '<div class="user-dropdown" id="userDropdown">' +
-                            '<a href="/profile" class="user-dropdown-item">' +
-                                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' +
-                                '<span data-i18n="nav.profile">' + (window.__I18N__ ? window.__I18N__.t('nav.profile') : '个人主页') + '</span>' +
-                            '</a>' +
-                            '<div class="user-dropdown-item" onclick="DevAuth.showChangePassword()">' +
-                                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
-                                '<span data-i18n="nav.change_pwd">' + (window.__I18N__ ? window.__I18N__.t('nav.change_pwd') : '修改密码') + '</span>' +
-                            '</div>' +
-                            '<div class="user-dropdown-divider"></div>' +
-                            '<div class="user-dropdown-item" onclick="DevAuth.logout()">' +
-                                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
-                                '<span data-i18n="nav.logout">' + (window.__I18N__ ? window.__I18N__.t('nav.logout') : '退出登录') + '</span>' +
-                            '</div>' +
-                        '</div>' +
                     '</div>';
 
-                // 绑定菜单事件
-                setTimeout(function() {
-                    var btn = document.getElementById('userMenuBtn');
-                    var drop = document.getElementById('userDropdown');
-                    if (btn && drop) {
-                        btn.onclick = function(e) {
-                            e.stopPropagation();
-                            var isActive = drop.classList.contains('active');
-                            document.querySelectorAll('.user-dropdown.active').forEach(function(d) {
-                                d.classList.remove('active');
-                            });
-                            if (!isActive) {
-                                drop.classList.add('active');
-                            }
-                        };
+                // 用户浮框 hover 事件（延迟隐藏防止鼠标划过即消失）
+                var userMenu = container.querySelector('.user-menu');
+                var hoverCard = container.querySelector('.user-hover-card');
+                var userHoverTimer = null;
+                if (userMenu && hoverCard) {
+                    function showHoverCard() {
+                        clearTimeout(userHoverTimer);
+                        hoverCard.classList.add('visible');
                     }
-                }, 50);
+                    function hideHoverCard() {
+                        userHoverTimer = setTimeout(function() {
+                            hoverCard.classList.remove('visible');
+                        }, 300);
+                    }
+                    userMenu.addEventListener('mouseenter', showHoverCard);
+                    userMenu.addEventListener('mouseleave', hideHoverCard);
+                    // 浮框本身也响应 hover，避免在其中移动时消失
+                    hoverCard.addEventListener('mouseenter', showHoverCard);
+                    hoverCard.addEventListener('mouseleave', hideHoverCard);
+                }
+
+                // 获取并显示用户积分
+                setTimeout(function() {
+                    fetchUserPointsForHover();
+                }, 100);
             } else {
                 container.innerHTML =
                     '<button class="btn-ghost" onclick="DevAuth.showLogin()" style="font-weight:600;">' +
@@ -900,13 +1027,31 @@
         initLangSwitchers();
     }
 
-    // 全局点击关闭下拉菜单
+    // ============ 获取用户积分（用于浮框显示） ============
+    function fetchUserPointsForHover() {
+        var token = currentToken || localStorage.getItem(TOKEN_KEY);
+        if (!token) return;
+        var el = document.getElementById('userHoverPoints');
+        if (!el) return;
+        fetch('/api/theme-store/points', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json', 'X-Auth-Token': token }
+        }).then(function(r) { return r.json(); }).then(function(res) {
+            if (res.code === 200 && res.data) {
+                var pts = res.data.points != null ? res.data.points : 0;
+                var label = (window.__I18N__ ? window.__I18N__.t('nav.points_label') : '我的积分') || '我的积分';
+                el.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.26 8.09 12 2"/></svg>' +
+                    '<span><b style="color:#f59e0b">' + pts + '</b> 💎</span>';
+            } else {
+                el.querySelector('span').textContent = (window.__I18N__ ? window.__I18N__.t('nav.points_na') : '暂无积分') || '暂无积分';
+            }
+        }).catch(function() {
+            el.querySelector('span').textContent = (window.__I18N__ ? window.__I18N__.t('nav.points_error') : '加载失败') || '加载失败';
+        });
+    }
+
+    // 全局点击关闭下拉菜单（语言切换器）
     document.addEventListener('click', function(e) {
-        if (!e.target.closest('.user-menu')) {
-            document.querySelectorAll('.user-dropdown.active').forEach(function(d) {
-                d.classList.remove('active');
-            });
-        }
         if (!e.target.closest('.lang-switcher')) {
             document.querySelectorAll('.lang-dropdown.active').forEach(function(d) {
                 d.classList.remove('active');
@@ -919,11 +1064,6 @@
 
     // ============ 修改密码弹窗（已登录用户） ============
     function showChangePasswordModal() {
-        // 先关闭下拉菜单
-        document.querySelectorAll('.user-dropdown.active').forEach(function(d) {
-            d.classList.remove('active');
-        });
-
         var innerHTML =
             '<div class="auth-modal auth-modal-xhs auth-modal-cpwd">' +
                 '<button class="auth-close" id="cpwdCloseBtn">&times;</button>' +
@@ -1013,10 +1153,11 @@
                     btn.querySelector('span').textContent = __('profile.confirm_change');
                     if (res.code === 200) {
                         // 密码修改成功，清除登录态并关闭弹窗
+                        // 先提示用户将被登出
+                        showToast(__('toast.pwd_changed') + '，' + __('toast.will_logout'));
                         clearAuth();
                         closeOverlay();
                         updateUI();
-                        showToast(__('toast.pwd_changed'));
                     } else {
                         errEl.textContent = res.message || __('validate.change_failed');
                     }

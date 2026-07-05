@@ -1,0 +1,566 @@
+/* ============================================
+   Widget.css - 桌面小组件系统样式
+   类似 Android/iOS 桌面小组件卡片
+   ============================================ */
+
+/* ========== 小组件容器 ========== */
+.desktop-widget {
+    position: absolute;
+    width: 220px;
+    min-height: 100px;
+    background: transparent;
+    border: none;
+    border-radius: 16px;
+    box-shadow: none;
+    overflow: visible;
+    z-index: 2;
+    transition: box-shadow 0.2s, transform 0.15s, background 0.2s;
+    cursor: grab;
+}
+.desktop-widget:hover {
+    background: rgba(255,255,255,0.03);
+    z-index: 5;
+}
+.desktop-widget.dragging {
+    z-index: 100 !important;
+    opacity: 0.92;
+    cursor: grabbing;
+    background: rgba(255,255,255,0.06);
+    transform: scale(1.03);
+}
+.desktop-widget.resizing {
+    z-index: 10;
+}
+.desktop-widget.just-added {
+    animation: widgetPop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes widgetPop {
+    0% { transform: scale(0.5); opacity: 0; }
+    60% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* ========== 关闭按钮（悬浮角标，hover 显示） ========== */
+.widget-close-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(4px);
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s, background 0.2s, color 0.2s;
+    z-index: 10;
+    line-height: 1;
+    padding: 0;
+}
+.desktop-widget:hover .widget-close-btn {
+    opacity: 1;
+}
+.widget-close-btn:hover {
+    background: rgba(239,68,68,0.65);
+    color: #fff;
+}
+
+/* ========== Widget 内容区域 ========== */
+.widget-body {
+    padding: 14px;
+    cursor: default;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(244,114,182,0.05);
+    transition: border-color 0.25s;
+}
+.desktop-widget:hover .widget-body {
+    border-color: rgba(244,114,182,0.12);
+}
+
+/* ========== 时间戳 Widget ========== */
+.widget-timestamp .ts-big {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 4px;
+}
+.widget-timestamp .ts-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.widget-timestamp .ts-readable {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    font-weight: 500;
+}
+.widget-timestamp .ts-updating {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4ade80;
+    margin-left: 6px;
+    vertical-align: middle;
+    animation: tsPulse 1.5s ease-in-out infinite;
+}
+@keyframes tsPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* ========== UUID Widget ========== */
+.widget-uuid .uuid-value {
+    font-size: 12px;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    color: var(--text-primary);
+    background: var(--input-bg);
+    padding: 8px 10px;
+    border-radius: 8px;
+    word-break: break-all;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    max-height: 40px;
+    overflow: hidden;
+    position: relative;
+}
+.widget-uuid .uuid-value::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 16px;
+    background: linear-gradient(transparent, var(--input-bg));
+}
+.widget-uuid .uuid-actions {
+    display: flex;
+    gap: 6px;
+}
+.widget-uuid .uuid-btn {
+    flex: 1;
+    padding: 7px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--hover-bg);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.15s;
+}
+.widget-uuid .uuid-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background: var(--accent-shadow);
+}
+
+/* ========== 密码生成 Widget ========== */
+.widget-password .pw-display {
+    font-size: 15px;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--input-bg);
+    padding: 10px 12px;
+    border-radius: 10px;
+    text-align: center;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    word-break: break-all;
+}
+.widget-password .pw-actions {
+    display: flex;
+    gap: 6px;
+}
+.widget-password .pw-btn {
+    flex: 1;
+    padding: 7px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--hover-bg);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.15s;
+}
+.widget-password .pw-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background: var(--accent-shadow);
+}
+
+/* ========== 随机数 Widget ========== */
+.widget-random .rand-display {
+    text-align: center;
+    padding: 8px 0 4px;
+}
+.widget-random .rand-big {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--accent-color);
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    line-height: 1.1;
+}
+.widget-random .rand-small {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+.widget-random .rand-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+.widget-random .rand-range {
+    flex: 1;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+.widget-random .rand-range input {
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 11px;
+    text-align: center;
+    outline: none;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+}
+.widget-random .rand-range input:focus {
+    border-color: var(--accent-color);
+}
+.widget-random .rand-range span {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+.widget-random .rand-btn {
+    padding: 5px 12px;
+    border: 1px solid var(--accent-color);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--accent-color);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+.widget-random .rand-btn:hover {
+    background: var(--accent-color);
+    color: #fff;
+}
+
+/* ========== 颜色 Widget ========== */
+.widget-color .color-preview {
+    width: 100%;
+    height: 60px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s;
+}
+.widget-color .color-hex {
+    font-size: 14px;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    color: var(--text-primary);
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+}
+.widget-color .color-hex:hover {
+    color: var(--accent-color);
+}
+.widget-color .color-rgb {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 2px;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+}
+.widget-color .color-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+.widget-color .color-preset {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+.widget-color .color-preset:hover {
+    transform: scale(1.15);
+    border-color: var(--text-secondary);
+}
+.widget-color .color-preset.active {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 8px rgba(99,102,241,0.3);
+}
+.widget-color .color-input-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+.widget-color .color-input-row input {
+    flex: 1;
+    padding: 5px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 11px;
+    outline: none;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+}
+.widget-color .color-input-row input:focus {
+    border-color: var(--accent-color);
+}
+
+/* ========== 小组件商店面板 ========== */
+.widget-store-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2500;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.widget-store-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+.widget-store-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    width: 560px;
+    max-width: 94vw;
+    max-height: 80vh;
+    z-index: 2501;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.widget-store-panel.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+}
+.widget-store-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+.widget-store-header h2 {
+    flex: 1;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.widget-store-header p {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.widget-store-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.widget-store-reset {
+    padding: 6px 14px;
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px;
+    background: rgba(239,68,68,0.06);
+    color: #f87171;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.widget-store-reset:hover {
+    background: rgba(239,68,68,0.15);
+    border-color: rgba(239,68,68,0.5);
+}
+.widget-store-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: var(--hover-bg);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.widget-store-close:hover {
+    background: rgba(239,68,68,0.12);
+    color: #f87171;
+}
+.widget-store-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 24px 24px;
+}
+.widget-store-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+.widget-store-card {
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    background: var(--hover-bg);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.widget-store-card:hover {
+    border-color: var(--accent-color);
+    background: var(--accent-shadow);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+.widget-store-card.already-added {
+    opacity: 0.5;
+    pointer-events: none;
+}
+.widget-store-card-icon {
+    font-size: 28px;
+}
+.widget-store-card-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.widget-store-card-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+.widget-store-card .add-btn {
+    margin-top: auto;
+    padding: 7px 0;
+    border: 1px solid var(--accent-color);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--accent-color);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+.widget-store-card .add-btn:hover {
+    background: var(--accent-color);
+    color: #fff;
+}
+
+/* ========== 右键菜单小组件项 ========== */
+.context-item-widget {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ========== 桌面按钮：添加小组件 ========== */
+.desktop-widget-add-btn {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: 1px dashed var(--border-color);
+    background: rgba(0,0,0,0.2);
+    backdrop-filter: blur(8px);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.desktop-widget-add-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background: rgba(99,102,241,0.1);
+}
+.desktop-widget-add-btn svg {
+    opacity: 0.6;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 640px) {
+    .desktop-widget {
+        width: 180px;
+    }
+    .widget-store-panel {
+        width: 100vw;
+        max-width: 100vw;
+        border-radius: 16px 16px 0 0;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        transform: translateY(100%);
+        max-height: 60vh;
+    }
+    .widget-store-panel.active {
+        transform: translateY(0);
+    }
+    .widget-store-grid {
+        grid-template-columns: 1fr;
+    }
+}

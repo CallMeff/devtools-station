@@ -1,0 +1,375 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">星座运势 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/themes.css">
+    <style>
+        :root {
+            --bg: #1a1028; --card-bg: #241840; --text: #f0e6ff; --text-secondary: #b8a0d4;
+            --accent: #c084fc; --accent2: #f472b6; --accent3: #60a5fa;
+            --border: rgba(192, 132, 252, 0.2); --radius: 18px; --radius-sm: 12px;
+            --shadow: 0 8px 32px rgba(192, 132, 252, 0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #1a1028 0%, #1e1035 30%, #1a0a2e 60%, #1a1028 100%);
+            min-height: 100vh; color: var(--text); line-height: 1.6; overflow-x: hidden;
+        }
+        /* Stars BG */
+        .stars-bg { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; }
+        .star {
+            position: absolute; background: white; border-radius: 50%;
+            animation: twinkle var(--duration) ease-in-out infinite;
+            animation-delay: var(--delay);
+        }
+        @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+        @keyframes floatUp { 0% { opacity: 0; transform: translateY(0) scale(0.5); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-200px) scale(1.5); } }
+        .floating-star {
+            position: absolute; font-size: 24px; animation: floatUp 4s ease-out infinite;
+            animation-delay: var(--delay); opacity: 0;
+        }
+
+        /* Main */
+        .content { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; padding: 20px; }
+        .topbar {
+            display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+            background: rgba(36, 24, 64, 0.85); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
+        }
+        .topbar a { color: var(--text-secondary); text-decoration: none; font-size: 13px; transition: color .2s; }
+        .topbar a:hover { color: var(--accent2); }
+        .topbar h1 { font-size: 16px; font-weight: 600; flex: 1; background: linear-gradient(135deg, #c084fc, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* Sign Selector */
+        .sign-selector {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+            margin-bottom: 20px;
+        }
+        .sign-btn {
+            background: var(--card-bg); border: 2px solid transparent;
+            border-radius: var(--radius-sm); padding: 10px 6px; cursor: pointer;
+            text-align: center; transition: all .3s; color: var(--text-secondary);
+        }
+        .sign-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .sign-btn.active { border-color: var(--accent2); background: rgba(244, 114, 182, 0.15); color: var(--text); }
+        .sign-btn .emoji { font-size: 28px; display: block; margin-bottom: 4px; }
+        .sign-btn .name { font-size: 12px; }
+        .sign-btn .date { font-size: 10px; color: var(--text-secondary); }
+
+        /* Fortune Card */
+        .fortune-card {
+            background: linear-gradient(145deg, rgba(36, 24, 64, 0.95), rgba(42, 20, 58, 0.95));
+            border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 28px 24px; text-align: center; backdrop-filter: blur(8px);
+            box-shadow: var(--shadow);
+        }
+        .fortune-card .zodiac-icon { font-size: 64px; display: block; margin-bottom: 8px; animation: bounce 2s ease-in-out infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        .fortune-card .sign-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .fortune-card .date-range { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+        .fortune-card .motto {
+            font-size: 24px; font-weight: 700; margin-bottom: 12px;
+            background: linear-gradient(135deg, #f472b6, #c084fc, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* Luck Meter */
+        .luck-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0;
+        }
+        .luck-item {
+            background: rgba(255, 255, 255, 0.04); border-radius: var(--radius-sm);
+            padding: 14px 8px; text-align: center;
+        }
+        .luck-item .label { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+        .luck-item .stars { font-size: 20px; letter-spacing: 2px; }
+        .luck-item .word { font-size: 12px; font-weight: 600; margin-top: 2px; }
+
+        /* Lucky Info */
+        .lucky-info {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px;
+        }
+        .lucky-tag {
+            background: rgba(192, 132, 252, 0.12); border-radius: 20px;
+            padding: 10px 12px; text-align: center; font-size: 13px;
+        }
+        .lucky-tag .icon { font-size: 20px; display: block; margin-bottom: 2px; }
+        .lucky-tag .val { font-weight: 600; color: var(--accent2); }
+
+        /* Advice */
+        .advice-box {
+            background: rgba(244, 114, 182, 0.08); border: 1px solid rgba(244, 114, 182, 0.2);
+            border-radius: var(--radius-sm); padding: 16px 20px; margin-top: 16px;
+            font-size: 14px; line-height: 1.8; text-align: left;
+        }
+        .advice-box .title { font-weight: 600; color: var(--accent2); margin-bottom: 4px; }
+
+        /* Refresh Btn */
+        .refresh-btn {
+            display: block; width: 100%; margin-top: 16px; padding: 12px;
+            background: linear-gradient(135deg, #c084fc, #f472b6);
+            border: none; border-radius: 50px; color: white; font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: all .3s;
+        }
+        .refresh-btn:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(192, 132, 252, 0.4); }
+        .refresh-btn:active { transform: scale(0.98); }
+
+        @media (max-width: 500px) {
+            .sign-selector { grid-template-columns: repeat(3, 1fr); }
+            .luck-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars-bg" id="starsBg"></div>
+    <div class="topbar">
+        <a href="/">← 首页</a>
+        <h1>🔮 <span th:text="${tool.name}">星座运势</span></h1>
+        <span style="font-size:12px;color:var(--text-secondary)">每日好运指南 ✨</span>
+    </div>
+    <div class="content">
+        <!-- 星座选择 -->
+        <div class="sign-selector" id="signSelector"></div>
+
+        <!-- 运势卡片 -->
+        <div class="fortune-card" id="fortuneCard">
+            <span class="zodiac-icon">♈</span>
+            <div class="sign-name">白羊座</div>
+            <div class="date-range">3月21日 - 4月19日</div>
+            <div class="motto" id="motto">今天元气满满！</div>
+
+            <div class="luck-grid" id="luckGrid"></div>
+            <div class="lucky-info" id="luckyInfo"></div>
+            <div class="advice-box" id="adviceBox"></div>
+        </div>
+
+        <button class="refresh-btn" onclick="refresh()">✨ 查看今日运势</button>
+        <p style="text-align:center;margin-top:12px;font-size:12px;color:var(--text-secondary)">
+            💫 每天早上运势自动更新，记得来看哦~
+        </p>
+    </div>
+
+    <script>
+        const zodiacs = [
+            { emoji:'♈', name:'白羊座', date:'3.21-4.19', element:'火', traits:'热情勇敢、直率冲动' },
+            { emoji:'♉', name:'金牛座', date:'4.20-5.20', element:'土', traits:'稳重务实、享受生活' },
+            { emoji:'♊', name:'双子座', date:'5.21-6.21', element:'风', traits:'机智多变、好奇心强' },
+            { emoji:'♋', name:'巨蟹座', date:'6.22-7.22', element:'水', traits:'温柔敏感、顾家细腻' },
+            { emoji:'♌', name:'狮子座', date:'7.23-8.22', element:'火', traits:'自信大方、领导力强' },
+            { emoji:'♍', name:'处女座', date:'8.23-9.22', element:'土', traits:'追求完美、细心严谨' },
+            { emoji:'♎', name:'天秤座', date:'9.23-10.23', element:'风', traits:'优雅公正、社交达人' },
+            { emoji:'♏', name:'天蝎座', date:'10.24-11.22', element:'水', traits:'神秘深情、意志坚定' },
+            { emoji:'♐', name:'射手座', date:'11.23-12.21', element:'火', traits:'乐观自由、热爱冒险' },
+            { emoji:'♑', name:'摩羯座', date:'12.22-1.19', element:'土', traits:'踏实负责、目标明确' },
+            { emoji:'♒', name:'水瓶座', date:'1.20-2.18', element:'风', traits:'独立创新、思想前卫' },
+            { emoji:'♓', name:'双鱼座', date:'2.19-3.20', element:'水', traits:'浪漫梦幻、富有同情心' }
+        ];
+
+        const colors = ['#FF6B9D','#C084FC','#FB923C','#60A5FA','#34D399','#F472B6',
+            '#A78BFA','#FBBF24','#F87171','#38BDF8','#A3E635','#E879F9'];
+
+        const mottos = {
+            good: ['今天超级好运！做什么都能成 🎉','幸运女神在微笑 😊','好运爆棚的一天 ✨','桃花运满满 🌸','心想事成的一天 💫','贵人相助，顺风顺水 ⭐'],
+            ok: ['平平淡淡才是真 🌿','小确幸就在身边 💕','保持好心情最重要 😌','轻微的惊喜在等你 🎀','适合安静做自己 🌙','一切都刚刚好 ☁️'],
+            meh: ['今天宜低调 🤫','耐心等待转机 🕯️','深呼吸，没什么大不了 🌬️','乌云会散去的 🌈','给自己一点空间 🧘','水逆也没关系，你会好好的 💪']
+        };
+
+        let currentSign = -1;
+        let fortuneData = null;
+
+        function seededRandom(seed) {
+            let h = 0;
+            for (let i = 0; i < seed.length; i++) {
+                h = ((h << 5) - h) + seed.charCodeAt(i); h |= 0;
+            }
+            return function() { h = (h * 1103515245 + 12345) & 0x7fffffff; return h / 0x7fffffff; };
+        }
+
+        function getDayKey() {
+            const d = new Date();
+            return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+        }
+
+        function getLuckStars(value) {
+            const full = '★'.repeat(value);
+            const empty = '☆'.repeat(5 - value);
+            return `<span style="color:#FFD700">${full}</span><span style="color:#555">${empty}</span>`;
+        }
+
+        function getLuckWord(value) {
+            if (value >= 5) return '大吉 ✨';
+            if (value >= 4) return '吉 🌟';
+            if (value >= 3) return '中吉 ☁️';
+            if (value >= 2) return '小吉 🌿';
+            return '注意 ⚠️';
+        }
+
+        const luckyColors = ['🌸 樱花粉','🔮 薰衣草紫','🧡 活力橙','💎 宝石蓝','🍃 薄荷绿','💗 蜜桃粉','🦋 天空蓝','🍋 柠檬黄','🌺 珊瑚色','🥑 牛油果绿','🌸 玫瑰粉','🍇 葡萄紫'];
+        const luckyNumbers = ['3','7','8','5','9','1','6','2','4','11','13','22'];
+        const luckyZodiacs = ['狮子座','处女座','巨蟹座','天蝎座','双鱼座','摩羯座','双子座','金牛座','射手座','天秤座','水瓶座','白羊座'];
+
+        const advices = [
+            '今天适合穿上最喜欢的衣服出门，自信是最好的护身符 💃\n晚上适合泡个热水澡，放松心情 🛁\n幸运时段：下午 3:00-5:00',
+            '今天适合尝试新事物，可能会有意外惊喜 🎁\n多和朋友聊天，开心的事会找上门 💬\n幸运时段：上午 10:00-12:00',
+            '今天宜静不宜动，适合在家看一部好电影 🎬\n买一杯喜欢的奶茶犒劳自己 🧋\n幸运时段：晚上 8:00-10:00',
+            '今天财运不错，但也要理性消费哦 💰\n适合整理房间，清爽的环境带来好心情 🏠\n幸运时段：中午 12:00-2:00',
+            '今天桃花运在线，单身的朋友主动一点 💕\n适合出门走走，转角遇到惊喜 🚶‍♀️\n幸运时段：傍晚 5:00-7:00',
+            '今天学习效率很高，抓紧完成待办事项 📚\n适合联系好久不见的老朋友 👋\n幸运时段：上午 8:00-10:00',
+            '今天创意爆棚，适合做点手工或写日记 ✍️\n给自己做一顿美食吧 🍳\n幸运时段：下午 2:00-4:00',
+            '今天适合制定新计划，让生活更有方向感 🎯\n别人的建议值得一听但最终听自己的 💪\n幸运时段：上午 11:00-1:00',
+            '今天的小确幸藏在细节里，用心感受 🌷\n适合听一首循环播放的歌 🎵\n幸运时段：晚上 7:00-9:00',
+            '今天勇敢一点，说出心里话会有好回应 🗣️\n幸运颜色系的穿搭会加分 👗\n幸运时段：下午 4:00-6:00',
+            '今天适合做运动，流汗会带来快乐 🏃\n吃一顿好的，犒劳努力的自己 🍕\n幸运时段：早上 7:00-9:00',
+            '今天宜表白，无论是人还是梦想 🌈\n看到彩虹色的东西会带来好运 🌈\n幸运时段：全天都是你的幸运时间 ⭐'
+        ];
+
+        function generateFortune(signIndex) {
+            const key = getDayKey() + '-' + signIndex;
+            const rng = seededRandom(key);
+            const sign = zodiacs[signIndex];
+
+            const overall = Math.floor(rng() * 3) + 3; // 3-5
+            const love = Math.floor(rng() * 5) + 1;
+            const career = Math.floor(rng() * 5) + 1;
+            const health = Math.floor(rng() * 5) + 1;
+
+            let moodCat = 'good';
+            if (overall <= 3) moodCat = 'meh';
+            else if (overall <= 4) moodCat = 'ok';
+
+            const moodList = mottos[moodCat];
+            const motto = moodList[Math.floor(rng() * moodList.length)];
+
+            return {
+                sign: sign,
+                overall, love, career, health,
+                motto: motto,
+                mood: moodCat,
+                luckyColor: luckyColors[Math.floor(rng() * luckyColors.length)],
+                luckyNumber: luckyNumbers[Math.floor(rng() * luckyNumbers.length)],
+                luckyZodiac: luckyZodiacs[Math.floor(rng() * luckyZodiacs.length)],
+                advice: advices[Math.floor(rng() * advices.length)],
+                color: colors[signIndex]
+            };
+        }
+
+        function selectSign(index) {
+            currentSign = index;
+            document.querySelectorAll('.sign-btn').forEach((b, i) => b.classList.toggle('active', i === index));
+            fortuneData = generateFortune(index);
+            renderFortune();
+        }
+
+        function renderFortune() {
+            const fd = fortuneData;
+            const card = document.getElementById('fortuneCard');
+            card.style.background = `linear-gradient(145deg, rgba(36,24,64,0.95), ${fd.color}22)`;
+
+            // icon + name
+            card.querySelector('.zodiac-icon').textContent = fd.sign.emoji;
+            card.querySelector('.sign-name').innerHTML = `${fd.sign.name} · ${fd.sign.element}象星座`;
+            card.querySelector('.sign-name').style.color = fd.color;
+            card.querySelector('.date-range').textContent = fd.sign.date;
+            card.querySelector('#motto').textContent = fd.motto;
+
+            // luck grid
+            const luckItems = [
+                ['综合运势', fd.overall], ['爱情运势', fd.love],
+                ['事业运势', fd.career], ['健康运势', fd.health]
+            ];
+            document.getElementById('luckGrid').innerHTML = luckItems.map(([l, v]) =>
+                `<div class="luck-item">
+                    <div class="label">${l}</div>
+                    <div class="stars">${getLuckStars(v)}</div>
+                    <div class="word" style="color:${v>=4?'#FFD700':v>=3?'#C084FC':'#888'}">${getLuckWord(v)}</div>
+                </div>`
+            ).join('');
+
+            // lucky info
+            document.getElementById('luckyInfo').innerHTML = [
+                { icon: '🎨', label: '幸运色', val: fd.luckyColor.replace(/^[^\u4e00-\u9fa5]+/, '') },
+                { icon: '🔢', label: '幸运数字', val: fd.luckyNumber },
+                { icon: '⭐', label: '幸运星座', val: fd.luckyZodiac }
+            ].map(t =>
+                `<div class="lucky-tag">
+                    <span class="icon">${t.icon}</span>
+                    <span class="val">${t.val}</span>
+                    <div style="font-size:10px;color:var(--text-secondary)">${t.label}</div>
+                </div>`
+            ).join('');
+
+            // advice
+            document.getElementById('adviceBox').innerHTML = `
+                <div class="title">💬 今日小建议</div>
+                ${fd.advice.replace(/\n/g, '<br>')}
+            `;
+        }
+
+        function refresh() {
+            if (currentSign < 0) { currentSign = Math.floor(Math.random() * 12); }
+            document.querySelectorAll('.sign-btn').forEach((b, i) => b.classList.toggle('active', i === currentSign));
+            fortuneData = generateFortune(currentSign);
+            renderFortune();
+            // brief toast
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(192,132,252,0.9);color:#fff;padding:10px 24px;border-radius:50px;font-size:14px;z-index:99;animation:fadeInOut 2s ease forwards;';
+            toast.textContent = '✨ 运势已更新！';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+
+        function initStars() {
+            const bg = document.getElementById('starsBg');
+            let html = '';
+            for (let i = 0; i < 50; i++) {
+                const size = Math.random() * 3 + 1;
+                html += `<div class="star" style="left:${Math.random()*100}%;top:${Math.random()*100}%;
+                    width:${size}px;height:${size}px;
+                    --duration:${Math.random()*3+2}s;--delay:${Math.random()*5}s"></div>`;
+            }
+            const emojis = ['✨','🌟','💫','⭐','🌙','🌸','💖','🦋','🔮'];
+            for (let i = 0; i < 12; i++) {
+                html += `<div class="floating-star" style="left:${Math.random()*95}%;top:${60+Math.random()*40}%;
+                    --delay:${Math.random()*5}s">${emojis[i%emojis.length]}</div>`;
+            }
+            bg.innerHTML = html;
+        }
+
+        function initSignSelector() {
+            document.getElementById('signSelector').innerHTML = zodiacs.map((z, i) =>
+                `<button class="sign-btn" onclick="selectSign(${i})">
+                    <span class="emoji">${z.emoji}</span>
+                    <span class="name">${z.name}</span>
+                    <span class="date">${z.date}</span>
+                </button>`
+            ).join('');
+        }
+
+        // init
+        initStars();
+        initSignSelector();
+        const savedSign = parseInt(localStorage.getItem('horoscope-sign') || '-1');
+        selectSign(savedSign >= 0 ? savedSign : new Date().getMonth());
+        if (savedSign >= 0) localStorage.setItem('horoscope-sign', savedSign);
+
+        // override selectSign to save preference
+        const _selectSign = selectSign;
+        selectSign = function(index) {
+            _selectSign(index);
+            localStorage.setItem('horoscope-sign', index);
+        };
+    </script>
+    <style>
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+            20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+</body>
+</html>

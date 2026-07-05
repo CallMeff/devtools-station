@@ -17,7 +17,7 @@ public class DevToolsApplication {
         System.out.println("""
                 
                 ╔══════════════════════════════════════════════╗
-                ║        🛠️  DevTools Station 启动成功!        ║
+                ║        🚀  DevTools Station 启动成功!         ║
                 ║        访问: http://localhost:8088            ║
                 ║        API文档: http://localhost:8088/doc.html ║
                 ╚══════════════════════════════════════════════╝

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">待办小清单 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #fff5fb;
+            --card-bg: #ffffff;
+            --text: #5d3a5c;
+            --text-secondary: #9a7e9b;
+            --accent: #f472b6;
+            --accent-light: #fce7f3;
+            --accent-dark: #db2777;
+            --success: #34d399;
+            --success-light: #d1fae5;
+            --border: #f5d4e8;
+            --shadow: 0 6px 30px rgba(244, 114, 182, 0.13);
+            --radius: 18px;
+            --radius-sm: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #fff5fb 0%, #fdf2f8 20%, #fce7f3 50%, #faf5ff 80%, #fff5fb 100%);
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .floating-decorations {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .float-item {
+            position: absolute; opacity: 0.1; font-size: 2.2rem;
+            animation: floatItem 18s infinite ease-in-out;
+        }
+        .float-item:nth-child(1) { top: 6%; left: 9%; animation-delay: 0s; }
+        .float-item:nth-child(2) { top: 18%; right: 11%; animation-delay: -3s; }
+        .float-item:nth-child(3) { top: 40%; left: 6%; animation-delay: -7s; font-size: 1.8rem; }
+        .float-item:nth-child(4) { top: 60%; right: 8%; animation-delay: -11s; font-size: 2.6rem; }
+        .float-item:nth-child(5) { top: 78%; left: 22%; animation-delay: -2s; }
+        .float-item:nth-child(6) { top: 14%; left: 48%; animation-delay: -15s; font-size: 1.9rem; }
+
+        @keyframes floatItem {
+            0% { transform: translateY(0) rotate(0deg) scale(1); }
+            25% { transform: translateY(-28px) rotate(8deg) scale(1.1); }
+            50% { transform: translateY(-10px) rotate(-4deg) scale(0.92); }
+            75% { transform: translateY(-32px) rotate(6deg) scale(1.05); }
+            100% { transform: translateY(0) rotate(0deg) scale(1); }
+        }
+
+        .container {
+            max-width: 600px; margin: 0 auto; padding: 30px 20px 60px;
+            position: relative; z-index: 1;
+        }
+
+        .header {
+            text-align: center; padding: 30px 0 20px;
+        }
+        .header .icon { font-size: 3rem; margin-bottom: 8px; animation: bounceIcon 2s infinite; }
+        .header h1 {
+            font-size: 1.8rem; font-weight: 800;
+            background: linear-gradient(135deg, #f472b6, #c084fc, #60a5fa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @keyframes bounceIcon {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .card {
+            background: var(--card-bg); border-radius: var(--radius);
+            padding: 24px; margin-bottom: 20px;
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+        }
+
+        /* Input row */
+        .input-row {
+            display: flex; gap: 10px;
+        }
+        .input-row input {
+            flex: 1; padding: 12px 16px;
+            border: 2px solid var(--border); border-radius: 25px;
+            font-size: 0.95rem; font-family: inherit; color: var(--text);
+            background: var(--bg); outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+
+        .btn {
+            padding: 10px 22px; border-radius: 25px;
+            font-size: 0.9rem; font-weight: 700; cursor: pointer;
+            transition: all 0.2s; border: none; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 6px;
+            white-space: nowrap;
+        }
+        .btn-primary { background: linear-gradient(135deg, #f472b6, #c084fc); color: #fff; box-shadow: 0 4px 15px rgba(244,114,182,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(244,114,182,0.4); }
+        .btn-ghost { background: #fff; color: var(--text-secondary); border: 1.5px solid var(--border); }
+        .btn-ghost:hover { background: var(--accent-light); color: var(--accent-dark); border-color: var(--accent); }
+        .btn-danger { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
+        .btn-danger:hover { background: #fecaca; }
+
+        /* Stats bar */
+        .stats-bar {
+            display: flex; gap: 16px; margin-bottom: 16px;
+            align-items: center; justify-content: center;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            background: var(--bg); border-radius: 16px;
+            padding: 8px 16px; font-size: 0.85rem;
+            color: var(--text-secondary); font-weight: 600;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .stat-num { font-size: 1.2rem; font-weight: 800; color: var(--accent); }
+
+        /* Progress bar */
+        .progress-wrap {
+            width: 100%; background: #fce7f3; border-radius: 10px;
+            height: 10px; margin-bottom: 8px; overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%; border-radius: 10px;
+            background: linear-gradient(90deg, #f472b6, #c084fc, #60a5fa);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .progress-label {
+            text-align: center; font-size: 0.8rem; color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        /* Todo list */
+        .todo-list { list-style: none; }
+        .todo-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 16px; border-radius: var(--radius-sm);
+            margin-bottom: 8px; background: var(--bg);
+            border: 1.5px solid transparent;
+            transition: all 0.3s; animation: slideIn 0.3s ease;
+        }
+        .todo-item:hover { border-color: var(--accent); }
+        .todo-item.completed {
+            background: #f0fdf4; border-color: #bbf7d0; opacity: 0.8;
+        }
+        .todo-item.completed .todo-text {
+            text-decoration: line-through; color: #9ca3af;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .checkbox {
+            width: 26px; height: 26px; border-radius: 50%;
+            border: 2.5px solid var(--border); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s; flex-shrink: 0; background: #fff;
+        }
+        .checkbox:hover { border-color: var(--accent); background: var(--accent-light); }
+        .todo-item.completed .checkbox {
+            background: linear-gradient(135deg, #34d399, #10b981);
+            border-color: #34d399;
+        }
+        .check-mark {
+            font-size: 0.7rem; color: #fff; opacity: 0; transition: opacity 0.3s;
+        }
+        .todo-item.completed .check-mark { opacity: 1; }
+
+        .todo-text { flex: 1; font-size: 0.95rem; transition: all 0.3s; }
+
+        .todo-time {
+            font-size: 0.75rem; color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .delete-btn {
+            width: 28px; height: 28px; border-radius: 50%;
+            border: none; background: transparent; cursor: pointer;
+            color: #d1d5db; font-size: 1rem; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .delete-btn:hover { background: #fee2e2; color: #ef4444; }
+
+        .action-row {
+            display: flex; gap: 8px; margin-top: 16px; justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            text-align: center; padding: 40px 20px; color: var(--text-secondary);
+        }
+        .empty-state .big-icon { font-size: 3.5rem; margin-bottom: 12px; }
+        .empty-state p { font-size: 0.95rem; }
+
+        /* Category tags */
+        .tag-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .tag {
+            padding: 3px 10px; border-radius: 12px; font-size: 0.72rem;
+            cursor: pointer; border: 1px solid var(--border);
+            background: #fff; color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        .tag:hover { border-color: var(--accent); }
+        .tag.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        .confetti-particle {
+            position: fixed; pointer-events: none; z-index: 999;
+            font-size: 1.5rem; animation: confettiFall 1.5s ease-out forwards;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+            100% { transform: translateY(200px) rotate(720deg) scale(0); opacity: 0; }
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 16px 10px; }
+            .header h1 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-decorations">
+        <span class="float-item">📝</span><span class="float-item">✅</span>
+        <span class="float-item">💖</span><span class="float-item">🌟</span>
+        <span class="float-item">🎯</span><span class="float-item">✨</span>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="icon">📝</div>
+            <h1 th:text="${tool.name}">待办小清单</h1>
+        </div>
+
+        <!-- 输入卡片 -->
+        <div class="card">
+            <div class="input-row">
+                <input type="text" id="todoInput" placeholder="添加一条待办事项... ✨" maxlength="100" onkeydown="if(event.key==='Enter')addTodo()">
+                <button class="btn btn-primary" onclick="addTodo()">➕ 添加</button>
+            </div>
+        </div>
+
+        <!-- 统计 -->
+        <div class="card">
+            <div class="stats-bar">
+                <div class="stat-item">📝 总计: <span class="stat-num" id="totalCount">0</span></div>
+                <div class="stat-item">✅ 已完成: <span class="stat-num" id="doneCount">0</span></div>
+                <div class="stat-item">🎯 完成率: <span class="stat-num" id="percentVal">0%</span></div>
+            </div>
+            <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+            <div class="progress-label" id="encourageMsg">✨ 新的一天，从一个小目标开始吧！</div>
+        </div>
+
+        <!-- 清单列表 -->
+        <div class="card">
+            <ul class="todo-list" id="todoList"></ul>
+            <div class="empty-state" id="emptyState">
+                <div class="big-icon">📋</div>
+                <p>还没有待办事项~<br>在上面输入一条吧 💕</p>
+            </div>
+            <div class="action-row">
+                <button class="btn btn-ghost" onclick="clearDone()">🧹 清除已完成</button>
+                <button class="btn btn-danger" onclick="clearAll()">🗑️ 清空全部</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'mini-checklist-todos';
+        let todos = [];
+
+        function loadTodos() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                todos = raw ? JSON.parse(raw) : [];
+            } catch(e) { todos = []; }
+        }
+
+        function saveTodos() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+        }
+
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            const text = input.value.trim();
+            if (!text) { input.focus(); return; }
+
+            todos.unshift({
+                id: Date.now(),
+                text: text,
+                done: false,
+                time: new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'})
+            });
+
+            input.value = '';
+            input.focus();
+            saveTodos();
+            render();
+        }
+
+        function toggleTodo(id) {
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                todo.done = !todo.done;
+                saveTodos();
+                render();
+                if (todo.done && getStats().pct === 100) {
+                    spawnConfetti();
+                }
+            }
+        }
+
+        function deleteTodo(id) {
+            todos = todos.filter(t => t.id !== id);
+            saveTodos();
+            render();
+        }
+
+        function clearDone() {
+            const before = todos.length;
+            todos = todos.filter(t => !t.done);
+            if (todos.length < before) { saveTodos(); render(); }
+        }
+
+        function clearAll() {
+            if (todos.length === 0) return;
+            if (confirm('确定要清空所有待办事项吗？')) {
+                todos = [];
+                saveTodos();
+                render();
+            }
+        }
+
+        function getStats() {
+            const total = todos.length;
+            const done = todos.filter(t => t.done).length;
+            const pct = total === 0 ? 0 : Math.round(done / total * 100);
+            return { total, done, pct };
+        }
+
+        function render() {
+            const stats = getStats();
+            document.getElementById('totalCount').textContent = stats.total;
+            document.getElementById('doneCount').textContent = stats.done;
+            document.getElementById('percentVal').textContent = stats.pct + '%';
+            document.getElementById('progressBar').style.width = stats.pct + '%';
+
+            const msgs = [
+                '✨ 新的一天，从一个小目标开始吧！',
+                '💪 不错哦，继续加油！',
+                '🌟 做得很好，继续保持！',
+                '🔥 太棒了，效率满满！',
+                '🏆 全部完成！你是最棒的！'
+            ];
+            let idx = stats.pct === 0 ? 0 : stats.pct === 100 ? 4 : Math.min(Math.floor(stats.pct / 25) + 1, 3);
+            document.getElementById('encourageMsg').textContent = msgs[idx];
+
+            const list = document.getElementById('todoList');
+            const empty = document.getElementById('emptyState');
+
+            if (todos.length === 0) {
+                list.innerHTML = '';
+                empty.style.display = 'block';
+            } else {
+                empty.style.display = 'none';
+                list.innerHTML = todos.map(t => `
+                    <li class="todo-item${t.done ? ' completed' : ''}" data-id="${t.id}">
+                        <div class="checkbox" onclick="toggleTodo(${t.id})">
+                            <span class="check-mark">✓</span>
+                        </div>
+                        <span class="todo-text">${escapeHtml(t.text)}</span>
+                        <span class="todo-time">${t.time}</span>
+                        <button class="delete-btn" onclick="deleteTodo(${t.id})" title="删除">×</button>
+                    </li>
+                `).join('');
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function spawnConfetti() {
+            const emojis = ['🎉','🎊','✨','💖','🌟','🎀','💫','🏆','🥳','💕'];
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const p = document.createElement('span');
+                    p.className = 'confetti-particle';
+                    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                    p.style.left = (10 + Math.random() * 80) + '%';
+                    p.style.top = (20 + Math.random() * 30) + '%';
+                    p.style.animationDuration = (1 + Math.random() * 1.5) + 's';
+                    document.body.appendChild(p);
+                    setTimeout(() => p.remove(), 2000);
+                }, i * 80);
+            }
+        }
+
+        // Init
+        loadTodos();
+        render();
+        document.getElementById('todoInput').focus();
+    </script>
+</body>
+</html>

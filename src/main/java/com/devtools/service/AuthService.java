@@ -159,9 +159,9 @@ public class AuthService {
     }
 
     /**
-     * 注册
+     * 注册（无需验证码）
      */
-    public Map<String, Object> register(String username, String password, String email, String verifyCode) {
+    public Map<String, Object> register(String username, String password, String email) {
         if (password == null || password.length() < passwordMinLength) {
             throw new RuntimeException("密码至少" + passwordMinLength + "位");
         }
@@ -171,7 +171,6 @@ public class AuthService {
             throw new RuntimeException("邮箱不能为空");
         }
         email = email.trim();
-        verifyCode = verifyCode == null ? "" : verifyCode.trim();
 
         // 校验邮箱格式
         if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
@@ -192,13 +191,6 @@ public class AuthService {
             throw new RuntimeException("该邮箱已被注册");
         }
 
-        if (!verifyCode.matches("^\\d{6}$")) {
-            throw new RuntimeException("验证码为6位数字");
-        }
-        if (!emailService.verifyRegisterCode(email, verifyCode)) {
-            throw new RuntimeException("验证码错误或已过期");
-        }
-
         // 密码加密
         String salt = BCrypt.gensalt(12);
         String passwordHash = BCrypt.hashpw(password, salt);
@@ -210,6 +202,7 @@ public class AuthService {
         user.setSalt(salt);
         user.setNickname(username);
         user.setStatus(1);
+        user.setPoints(6);
         userMapper.insert(user);
 
         // 创建默认设置
@@ -261,6 +254,36 @@ public class AuthService {
 
         // 记录日志
         logActivity(user.getId(), "login", "", "{\"ip\":\"" + ip + "\"}", ip);
+
+        return buildUserInfo(user, session);
+    }
+
+    /**
+     * 邮箱直登（无需密码，仅验证邮箱是否已注册）
+     */
+    public Map<String, Object> loginByEmail(String email, String ip, String ua) {
+        String cleanEmail = email == null ? "" : email.trim().toLowerCase();
+
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>()
+                .eq(User::getEmail, cleanEmail)
+                .last("LIMIT 1"));
+        if (user == null) {
+            throw new RuntimeException("该邮箱未注册，请先注册账号");
+        }
+        if (user.getStatus() != null && user.getStatus() == 0) {
+            throw new RuntimeException("账号已被禁用");
+        }
+
+        // 更新登录信息
+        user.setLastLoginAt(LocalDateTime.now());
+        user.setLastLoginIp(ip);
+        userMapper.updateById(user);
+
+        // 创建会话
+        UserSession session = createSession(user.getId(), ip, ua);
+
+        // 记录日志
+        logActivity(user.getId(), "login-by-email", "", "{\"ip\":\"" + ip + "\"}", ip);
 
         return buildUserInfo(user, session);
     }

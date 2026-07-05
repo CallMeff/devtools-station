@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">喝水提醒器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/themes.css">
+    <style>
+        :root {
+            --bg-primary:#0a0a0b;--bg-secondary:#111114;--bg-tertiary:#1a1a1e;
+            --text-primary:#fafafa;--text-secondary:#a1a1aa;--text-muted:#71717a;
+            --border-color:rgba(255,255,255,0.06);--accent:#6366f1;
+        }
+        html.theme-sunrise { --bg-primary:#fffdf7;--bg-secondary:#fef9ef;--bg-tertiary:#fef3d7;
+            --text-primary:#2d1f0c;--text-secondary:#6b5a3e;--text-muted:#9e8a6b;
+            --border-color:rgba(180,140,80,0.12); }
+        html.theme-ocean { --bg-primary:#0a1628;--bg-secondary:#0f1f3a;--bg-tertiary:#162a4a;
+            --text-primary:#e0f0ff;--text-secondary:#a0c8e8;--text-muted:#5a8aaa;
+            --border-color:rgba(100,180,255,0.08); }
+        html.theme-forest { --bg-primary:#0a1508;--bg-secondary:#0f1f0c;--bg-tertiary:#1a2e14;
+            --text-primary:#e8f5e0;--text-secondary:#a0c898;--text-muted:#5a8850;
+            --border-color:rgba(80,180,60,0.08); }
+        html.theme-cyberpunk { --bg-primary:#0a0a0a;--bg-secondary:#0f0a1a;--bg-tertiary:#1a0a2e;
+            --text-primary:#f0e0ff;--text-secondary:#c0a0e0;--text-muted:#8060a0;
+            --border-color:rgba(180,100,255,0.12); }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 25%, #e1bee7 50%, #f3e5f5 75%, #fce4ec 100%);
+            background-size: 400% 400%;
+            animation: bgShift 15s ease infinite;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px; color: #4a2040; overflow-x: hidden;
+        }
+        @keyframes bgShift {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        html[class*="theme-"] body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        .container { max-width: 500px; width: 100%; position: relative; z-index: 1; }
+        h1 {
+            text-align: center; font-size: 1.8em; margin-bottom: 4px;
+            background: linear-gradient(135deg, #e91e63, #9c27b0, #3f51b5);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle { text-align: center; color: #ad1457; font-size: 0.95em; margin-bottom: 24px; opacity: 0.8; }
+        html[class*="theme-"] .subtitle { color: var(--text-secondary); }
+
+        /* 大杯子 */
+        .cup-section {
+            display: flex; justify-content: center; align-items: center;
+            margin: 10px 0 20px; position: relative;
+        }
+        .cup-wrapper { position: relative; width: 180px; height: 200px; }
+        .cup-svg { width: 100%; height: 100%; }
+        .cup-body { fill: rgba(255,255,255,0.85); stroke: #e91e63; stroke-width: 3; }
+        .cup-water {
+            fill: url(#waterGrad); transition: y 0.8s cubic-bezier(0.4,0,0.2,1), height 0.8s cubic-bezier(0.4,0,0.2,1);
+        }
+        .water-wave { animation: wave 2s ease-in-out infinite; }
+        @keyframes wave {
+            0%,100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
+        }
+        .cup-straw { stroke: #ff80ab; stroke-width: 3; fill: none; stroke-linecap: round; }
+        .cup-bubble { fill: #f48fb1; opacity: 0.7; animation: bubbleFloat 2s ease-in-out infinite; }
+        .cup-bubble:nth-child(2) { animation-delay: -0.6s; }
+        .cup-bubble:nth-child(3) { animation-delay: -1.2s; }
+        @keyframes bubbleFloat {
+            0%,100% { transform: translateY(0); opacity: 0.3; }
+            50% { transform: translateY(-8px); opacity: 0.8; }
+        }
+
+        /* 进度 */
+        .progress-section { margin-bottom: 20px; }
+        .progress-label {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px; font-weight: 600;
+        }
+        .progress-bar-outer {
+            height: 28px; background: rgba(255,255,255,0.6);
+            border-radius: 14px; overflow: hidden;
+            border: 2px solid #f48fb1; position: relative;
+        }
+        html[class*="theme-"] .progress-bar-outer { background: var(--bg-tertiary); }
+        .progress-bar-inner {
+            height: 100%; border-radius: 12px;
+            background: linear-gradient(90deg, #80deea, #4dd0e1, #26c6da);
+            transition: width 0.5s ease; display: flex; align-items: center;
+            justify-content: center; color: #fff; font-size: 0.8em;
+            font-weight: 700; min-width: 0;
+        }
+        .target-info { text-align: center; font-size: 0.9em; color: #ad1457; margin-top: 6px; }
+        html[class*="theme-"] .target-info { color: var(--text-secondary); }
+
+        /* 水杯格子 */
+        .cups-grid {
+            display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+            margin-bottom: 20px;
+        }
+        .cup-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: rgba(255,255,255,0.7); border: 2px solid #f48fb1;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5em; cursor: pointer; transition: all 0.3s ease;
+            user-select: none; position: relative;
+        }
+        html[class*="theme-"] .cup-icon { background: var(--bg-tertiary); border-color: var(--border-color); }
+        .cup-icon:hover { transform: scale(1.1); border-color: #e91e63; }
+        .cup-icon.filled {
+            background: linear-gradient(135deg, #80deea, #4dd0e1);
+            border-color: #00bcd4; color: #fff;
+        }
+        .cup-icon.filled::after {
+            content: '✓'; position: absolute; top: -4px; right: -4px;
+            background: #e91e63; color: #fff; border-radius: 50%;
+            width: 16px; height: 16px; font-size: 10px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* 按钮 */
+        .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+        .btn {
+            padding: 10px 22px; border-radius: 25px; border: none;
+            font-size: 0.95em; font-weight: 600; cursor: pointer;
+            transition: all 0.3s ease; font-family: inherit;
+        }
+        .btn-drink {
+            background: linear-gradient(135deg, #4dd0e1, #26c6da);
+            color: #fff; box-shadow: 0 4px 15px rgba(0,188,212,0.35);
+        }
+        .btn-drink:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,188,212,0.5); }
+        .btn-undo {
+            background: rgba(255,255,255,0.7); color: #ad1457; border: 2px solid #f48fb1;
+        }
+        html[class*="theme-"] .btn-undo { background: var(--bg-tertiary); color: var(--text-primary); }
+        .btn-undo:hover { background: rgba(255,205,210,0.5); }
+        .btn-settings {
+            background: rgba(255,255,255,0.7); color: #ad1457; border: 2px solid #f48fb1;
+        }
+        html[class*="theme-"] .btn-settings { background: var(--bg-tertiary); color: var(--text-primary); }
+
+        /* 提醒 */
+        .reminder-section {
+            background: rgba(255,255,255,0.7); border-radius: 20px;
+            padding: 16px; margin-bottom: 16px;
+            border: 2px solid rgba(244,143,177,0.3);
+            display: flex; align-items: center; gap: 12px;
+            backdrop-filter: blur(10px);
+        }
+        html[class*="theme-"] .reminder-section { background: var(--bg-tertiary); border-color: var(--border-color); }
+        .reminder-status { font-size: 2em; flex-shrink: 0; }
+        .reminder-info { flex: 1; }
+        .reminder-title { font-weight: 700; margin-bottom: 4px; }
+        .reminder-detail { font-size: 0.85em; color: #ad1457; }
+        html[class*="theme-"] .reminder-detail { color: var(--text-secondary); }
+        .btn-toggle {
+            padding: 8px 16px; border-radius: 20px; border: none;
+            font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+        }
+        .btn-toggle.on { background: #4caf50; color: #fff; }
+        .btn-toggle.off { background: #e0e0e0; color: #666; padding: 8px 22px; }
+
+        /* 设置面板 */
+        .settings-panel {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            background: #fff; border-radius: 24px; padding: 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2); z-index: 100;
+            width: 90%; max-width: 380px; display: none;
+            border: 2px solid #f48fb1;
+        }
+        .settings-panel.show { display: block; }
+        .settings-panel h3 {
+            text-align: center; margin-bottom: 16px;
+            background: linear-gradient(135deg, #e91e63, #9c27b0);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .setting-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px;
+        }
+        .setting-row label { font-weight: 600; color: #4a2040; }
+        .setting-row input[type="number"], .setting-row select {
+            width: 80px; padding: 6px 10px; border: 2px solid #f48fb1;
+            border-radius: 10px; text-align: center; font-size: 0.95em;
+            background: #fce4ec; color: #4a2040; font-family: inherit;
+        }
+        .btn-save {
+            width: 100%; padding: 12px; border-radius: 25px; border: none;
+            background: linear-gradient(135deg, #e91e63, #9c27b0);
+            color: #fff; font-size: 1em; font-weight: 700; cursor: pointer;
+            margin-top: 8px; transition: all 0.3s ease;
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(233,30,99,0.4); }
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+            z-index: 99; display: none;
+        }
+        .overlay.show { display: block; }
+
+        /* toast */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #4dd0e1, #00bcd4);
+            color: #fff; padding: 12px 28px; border-radius: 25px;
+            font-weight: 600; font-size: 1em; z-index: 200;
+            box-shadow: 0 8px 30px rgba(0,188,212,0.4);
+            animation: toastIn 0.4s ease, toastOut 0.4s ease 2s forwards;
+            white-space: nowrap;
+        }
+        @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(-20px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+        @keyframes toastOut { from { opacity:1; } to { opacity:0; transform: translateX(-50%) translateY(-20px); } }
+
+        /* 统计数据 */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.7); border-radius: 16px;
+            padding: 14px 10px; text-align: center;
+            border: 2px solid rgba(244,143,177,0.2);
+            backdrop-filter: blur(10px);
+        }
+        html[class*="theme-"] .stat-card { background: var(--bg-tertiary); border-color: var(--border-color); }
+        .stat-value { font-size: 1.6em; font-weight: 700; color: #4dd0e1; }
+        .stat-label { font-size: 0.8em; color: #ad1457; margin-top: 2px; }
+        html[class*="theme-"] .stat-label { color: var(--text-secondary); }
+
+        /* 装饰粒子 */
+        .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        .particle {
+            position: absolute; font-size: 1.3em; opacity: 0;
+            animation: particleFloat 8s ease-in-out infinite;
+        }
+        @keyframes particleFloat {
+            0% { opacity: 0; transform: translateY(100vh) rotate(0deg); }
+            20% { opacity: 0.6; }
+            80% { opacity: 0.6; }
+            100% { opacity: 0; transform: translateY(-20vh) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="container">
+    <h1>💧 喝水提醒器</h1>
+    <p class="subtitle">记得多喝水哦，今天也是元气满满的一天～</p>
+
+    <!-- 大杯子动画 -->
+    <div class="cup-section">
+        <div class="cup-wrapper">
+            <svg class="cup-svg" viewBox="0 0 180 200">
+                <defs>
+                    <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#80deea" stop-opacity="0.8"/>
+                        <stop offset="100%" stop-color="#00bcd4" stop-opacity="0.95"/>
+                    </linearGradient>
+                </defs>
+                <!-- 杯子轮廓 -->
+                <path d="M50 50 L50 160 Q50 180 70 180 L110 180 Q130 180 130 160 L130 50 Z" class="cup-body"/>
+                <!-- 水位 -->
+                <rect id="waterLevel" class="cup-water water-wave" x="52" y="130" width="76" height="48" rx="4"/>
+                <!-- 吸管 -->
+                <line x1="100" y1="30" x2="110" y2="90" class="cup-straw" stroke-dasharray="2,2"/>
+                <!-- 泡泡 -->
+                <circle cx="70" cy="120" r="4" class="cup-bubble"/>
+                <circle cx="85" cy="105" r="3" class="cup-bubble"/>
+                <circle cx="75" cy="95" r="5" class="cup-bubble"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value" id="todayCount">0</div>
+            <div class="stat-label">今日已喝(杯)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalML">0</div>
+            <div class="stat-label">毫升(ml)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="streak">0</div>
+            <div class="stat-label">🔥 连续天数</div>
+        </div>
+    </div>
+
+    <!-- 进度条 -->
+    <div class="progress-section">
+        <div class="progress-label">
+            <span>今日饮水进度</span>
+            <span id="progressText">0/8 杯</span>
+        </div>
+        <div class="progress-bar-outer">
+            <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
+        </div>
+        <div class="target-info" id="targetMsg">今天还要喝 8 杯哦～加油！💪</div>
+    </div>
+
+    <!-- 水杯格子 -->
+    <div class="cups-grid" id="cupsGrid"></div>
+
+    <!-- 操作按钮 -->
+    <div class="btn-row">
+        <button class="btn btn-drink" onclick="addDrink()">💧 喝一杯！</button>
+        <button class="btn btn-undo" onclick="undoDrink()">↩️ 撤回</button>
+        <button class="btn btn-settings" onclick="openSettings()">⚙️ 设置</button>
+    </div>
+
+    <!-- 提醒开关 -->
+    <div class="reminder-section">
+        <div class="reminder-status">⏰</div>
+        <div class="reminder-info">
+            <div class="reminder-title">定时喝水提醒</div>
+            <div class="reminder-detail" id="reminderDetail">每 60 分钟提醒一次</div>
+        </div>
+        <button class="btn-toggle on" id="reminderToggle" onclick="toggleReminder()">已开启</button>
+    </div>
+</div>
+
+<!-- 设置面板 -->
+<div class="overlay" id="overlay" onclick="closeSettings()"></div>
+<div class="settings-panel" id="settingsPanel">
+    <h3>⚙️ 喝水设置</h3>
+    <div class="setting-row">
+        <label>每日目标(杯)</label>
+        <input type="number" id="setDailyGoal" min="4" max="20" value="8">
+    </div>
+    <div class="setting-row">
+        <label>每杯容量(ml)</label>
+        <input type="number" id="setCupML" min="100" max="500" step="50" value="250">
+    </div>
+    <div class="setting-row">
+        <label>提醒间隔(分)</label>
+        <select id="setInterval">
+            <option value="30">30 分钟</option>
+            <option value="45">45 分钟</option>
+            <option value="60" selected>60 分钟</option>
+            <option value="90">90 分钟</option>
+            <option value="120">120 分钟</option>
+        </select>
+    </div>
+    <button class="btn-save" onclick="saveSettings()">💾 保存设置</button>
+</div>
+
+<script>
+(function(){
+    'use strict';
+
+    const STORAGE_KEY = 'water-reminder-data';
+    let data = loadData();
+    let reminderTimer = null;
+    let reminderActive = true;
+
+    function loadData(){
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if(stored) return JSON.parse(stored);
+        return {
+            dailyGoal: 8,
+            cupML: 250,
+            intervalMin: 60,
+            today: getDateStr(),
+            count: 0,
+            streak: 0,
+            lastDate: null,
+            reminderOn: true
+        };
+    }
+
+    function saveData(){
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function getDateStr(){
+        return new Date().toISOString().slice(0,10);
+    }
+
+    function resetIfNewDay(){
+        const today = getDateStr();
+        if(data.today !== today){
+            if(data.lastDate){
+                const last = new Date(data.lastDate);
+                const now = new Date(today);
+                const diff = Math.round((now - last) / 86400000);
+                if(diff === 1 && data.count >= data.dailyGoal){
+                    data.streak++;
+                } else if(diff > 1){
+                    data.streak = 0;
+                }
+            }
+            data.today = today;
+            data.lastDate = data.today;
+            data.count = 0;
+            saveData();
+        }
+    }
+
+    function updateUI(){
+        const pct = Math.min(100, Math.round(data.count / data.dailyGoal * 100));
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('progressBar').textContent = pct >= 10 ? pct + '%' : '';
+        document.getElementById('progressText').textContent = data.count + '/' + data.dailyGoal + ' 杯';
+        document.getElementById('todayCount').textContent = data.count;
+        document.getElementById('totalML').textContent = data.count * data.cupML;
+        document.getElementById('streak').textContent = data.streak;
+
+        const left = data.dailyGoal - data.count;
+        if(left <= 0){
+            document.getElementById('targetMsg').textContent = '🎉 太棒了！今日目标达成！';
+        } else if(left <= 2){
+            document.getElementById('targetMsg').textContent = '就差 ' + left + ' 杯啦，继续加油！🔥';
+        } else {
+            document.getElementById('targetMsg').textContent = '今天还要喝 ' + left + ' 杯哦～加油！💪';
+        }
+
+        // 水杯格子
+        const grid = document.getElementById('cupsGrid');
+        grid.innerHTML = '';
+        for(let i = 1; i <= data.dailyGoal; i++){
+            const cup = document.createElement('div');
+            cup.className = 'cup-icon' + (i <= data.count ? ' filled' : '');
+            cup.textContent = i <= data.count ? '💙' : '🤍';
+            cup.title = '第 ' + i + ' 杯';
+            cup.addEventListener('click', function(){
+                if(i <= data.count){
+                    undoDrinkTo(i - 1);
+                } else if(i === data.count + 1){
+                    addDrink();
+                }
+            });
+            grid.appendChild(cup);
+        }
+
+        // 水位动画
+        const waterY = 178 - (pct / 100) * 128;
+        const waterH = (pct / 100) * 128;
+        const wl = document.getElementById('waterLevel');
+        wl.setAttribute('y', waterY);
+        wl.setAttribute('height', waterH);
+
+        // 提醒状态
+        const rToggle = document.getElementById('reminderToggle');
+        const rDetail = document.getElementById('reminderDetail');
+        if(data.reminderOn && reminderActive){
+            rToggle.textContent = '已开启';
+            rToggle.className = 'btn-toggle on';
+            rDetail.textContent = '每 ' + data.intervalMin + ' 分钟提醒一次';
+        } else {
+            rToggle.textContent = '已关闭';
+            rToggle.className = 'btn-toggle off';
+            rDetail.textContent = '提醒功能已暂停';
+        }
+    }
+
+    window.addDrink = function(){
+        if(data.count >= data.dailyGoal){
+            showToast('🎉 今日目标已达成！你好棒！');
+            return;
+        }
+        data.count++;
+        saveData();
+        updateUI();
+        if(data.count >= data.dailyGoal){
+            showToast('🎉 恭喜！今日饮水目标达成！');
+        } else {
+            showToast('💙 又喝了一杯！还差 ' + (data.dailyGoal - data.count) + ' 杯达标～');
+        }
+    };
+
+    window.undoDrink = function(){
+        if(data.count <= 0) { showToast('已经没有可以撤回的啦～'); return; }
+        data.count--;
+        saveData();
+        updateUI();
+        showToast('🔄 已撤回一杯');
+    };
+
+    window.undoDrinkTo = function(n){
+        const old = data.count;
+        data.count = Math.max(0, n);
+        saveData();
+        updateUI();
+        if(old !== data.count) showToast('🔄 已调整到 ' + data.count + ' 杯');
+    };
+
+    window.openSettings = function(){
+        document.getElementById('setDailyGoal').value = data.dailyGoal;
+        document.getElementById('setCupML').value = data.cupML;
+        document.getElementById('setInterval').value = String(data.intervalMin);
+        document.getElementById('settingsPanel').classList.add('show');
+        document.getElementById('overlay').classList.add('show');
+    };
+
+    window.closeSettings = function(){
+        document.getElementById('settingsPanel').classList.remove('show');
+        document.getElementById('overlay').classList.remove('show');
+    };
+
+    window.saveSettings = function(){
+        data.dailyGoal = parseInt(document.getElementById('setDailyGoal').value) || 8;
+        data.cupML = parseInt(document.getElementById('setCupML').value) || 250;
+        data.intervalMin = parseInt(document.getElementById('setInterval').value) || 60;
+        saveData();
+        closeSettings();
+        updateUI();
+        setupReminder();
+        showToast('✅ 设置已保存！');
+    };
+
+    window.toggleReminder = function(){
+        data.reminderOn = !data.reminderOn;
+        reminderActive = data.reminderOn;
+        saveData();
+        updateUI();
+        if(reminderActive){
+            setupReminder();
+            showToast('⏰ 提醒已开启');
+        } else {
+            clearInterval(reminderTimer);
+            showToast('⏰ 提醒已关闭');
+        }
+    };
+
+    function setupReminder(){
+        clearInterval(reminderTimer);
+        if(!data.reminderOn) return;
+        reminderActive = true;
+        const ms = data.intervalMin * 60 * 1000;
+        reminderTimer = setInterval(function(){
+            if(data.count < data.dailyGoal && document.visibilityState === 'visible'){
+                showToast('💧 该喝水啦！已经 ' + data.intervalMin + ' 分钟了哦～');
+            }
+            if('Notification' in window && Notification.permission === 'granted'){
+                new Notification('💧 喝水提醒', {
+                    body: '已经 ' + data.intervalMin + ' 分钟了，该喝水啦！',
+                    icon: '/favicon.svg'
+                });
+            }
+        }, ms);
+    }
+
+    function showToast(msg){
+        const existing = document.querySelector('.toast');
+        if(existing) existing.remove();
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(function(){ el.remove(); }, 2400);
+    }
+
+    function createParticles(){
+        const container = document.getElementById('particles');
+        const emojis = ['💧','💙','🫧','💦','✨','🌸'];
+        for(let i = 0; i < 10; i++){
+            const p = document.createElement('span');
+            p.className = 'particle';
+            p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDelay = Math.random() * 8 + 's';
+            p.style.animationDuration = (6 + Math.random() * 10) + 's';
+            p.style.fontSize = (0.8 + Math.random() * 1.5) + 'em';
+            container.appendChild(p);
+        }
+    }
+
+    // 请求通知权限
+    if('Notification' in window && Notification.permission === 'default'){
+        setTimeout(function(){ Notification.requestPermission(); }, 5000);
+    }
+
+    resetIfNewDay();
+    createParticles();
+    updateUI();
+    setupReminder();
+})();
+</script>
+</body>
+</html>

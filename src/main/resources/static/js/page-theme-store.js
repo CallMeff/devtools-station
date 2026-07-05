@@ -35,34 +35,25 @@
         }, 2500);
     }
 
-    // ============ 预览主题（临时预览，不保存） ============
+    // ============ 预览主题（跳转到首页，2分钟后自动恢复） ============
     function previewTheme(theme) {
         if (!window.DevTheme || !window.DevTheme.set) return;
 
-        // 保存当前主题作为原始主题（仅首次预览时保存）
-        if (!previewOriginalTheme) {
-            previewOriginalTheme = window.DevTheme.get();
-        }
+        var originalTheme = window.DevTheme.get();
+        if (originalTheme === theme.themeKey) return; // 已经是该主题
 
-        // 临时应用新主题（不保存到 localStorage）
-        var current = window.DevTheme.get();
-        // 如果已经在预览这个主题，则不做任何事
-        if (current === theme.themeKey) return;
+        // 写入预览状态到 localStorage（首页 theme.js 会读取）
+        var previewData = {
+            themeKey: theme.themeKey,
+            themeName: theme.name,
+            themeIcon: theme.icon || '🎨',
+            originalTheme: originalTheme,
+            expiresAt: Date.now() + 2 * 60 * 1000  // 2 分钟后过期
+        };
+        localStorage.setItem('devtools_theme_preview', JSON.stringify(previewData));
 
-        // 直接修改 DOM 类而不调用 setTheme（setTheme 会保存）
-        [document.documentElement, document.body].forEach(function(el) {
-            el.className = el.className.replace(/theme-\w+/g, '').trim();
-            el.classList.add('theme-' + theme.themeKey);
-        });
-
-        // 更新下拉列表中的选中状态
-        var options = document.querySelectorAll('.theme-option');
-        options.forEach(function(opt) {
-            opt.classList.toggle('active', opt.getAttribute('data-theme') === theme.themeKey);
-        });
-
-        // 显示预览通知栏
-        showPreviewBar(theme);
+        // 跳转到首页体验完整预览
+        window.location.href = '/';
     }
 
     // ============ 退出预览，恢复原主题 ============

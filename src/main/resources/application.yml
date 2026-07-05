@@ -1,4 +1,4 @@
-# DevTools Station - 应用配置
+﻿# DevTools Station - 应用配置
 server:
   port: 8088
   servlet:
@@ -6,6 +6,8 @@ server:
       charset: UTF-8
       enabled: true
       force: true
+  tomcat:
+    max-http-form-post-size: 50MB
 
 spring:
   application:
@@ -16,8 +18,8 @@ spring:
   # 文件上传配置
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 50MB
+      max-request-size: 50MB
   # Thymeleaf 配置
   thymeleaf:
     prefix: classpath:/templates/
@@ -40,6 +42,11 @@ app:
     token-secret: ${APP_TOKEN_SECRET:DevTools!Station@2026#SecureKey}
     # 密码最小长度
     password-min-length: 8
+  # CodeBuddy API 配置（密钥仅存储在服务端，绝不暴露给前端）
+  codebuddy:
+    api-key: ${CODEBUDDY_API_KEY:ck_fr2v352gv7k0.vVzEY8eoz_Np4mRtDQYmRTTkrCmSnPl7R8FF_Jp42Og}
+    base-url: ${CODEBUDDY_API_BASE:https://api.codebuddy.ai}
+    upload-dir: ${CODEBUDDY_UPLOAD_DIR:./data/pets-custom}
 
 # MyBatis Plus 配置
 mybatis-plus:
@@ -73,7 +80,7 @@ logging:
     org.springframework: warn
 
 ---
-# MySQL 生产环境配置（激活方式: --spring.profiles.active=prod）
+# MySQL 生产环境配置（默认激活）
 spring:
   config:
     activate:
@@ -129,9 +136,7 @@ spring:
       path: /h2-console
   sql:
     init:
-      mode: always
-      schema-locations: classpath:db/schema.sql
-      data-locations: classpath:db/data.sql
+      mode: never
       continue-on-error: true
       encoding: UTF-8
   mail:

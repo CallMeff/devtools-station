@@ -1,0 +1,324 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">日期计算器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        :root{--bg-primary:#1a1a2e;--bg-secondary:#1e1e2e;--bg-tertiary:#2a2a3a;--border-color:#333;--text-primary:#ddd;--text-secondary:#aaa;--text-muted:#888;--accent-color:#6366f1;--accent-light:#a5b4fc;--success-color:#22c55e;--warning-color:#f59e0b}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary);border-bottom:1px solid var(--border-color);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent-color);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary);font-size:14px}
+
+        .page-content{flex:1;max-width:860px;margin:0 auto;width:100%;padding:20px}
+        .card{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:12px;padding:20px;margin-bottom:16px}
+        .card h3{font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+
+        .tabs{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border-color);margin-bottom:16px}
+        .tab{flex:1;padding:10px 0;text-align:center;font-size:13px;font-weight:600;cursor:pointer;background:var(--bg-tertiary);color:var(--text-muted);border:none;transition:all .15s}
+        .tab.active{background:var(--accent-color);color:#fff}
+        .tab:hover:not(.active){color:var(--text-primary)}
+
+        .form-group{margin-bottom:14px}
+        .form-group label{display:block;font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+        .form-group label .hint{font-weight:400;color:var(--text-muted);font-size:11px;margin-left:4px}
+        input[type=date],input[type=text],input[type=number],select{padding:10px 12px;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:14px;font-family:inherit;transition:border-color .15s;outline:none}
+        input:focus,select:focus{border-color:var(--accent-color)}
+        input[type=date]{width:100%;max-width:250px}
+        input[type=number]{width:80px;text-align:center}
+        select{min-width:100px}
+
+        .input-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+        .formula-display{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg-tertiary);border-radius:8px;font-size:14px;flex-wrap:wrap}
+
+        .result-big{text-align:center;padding:24px 16px}
+        .result-big .number{font-size:48px;font-weight:800;color:var(--accent-light);line-height:1}
+        .result-big .unit{font-size:14px;color:var(--text-muted);margin-top:6px}
+        .result-big .detail{font-size:13px;color:var(--text-secondary);margin-top:8px}
+
+        .info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+        .info-chip{display:flex;flex-direction:column;gap:4px;padding:12px;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:10px;transition:border-color .15s}
+        .info-chip:hover{border-color:var(--accent-color)}
+        .info-chip .chip-label{font-size:11px;color:var(--text-muted);text-transform:uppercase}
+        .info-chip .chip-value{font-size:16px;font-weight:700;color:var(--accent-light)}
+        .info-chip.highlight{border-color:var(--accent-color);background:rgba(99,102,241,.08)}
+
+        .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+        .btn{padding:10px 20px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:6px}
+        .btn:hover{background:var(--accent-color);border-color:var(--accent-color);color:#fff}
+        .btn.primary{background:var(--accent-color);border-color:var(--accent-color);color:#fff}
+        .btn.primary:hover{opacity:.9}
+
+        .history-list{max-height:200px;overflow-y:auto}
+        .history-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border-color);font-size:13px;cursor:pointer;transition:background .15s}
+        .history-item:hover{background:var(--bg-tertiary)}
+        .history-item .ts{color:var(--text-muted);font-size:11px}
+
+        .copied-toast{position:fixed;top:50px;left:50%;transform:translateX(-50%);background:var(--success-color);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+        .copied-toast.show{opacity:1}
+
+        @media(max-width:640px){.page-content{padding:12px}.info-grid{grid-template-columns:repeat(2,1fr)}.input-row{flex-direction:column;align-items:stretch}}
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <div class="brand">
+        <a href="/">⚡ DevTools</a>
+        <span class="sep">/</span>
+        <span class="tool-name" th:text="${tool.name}">日期计算器</span>
+    </div>
+</div>
+
+<div class="page-content">
+    <div class="tabs" id="mainTabs">
+        <button class="tab active" data-tab="diff">📅 日期差计算</button>
+        <button class="tab" data-tab="add">➕ 日期加减</button>
+        <button class="tab" data-tab="info">📋 日期信息</button>
+    </div>
+
+    <!-- Tab 1: Date Difference -->
+    <div id="tabDiff">
+        <div class="card">
+            <h3>选择两个日期</h3>
+            <div class="input-row">
+                <div class="form-group">
+                    <label>开始日期 <span class="hint">较早的日期</span></label>
+                    <input type="date" id="diffStart" onchange="calcDiff()">
+                </div>
+                <span style="font-size:20px;color:var(--text-muted);align-self:center;margin-top:10px">→</span>
+                <div class="form-group">
+                    <label>结束日期 <span class="hint">较晚的日期</span></label>
+                    <input type="date" id="diffEnd" onchange="calcDiff()">
+                </div>
+            </div>
+            <button class="btn primary" onclick="calcDiff()" style="margin-top:8px">🔄 计算天数差</button>
+        </div>
+
+        <div class="card" id="diffResultCard" style="display:none">
+            <h3>计算结果</h3>
+            <div class="result-big" id="diffResult"></div>
+            <div class="info-grid" id="diffDetail"></div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Date Add/Subtract -->
+    <div id="tabAdd" style="display:none">
+        <div class="card">
+            <h3>日期加减运算</h3>
+            <div class="formula-display" style="margin-bottom:14px">
+                <span style="color:var(--text-muted)">从</span>
+                <input type="date" id="addBase" onchange="calcAdd()">
+                <select id="addOp" onchange="calcAdd()">
+                    <option value="add">➕ 加</option>
+                    <option value="sub">➖ 减</option>
+                </select>
+                <input type="number" id="addNum" value="7" min="0" max="99999" onchange="calcAdd()" oninput="calcAdd()">
+                <select id="addUnit" onchange="calcAdd()">
+                    <option value="days">天</option>
+                    <option value="weeks">周</option>
+                    <option value="months">月</option>
+                    <option value="years">年</option>
+                </select>
+            </div>
+            <div class="result-big" id="addResult" style="padding:16px">
+                <span style="color:var(--text-muted);font-size:14px">结果日期：</span>
+                <span class="number" id="addResultDate" style="font-size:32px">--</span>
+                <div class="detail" id="addResultDetail"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Date Info -->
+    <div id="tabInfo" style="display:none">
+        <div class="card">
+            <h3>查询日期信息</h3>
+            <div class="input-row">
+                <div class="form-group">
+                    <label>选择日期</label>
+                    <input type="date" id="infoDate" onchange="calcInfo()">
+                </div>
+                <button class="btn primary" onclick="calcInfo()" style="align-self:flex-end">🔍 查询</button>
+            </div>
+        </div>
+
+        <div class="card" id="infoResultCard" style="display:none">
+            <h3>日期详情</h3>
+            <div class="info-grid" id="infoGrid"></div>
+        </div>
+    </div>
+
+    <div class="card" id="historyCard" style="display:none">
+        <h3 style="display:flex;justify-content:space-between;align-items:center">
+            📜 历史记录
+            <button class="btn" onclick="clearHistory()" style="padding:4px 10px;font-size:11px">清空</button>
+        </h3>
+        <div class="history-list" id="historyList"></div>
+    </div>
+</div>
+
+<div class="copied-toast" id="toast"></div>
+
+<script>
+// ===== UTILS =====
+function fmt(d){return d.toISOString().split('T')[0]}
+function fmtCN(d){return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日'}
+function isLeap(y){return (y%4===0&&y%100!==0)||y%400===0}
+function daysInMonth(y,m){return new Date(y,m+1,0).getDate()}
+function dayName(d){return['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][d.getDay()]}
+function weekNum(d){
+    var d2=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+    var dayNum=d2.getUTCDay()||7;d2.setUTCDate(d2.getUTCDate()+4-dayNum);
+    var yearStart=new Date(Date.UTC(d2.getUTCFullYear(),0,1));
+    return Math.ceil(((d2-yearStart)/86400000+1)/7);
+}
+
+// ===== INIT =====
+var today=new Date();
+document.getElementById('diffStart').value=fmt(new Date(today.getFullYear(),today.getMonth(),1));
+document.getElementById('diffEnd').value=fmt(today);
+document.getElementById('addBase').value=fmt(today);
+document.getElementById('infoDate').value=fmt(today);
+
+// ===== TAB SWITCHING =====
+document.getElementById('mainTabs').addEventListener('click',function(e){
+    if(!e.target.classList.contains('tab'))return;
+    document.querySelectorAll('#mainTabs .tab').forEach(function(t){t.classList.remove('active')});
+    e.target.classList.add('active');
+    var tab=e.target.dataset.tab;
+    document.getElementById('tabDiff').style.display=tab==='diff'?'':'none';
+    document.getElementById('tabAdd').style.display=tab==='add'?'':'none';
+    document.getElementById('tabInfo').style.display=tab==='info'?'':'none';
+});
+
+// ===== TAB 1: DATE DIFFERENCE =====
+function calcDiff(){
+    var s=new Date(document.getElementById('diffStart').value+'T00:00:00');
+    var e=new Date(document.getElementById('diffEnd').value+'T00:00:00');
+    if(isNaN(s.getTime())||isNaN(e.getTime()))return;
+
+    var diffMs=e-s;
+    var diffDays=Math.round(diffMs/86400000);
+    var absDays=Math.abs(diffDays);
+    var diffWeeks=(absDays/7).toFixed(1);
+    var diffMonths=(absDays/30.44).toFixed(1);
+    var diffYears=(absDays/365.25).toFixed(2);
+
+    var card=document.getElementById('diffResultCard');
+    var result=document.getElementById('diffResult');
+    card.style.display='';
+
+    var cls=diffDays>=0?'var(--success-color)':'var(--warning-color)';
+    result.innerHTML='<div class="number" style="color:'+cls+'">'+absDays.toLocaleString()+'</div><div class="unit">天</div><div class="detail">'+(diffDays>=0?'相差':'超前')+' '+absDays+' 天</div>';
+
+    document.getElementById('diffDetail').innerHTML=[
+        {l:'周数',v:diffWeeks+' 周'},
+        {l:'月数',v:diffMonths+' 月'},
+        {l:'年数',v:diffYears+' 年'},
+        {l:'小时数',v:(absDays*24).toLocaleString()+' 小时'},
+        {l:'起始日期',v:fmtCN(s)},
+        {l:'结束日期',v:fmtCN(e)},
+    ].map(function(it){return '<div class="info-chip"><span class="chip-label">'+it.l+'</span><span class="chip-value">'+it.v+'</span></div>'}).join('');
+
+    addHistory('日期差',fmtCN(s)+' → '+fmtCN(e)+' = '+absDays+' 天');
+}
+
+// ===== TAB 2: DATE ADD/SUBTRACT =====
+function calcAdd(){
+    var base=new Date(document.getElementById('addBase').value+'T00:00:00');
+    if(isNaN(base.getTime()))return;
+
+    var op=document.getElementById('addOp').value;
+    var num=parseInt(document.getElementById('addNum').value)||0;
+    var unit=document.getElementById('addUnit').value;
+
+    var result=new Date(base);
+    var desc;
+
+    if(op==='sub')num=-num;
+
+    switch(unit){
+        case 'days':result.setDate(result.getDate()+num);desc=(num>=0?'+':'')+num+' 天';break;
+        case 'weeks':result.setDate(result.getDate()+num*7);desc=(num>=0?'+':'')+num+' 周 ('+(num*7)+' 天)';break;
+        case 'months':result.setMonth(result.getMonth()+num);desc=(num>=0?'+':'')+num+' 个月';break;
+        case 'years':result.setFullYear(result.getFullYear()+num);desc=(num>=0?'+':'')+num+' 年';break;
+    }
+
+    document.getElementById('addResultDate').textContent=fmtCN(result);
+    document.getElementById('addResultDetail').textContent=desc+' = '+fmt(result)+' ('+dayName(result)+')';
+
+    addHistory('日期'+(op==='add'?'加':'减'),fmtCN(base)+' '+(op==='add'?'+':'-')+' '+Math.abs(num)+' '+unit+' = '+fmtCN(result));
+}
+
+// ===== TAB 3: DATE INFO =====
+function calcInfo(){
+    var d=new Date(document.getElementById('infoDate').value+'T00:00:00');
+    if(isNaN(d.getTime()))return;
+
+    document.getElementById('infoResultCard').style.display='';
+
+    var y=d.getFullYear();
+    var m=d.getMonth();
+
+    var items=[
+        {l:'日期',v:fmtCN(d)},
+        {l:'星期',v:dayName(d)},
+        {l:'年第几周',v:'第 '+weekNum(d)+' 周'},
+        {l:'年第几天',v:'第 '+Math.ceil((d-new Date(y,0,0))/86400000)+' 天'},
+        {l:'是否闰年',v:isLeap(y)?'✅ 闰年':'❌ 平年'},
+        {l:'本月天数',v:daysInMonth(y,m)+' 天'},
+        {l:'季度',v:'第 '+Math.floor(m/3+1)+' 季度'},
+        {l:'ISO 格式',v:fmt(d)},
+        {l:'Unix 时间戳',v:Math.floor(d.getTime()/1000)},
+        {l:'距今天数',v:(Math.round((d-today)/86400000)===0?'今天':Math.round((d-today)/86400000)>0?'还有 '+Math.round((d-today)/86400000)+' 天':'已过去 '+Math.abs(Math.round((d-today)/86400000))+' 天')},
+    ];
+
+    document.getElementById('infoGrid').innerHTML=items.map(function(it,i){
+        var cls=i<3?'info-chip highlight':'info-chip';
+        return '<div class="'+cls+'"><span class="chip-label">'+it.l+'</span><span class="chip-value">'+it.v+'</span></div>';
+    }).join('');
+
+    addHistory('日期信息',fmtCN(d)+' '+dayName(d));
+}
+
+// ===== HISTORY =====
+var MAX_HISTORY=15;
+function getHistory(){
+    try{return JSON.parse(localStorage.getItem('datecalc_history')||'[]')}catch(e){return[]}
+}
+function addHistory(type,desc){
+    var h=getHistory();
+    h.unshift({type:type,desc:desc,ts:new Date().toLocaleTimeString()});
+    if(h.length>MAX_HISTORY)h=h.slice(0,MAX_HISTORY);
+    localStorage.setItem('datecalc_history',JSON.stringify(h));
+    renderHistory();
+}
+function renderHistory(){
+    var h=getHistory();
+    var card=document.getElementById('historyCard');
+    if(!h.length){card.style.display='none';return}
+    card.style.display='';
+    document.getElementById('historyList').innerHTML=h.map(function(item){
+        return '<div class="history-item"><span>'+item.type+': '+item.desc+'</span><span class="ts">'+item.ts+'</span></div>';
+    }).join('');
+}
+function clearHistory(){
+    localStorage.removeItem('datecalc_history');
+    renderHistory();
+}
+
+// ===== INIT =====
+calcDiff();
+calcAdd();
+calcInfo();
+renderHistory();
+</script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">文字云生成器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/themes.css">
+    <style>
+        :root {
+            --bg-primary:#0a0a0b;--bg-secondary:#111114;--bg-tertiary:#1a1a1e;
+            --text-primary:#fafafa;--text-secondary:#a1a1aa;--text-muted:#71717a;
+            --border-color:rgba(255,255,255,0.06);
+        }
+        html.theme-sunrise { --bg-primary:#fffdf7;--bg-secondary:#fef9ef;--bg-tertiary:#fef3d7;
+            --text-primary:#2d1f0c;--text-secondary:#6b5a3e;--text-muted:#9e8a6b;
+            --border-color:rgba(180,140,80,0.12); }
+        html.theme-ocean { --bg-primary:#0a1628;--bg-secondary:#0f1f3a;--bg-tertiary:#162a4a;
+            --text-primary:#e0f0ff;--text-secondary:#a0c8e8;--text-muted:#5a8aaa;
+            --border-color:rgba(100,180,255,0.08); }
+        html.theme-forest { --bg-primary:#0a1508;--bg-secondary:#0f1f0c;--bg-tertiary:#1a2e14;
+            --text-primary:#e8f5e0;--text-secondary:#a0c898;--text-muted:#5a8850;
+            --border-color:rgba(80,180,60,0.08); }
+        html.theme-cyberpunk { --bg-primary:#0a0a0a;--bg-secondary:#0f0a1a;--bg-tertiary:#1a0a2e;
+            --text-primary:#f0e0ff;--text-secondary:#c0a0e0;--text-muted:#8060a0;
+            --border-color:rgba(180,100,255,0.12); }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fce4ec 0%, #f3e5f5 30%, #e8eaf6 60%, #fce4ec 100%);
+            background-size: 400% 400%;
+            animation: bgShift 12s ease infinite;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px; color: #4a1a5e; overflow-x: hidden;
+        }
+        @keyframes bgShift {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        html[class*="theme-"] body { background: var(--bg-primary); color: var(--text-primary); }
+        .container { max-width: 600px; width: 100%; position: relative; z-index: 1; }
+        h1 {
+            text-align: center; font-size: 1.7em; margin-bottom: 4px;
+            background: linear-gradient(135deg, #e91e63, #9c27b0, #3f51b5);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle { text-align: center; color: #7b1fa2; font-size: 0.9em; margin-bottom: 20px; opacity: 0.8; }
+        html[class*="theme-"] .subtitle { color: var(--text-secondary); }
+
+        .card {
+            background: rgba(255,255,255,0.8); border-radius: 24px;
+            padding: 24px; margin-bottom: 16px;
+            border: 2px solid rgba(206,147,216,0.3);
+            backdrop-filter: blur(10px);
+        }
+        html[class*="theme-"] .card { background: var(--bg-tertiary); border-color: var(--border-color); }
+
+        .input-group { margin-bottom: 14px; }
+        .input-group label { display: block; font-weight: 600; margin-bottom: 6px; color: #6a1b9a; }
+        html[class*="theme-"] .input-group label { color: var(--text-primary); }
+        .input-group textarea {
+            width: 100%; padding: 12px 16px; border: 2px solid #e1bee7;
+            border-radius: 14px; font-size: 0.95em; background: rgba(255,255,255,0.7);
+            color: #4a1a5e; font-family: inherit; outline: none; resize: vertical;
+            min-height: 100px; transition: border-color 0.3s;
+        }
+        .input-group textarea:focus { border-color: #9c27b0; box-shadow: 0 0 0 3px rgba(156,39,176,0.1); }
+
+        /* 云图预览 */
+        .cloud-preview {
+            width: 100%; min-height: 320px; background: rgba(255,255,255,0.5);
+            border-radius: 20px; border: 2px dashed #e1bee7;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden; margin-bottom: 16px;
+        }
+        html[class*="theme-"] .cloud-preview { background: var(--bg-secondary); border-color: var(--border-color); }
+        .cloud-placeholder { text-align: center; color: #ce93d8; }
+        .cloud-placeholder .big-emoji { font-size: 3em; display: block; margin-bottom: 8px; }
+        canvas { display: block; max-width: 100%; }
+
+        /* 预设 */
+        .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+        .preset-tag {
+            padding: 6px 14px; border-radius: 16px; border: 2px solid #e1bee7;
+            background: rgba(255,255,255,0.7); color: #7b1fa2;
+            font-size: 0.85em; cursor: pointer; transition: all 0.2s ease;
+            user-select: none;
+        }
+        .preset-tag:hover { border-color: #9c27b0; background: #f3e5f5; }
+
+        /* 形状选项 */
+        .shape-row { display: flex; gap: 12px; margin-bottom: 14px; }
+        .shape-btn {
+            flex: 1; padding: 10px; border-radius: 14px; border: 2px solid #e1bee7;
+            background: rgba(255,255,255,0.7); color: #7b1fa2;
+            text-align: center; cursor: pointer; transition: all 0.2s ease; font-weight: 600;
+        }
+        .shape-btn:hover { border-color: #9c27b0; }
+        .shape-btn.active { border-color: #9c27b0; background: linear-gradient(135deg, #f3e5f5, #e1bee7); }
+
+        /* 配色方案 */
+        .color-schemes { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .color-scheme {
+            display: flex; gap: 3px; padding: 4px; border-radius: 12px;
+            border: 2px solid transparent; cursor: pointer; transition: all 0.2s ease;
+        }
+        .color-scheme:hover { transform: scale(1.05); }
+        .color-scheme.active { border-color: #9c27b0; box-shadow: 0 0 0 3px rgba(156,39,176,0.15); }
+        .color-dot { width: 16px; height: 16px; border-radius: 50%; }
+
+        .btn {
+            padding: 12px 28px; border-radius: 25px; border: none;
+            font-size: 1em; font-weight: 700; cursor: pointer;
+            transition: all 0.3s ease; font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #e91e63, #9c27b0);
+            color: #fff; box-shadow: 0 4px 15px rgba(233,30,99,0.3);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(233,30,99,0.5); }
+        .btn-outline {
+            background: rgba(255,255,255,0.7); color: #7b1fa2;
+            border: 2px solid #ce93d8;
+        }
+        html[class*="theme-"] .btn-outline { background: var(--bg-tertiary); color: var(--text-primary); }
+        .btn-outline:hover { background: #f3e5f5; }
+        .btn-full { width: 100%; padding: 14px; font-size: 1.1em; margin-top: 8px; }
+        .btn-row { display: flex; gap: 10px; }
+
+        /* toast */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #9c27b0, #7c4dff);
+            color: #fff; padding: 12px 28px; border-radius: 25px;
+            font-weight: 600; font-size: 1em; z-index: 200;
+            box-shadow: 0 8px 30px rgba(156,39,176,0.4);
+            animation: toastIn 0.4s ease, toastOut 0.4s ease 2s forwards;
+            white-space: nowrap;
+        }
+        @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(-20px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+        @keyframes toastOut { from { opacity:1; } to { opacity:0; transform: translateX(-50%) translateY(-20px); } }
+
+        /* 装饰粒子 */
+        .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        .particle {
+            position: absolute; font-size: 1.3em; opacity: 0;
+            animation: particleFloat 8s ease-in-out infinite;
+        }
+        @keyframes particleFloat {
+            0% { opacity: 0; transform: translateY(100vh) rotate(0deg); }
+            20% { opacity: 0.6; }
+            80% { opacity: 0.6; }
+            100% { opacity: 0; transform: translateY(-20vh) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="container">
+    <h1>☁️ 文字云生成器</h1>
+    <p class="subtitle">把心情、名字、关键词变成漂亮文字云～</p>
+
+    <div class="card">
+        <div class="presets">
+            <span class="preset-tag" onclick="loadPreset('love')">💕 甜甜恋爱</span>
+            <span class="preset-tag" onclick="loadPreset('mood')">🌸 今日心情</span>
+            <span class="preset-tag" onclick="loadPreset('name')">👯 闺蜜名字</span>
+            <span class="preset-tag" onclick="loadPreset('dream')">✨ 梦想清单</span>
+            <span class="preset-tag" onclick="loadPreset('food')">🍰 美食天堂</span>
+        </div>
+
+        <div class="input-group">
+            <label>📝 输入文字（每行一个词，可加:权重，如"开心:5"）</label>
+            <textarea id="wordsInput" placeholder="每行一个词，例如：&#10;开心&#10;阳光&#10;奶茶&#10;旅行:5&#10;追剧&#10;闺蜜:4"></textarea>
+        </div>
+
+        <div class="input-group">
+            <label>🎭 云图形状</label>
+            <div class="shape-row" id="shapeRow">
+                <div class="shape-btn active" data-shape="circle" onclick="setShape('circle',this)">⭕ 圆形</div>
+                <div class="shape-btn" data-shape="heart" onclick="setShape('heart',this)">❤️ 爱心</div>
+                <div class="shape-btn" data-shape="star" onclick="setShape('star',this)">⭐ 星形</div>
+                <div class="shape-btn" data-shape="oval" onclick="setShape('oval',this)">☁️ 椭圆</div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>🎨 配色方案</label>
+            <div class="color-schemes" id="colorSchemes"></div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-primary" style="flex:2" onclick="generateCloud()">✨ 生成文字云</button>
+            <button class="btn btn-outline" style="flex:1" onclick="downloadCloud()">📥 下载 PNG</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="cloud-preview" id="cloudPreview">
+            <div class="cloud-placeholder" id="cloudPlaceholder">
+                <span class="big-emoji">☁️</span>
+                <p>输入文字，点击生成～</p>
+            </div>
+            <canvas id="cloudCanvas"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+    'use strict';
+
+    const COLOR_SCHEMES = [
+        { name: '🌸 粉嫩马卡龙', colors: ['#f48fb1','#ce93d8','#e91e63','#9c27b0','#f06292','#ba68c8'] },
+        { name: '🌈 彩虹糖果', colors: ['#ef5350','#ff7043','#ffca28','#66bb6a','#42a5f5','#ab47bc'] },
+        { name: '💙 海洋清风', colors: ['#29b6f6','#4dd0e1','#0288d1','#26a69a','#80cbc4','#40c4ff'] },
+        { name: '🍊 橘子汽水', colors: ['#ff7043','#ffab91','#ffcc80','#ff8a65','#ff5722','#ff6e40'] },
+        { name: '🌿 薄荷清新', colors: ['#26a69a','#66bb6a','#81c784','#4db6ac','#a5d6a7','#80cbc4'] },
+        { name: '🌙 梦幻星空', colors: ['#5c6bc0','#7e57c2','#2196f3','#673ab7','#3f51b5','#1e88e5'] }
+    ];
+
+    let currentShape = 'circle';
+    let currentSchemeIdx = 0;
+    let currentCanvasData = null;
+
+    function initColorSchemes(){
+        const container = document.getElementById('colorSchemes');
+        COLOR_SCHEMES.forEach(function(scheme, idx){
+            const div = document.createElement('div');
+            div.className = 'color-scheme' + (idx === 0 ? ' active' : '');
+            div.title = scheme.name;
+            div.onclick = function(){ selectColorScheme(idx, div); };
+            scheme.colors.forEach(function(c){
+                const dot = document.createElement('span');
+                dot.className = 'color-dot';
+                dot.style.background = c;
+                div.appendChild(dot);
+            });
+            container.appendChild(div);
+        });
+    }
+
+    window.selectColorScheme = function(idx, el){
+        currentSchemeIdx = idx;
+        document.querySelectorAll('#colorSchemes .color-scheme').forEach(function(d){ d.classList.remove('active'); });
+        el.classList.add('active');
+        if(document.getElementById('wordsInput').value.trim()) generateCloud();
+    };
+
+    window.setShape = function(shape, el){
+        currentShape = shape;
+        document.querySelectorAll('#shapeRow .shape-btn').forEach(function(b){ b.classList.remove('active'); });
+        el.classList.add('active');
+        if(document.getElementById('wordsInput').value.trim()) generateCloud();
+    };
+
+    function isInsideShape(x, y, cx, cy, r){
+        switch(currentShape){
+            case 'heart':
+                var tx = (x - cx) / r;
+                var ty = (y - cy) / r;
+                return (tx*tx + ty*ty - 1 < 0.02) && !(
+                    tx > 0 && ty > 0 && ty > tx + 0.3 ||
+                    tx < -0.5 || tx > 0.5
+                );
+            case 'star':
+                return Math.abs(x - cx) + Math.abs(y - cy) < r * 1.25;
+            case 'oval':
+                return ((x-cx)*(x-cx))/(r*r) + ((y-cy)*(y-cy))/((r*0.75)*(r*0.75)) < 1;
+            default:
+                return (x-cx)*(x-cx) + (y-cy)*(y-cy) < r*r;
+        }
+    }
+
+    window.generateCloud = function(){
+        const input = document.getElementById('wordsInput').value.trim();
+        if(!input) { showToast('请先输入一些文字哦～'); return; }
+
+        const lines = input.split('\n').filter(function(l){ return l.trim(); });
+        const words = lines.map(function(line){
+            const parts = line.split(':');
+            return {
+                text: parts[0].trim(),
+                weight: parts.length > 1 ? parseInt(parts[1]) || 3 : 3
+            };
+        });
+
+        if(!words.length) { showToast('请输入至少一个词～'); return; }
+
+        const canvas = document.getElementById('cloudCanvas');
+        const container = document.getElementById('cloudPreview');
+        const W = container.clientWidth - 20;
+        const H = 320;
+
+        canvas.width = W;
+        canvas.height = H;
+        canvas.style.display = 'block';
+
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, W, H);
+
+        const cx = W / 2, cy = H / 2, baseR = Math.min(W, H) * 0.38;
+        const colors = COLOR_SCHEMES[currentSchemeIdx].colors;
+
+        // 按权重排序
+        words.sort(function(a,b){ return b.weight - a.weight; });
+
+        const placed = [];
+        const maxAttempts = 800;
+
+        words.forEach(function(word){
+            var fontSize = 14 + word.weight * 8;
+            ctx.font = 'bold ' + fontSize + 'px "Segoe UI", system-ui, sans-serif';
+            var metrics = ctx.measureText(word.text);
+            var tw = metrics.width + 8;
+            var th = fontSize + 8;
+            var bestX = 0, bestY = 0, bestDist = -Infinity;
+            var placed_success = false;
+
+            for(var attempt = 0; attempt < maxAttempts; attempt++){
+                var angle = Math.random() * Math.PI * 2;
+                var dist = Math.random() * baseR * 1.1;
+                var tx = cx + Math.cos(angle) * dist;
+                var ty = cy + Math.sin(angle) * dist;
+
+                if(!isInsideShape(tx, ty, cx, cy, baseR)) continue;
+                if(tx - tw/2 < 0 || tx + tw/2 > W || ty - th/2 < 0 || ty + th/2 > H) continue;
+
+                var overlap = false;
+                for(var p = 0; p < placed.length; p++){
+                    var pr = placed[p];
+                    if(!(tx + tw/2 < pr.x - pr.w/2 || tx - tw/2 > pr.x + pr.w/2 ||
+                         ty + th/2 < pr.y - pr.h/2 || ty - th/2 > pr.y + pr.h/2)){
+                        overlap = true; break;
+                    }
+                }
+                if(!overlap){
+                    var closenessScore = 0;
+                    for(var p = 0; p < placed.length; p++){
+                        var dx = tx - placed[p].x;
+                        var dy = ty - placed[p].y;
+                        closenessScore += Math.sqrt(dx*dx + dy*dy);
+                    }
+                    if(!placed_success || closenessScore > bestDist){
+                        bestDist = closenessScore;
+                        bestX = tx; bestY = ty;
+                    }
+                    placed_success = true;
+                }
+            }
+
+            if(placed_success){
+                placed.push({ x: bestX, y: bestY, w: tw, h: th, text: word.text, fontSize: fontSize });
+            } else {
+                // 缩小字号重试
+                fontSize = Math.max(11, fontSize - 6);
+                ctx.font = 'bold ' + fontSize + 'px "Segoe UI", system-ui, sans-serif';
+                metrics = ctx.measureText(word.text);
+                tw = metrics.width + 8; th = fontSize + 8;
+                for(var attempt2 = 0; attempt2 < maxAttempts; attempt2++){
+                    var angle2 = Math.random() * Math.PI * 2;
+                    var dist2 = Math.random() * baseR;
+                    var tx2 = cx + Math.cos(angle2) * dist2;
+                    var ty2 = cy + Math.sin(angle2) * dist2;
+                    if(!isInsideShape(tx2, ty2, cx, cy, baseR)) continue;
+                    if(tx2 - tw/2 < 0 || tx2 + tw/2 > W || ty2 - th/2 < 0 || ty2 + th/2 > H) continue;
+                    var overlap2 = false;
+                    for(var pp = 0; pp < placed.length; pp++){
+                        var pr2 = placed[pp];
+                        if(!(tx2 + tw/2 < pr2.x - pr2.w/2 || tx2 - tw/2 > pr2.x + pr2.w/2 ||
+                             ty2 + th/2 < pr2.y - pr2.h/2 || ty2 - th/2 > pr2.y + pr2.h/2)){
+                            overlap2 = true; break;
+                        }
+                    }
+                    if(!overlap2){ placed.push({ x: tx2, y: ty2, w: tw, h: th, text: word.text, fontSize: fontSize }); break; }
+                }
+            }
+        });
+
+        // 绘制
+        placed.forEach(function(p, i){
+            ctx.font = 'bold ' + p.fontSize + 'px "Segoe UI", system-ui, sans-serif';
+            var color = colors[i % colors.length];
+            ctx.fillStyle = color;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 4;
+            ctx.fillText(p.text, p.x - p.w/2 + 4, p.y + p.h/2 - 4);
+        });
+
+        ctx.shadowBlur = 0;
+        document.getElementById('cloudPlaceholder').style.display = 'none';
+        canvas.style.display = 'block';
+        currentCanvasData = canvas.toDataURL('image/png');
+    };
+
+    window.downloadCloud = function(){
+        if(!currentCanvasData) { showToast('请先生成文字云哦～'); return; }
+        var link = document.createElement('a');
+        link.download = 'word-cloud-' + Date.now() + '.png';
+        link.href = currentCanvasData;
+        link.click();
+        showToast('📥 已开始下载！');
+    };
+
+    window.loadPreset = function(type){
+        var presets = {
+            love: '甜甜\n心动:5\n恋爱:4\n奶茶\n牵手\n宠溺:4\n撒娇\n幸福:5\n永远',
+            mood: '开心:5\n期待\n元气满满:4\n青春\n笑\n温暖\n晴天\n放松\n治愈\n甜蜜',
+            name: '闺蜜:5\n姐妹\n永远\n一起\n陪伴\n真心\n默契:4\n温暖\n加油',
+            dream: '旅行:5\n环游世界:4\n自由\n冒险\n追梦:4\n星辰\n大海\n远方\n勇敢',
+            food: '奶茶:5\n火锅:4\n蛋糕:4\n寿司\n炸鸡\n冰淇淋\n烧烤:3\n饺子\n布丁'
+        };
+        document.getElementById('wordsInput').value = presets[type] || '';
+        generateCloud();
+    };
+
+    function showToast(msg){
+        var existing = document.querySelector('.toast');
+        if(existing) existing.remove();
+        var el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(function(){ el.remove(); }, 2400);
+    }
+
+    function createParticles(){
+        var container = document.getElementById('particles');
+        var emojis = ['☁️','✨','💕','🌸','🌟','💫'];
+        for(var i = 0; i < 10; i++){
+            var p = document.createElement('span');
+            p.className = 'particle';
+            p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDelay = Math.random() * 8 + 's';
+            p.style.animationDuration = (6 + Math.random() * 10) + 's';
+            p.style.fontSize = (0.8 + Math.random() * 1.5) + 'em';
+            container.appendChild(p);
+        }
+    }
+
+    initColorSchemes();
+    createParticles();
+})();
+</script>
+</body>
+</html>

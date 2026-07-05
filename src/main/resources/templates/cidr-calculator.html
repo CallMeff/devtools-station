@@ -1,0 +1,264 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">CIDR 子网计算器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        :root{--bg-primary:#1a1a2e;--bg-secondary:#1e1e2e;--bg-tertiary:#2a2a3a;--border-color:#333;--text-primary:#ddd;--text-secondary:#aaa;--text-muted:#888;--accent-color:#6366f1;--accent-light:#a5b4fc;--success-color:#22c55e}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary);border-bottom:1px solid var(--border-color);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent-color);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary);font-size:14px}
+
+        .page-content{flex:1;max-width:1000px;margin:0 auto;width:100%;padding:20px}
+        .card{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:12px;padding:20px;margin-bottom:16px}
+        .card h3{font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+
+        .input-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+        .form-group{flex:1;min-width:200px}
+        .form-group label{display:block;font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+        .form-group label .hint{font-weight:400;color:var(--text-muted);font-size:11px;margin-left:4px}
+        input[type=text]{width:100%;padding:10px 14px;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:15px;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;transition:border-color .15s;outline:none}
+        input:focus{border-color:var(--accent-color)}
+        .error-msg{padding:8px 14px;background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.3);border-radius:8px;color:#e53e3e;font-size:13px;display:none;margin-top:8px}
+
+        .results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:16px}
+        .result-item{background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:10px;padding:14px 16px;transition:border-color .15s}
+        .result-item:hover{border-color:var(--accent-color)}
+        .result-item .label{font-size:11px;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+        .result-item .value{font-size:16px;font-weight:700;color:var(--accent-light);font-family:'SF Mono','JetBrains Mono','Consolas',monospace;word-break:break-all}
+        .result-item .value.binary{font-size:12px;color:var(--text-secondary);margin-top:4px;word-break:break-all;line-height:1.5}
+        .result-item.highlight{border-color:var(--accent-color);background:rgba(99,102,241,.08)}
+
+        .visual-bar{height:8px;background:var(--border-color);border-radius:4px;margin-top:12px;overflow:hidden;display:flex}
+        .visual-bar .net{height:100%;background:var(--accent-color);border-radius:4px 0 0 4px}
+        .visual-bar .host{height:100%;background:var(--success-color);border-radius:0 4px 4px 0}
+
+        .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+        .btn{padding:10px 20px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:6px}
+        .btn:hover{background:var(--accent-color);border-color:var(--accent-color);color:#fff}
+        .btn.primary{background:var(--accent-color);border-color:var(--accent-color);color:#fff}
+        .btn.primary:hover{opacity:.9}
+        .btn.small{padding:6px 12px;font-size:12px}
+
+        .preset-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+        .preset-chip{padding:5px 12px;border:1px solid var(--border-color);border-radius:100px;cursor:pointer;font-size:12px;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;color:var(--text-secondary);background:var(--bg-tertiary);transition:all .15s}
+        .preset-chip:hover{border-color:var(--accent-color);color:var(--accent-light)}
+
+        .copied-toast{position:fixed;top:50px;left:50%;transform:translateX(-50%);background:var(--success-color);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+        .copied-toast.show{opacity:1}
+
+        @media(max-width:640px){.page-content{padding:12px}.results-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <div class="brand">
+        <a href="/">⚡ DevTools</a>
+        <span class="sep">/</span>
+        <span class="tool-name" th:text="${tool.name}">CIDR 子网计算器</span>
+    </div>
+</div>
+
+<div class="page-content">
+    <div class="card">
+        <h3>🎯 输入 CIDR 地址</h3>
+        <div class="input-row">
+            <div class="form-group">
+                <label>IP/CIDR 地址 <span class="hint">如 192.168.1.0/24</span></label>
+                <input type="text" id="cidrInput" placeholder="192.168.1.0/24" autofocus onkeydown="if(event.key==='Enter')calculate()">
+            </div>
+            <button class="btn primary" onclick="calculate()" style="align-self:flex-end">🔄 计算</button>
+        </div>
+        <div class="error-msg" id="errorMsg"></div>
+        <div class="preset-grid">
+            <span style="font-size:11px;color:var(--text-muted);margin-right:4px;line-height:30px">快捷预设：</span>
+            <button class="preset-chip" onclick="setCIDR('10.0.0.0/24')">10.0.0.0/24</button>
+            <button class="preset-chip" onclick="setCIDR('192.168.1.0/24')">192.168.1.0/24</button>
+            <button class="preset-chip" onclick="setCIDR('172.16.0.0/16')">172.16.0.0/16</button>
+            <button class="preset-chip" onclick="setCIDR('10.0.0.0/8')">10.0.0.0/8</button>
+            <button class="preset-chip" onclick="setCIDR('192.168.0.0/16')">192.168.0.0/16</button>
+            <button class="preset-chip" onclick="setCIDR('203.0.113.0/28')">203.0.113.0/28</button>
+        </div>
+    </div>
+
+    <div id="resultsSection" style="display:none">
+        <div class="card">
+            <h3>📊 子网信息</h3>
+            <div class="results-grid" id="resultsGrid"></div>
+            <div class="visual-bar" id="visualBar" style="margin-top:16px"></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:4px">
+                <span>网络位 <span id="netBits">0</span></span>
+                <span>主机位 <span id="hostBits">0</span></span>
+            </div>
+            <div class="btn-row" style="margin-top:14px">
+                <button class="btn" onclick="copyResult()">📋 一键复制所有结果</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📋 IP 地址二进制分解</h3>
+            <div id="binaryTable" style="overflow-x:auto"></div>
+        </div>
+    </div>
+</div>
+
+<div class="copied-toast" id="toast"></div>
+
+<script>
+function ipToInt(ip){var p=ip.split('.');return ((+p[0]<<24)|(+p[1]<<16)|(+p[2]<<8)|+p[3])>>>0}
+function intToIp(n){return [(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255].join('.')}
+function maskToInt(prefix){return prefix===0?0:(~0<<(32-prefix))>>>0}
+function ipToBinary(ip){return ip.split('.').map(function(o){return (+o).toString(2).padStart(8,'0')}).join('.')}
+
+function validateIP(ip){
+    var p=ip.split('.');
+    if(p.length!==4)return false;
+    for(var i=0;i<4;i++){
+        var n=parseInt(p[i],10);
+        if(isNaN(n)||n<0||n>255||p[i]!==String(n))return false;
+    }
+    return true;
+}
+
+function calculate(){
+    var input=document.getElementById('cidrInput').value.trim();
+    var err=document.getElementById('errorMsg');
+    err.style.display='none';
+    document.getElementById('resultsSection').style.display='none';
+
+    var parts=input.split('/');
+    if(parts.length!==2){err.textContent='格式错误，请使用 IP/前缀 格式，如 192.168.1.0/24';err.style.display='block';return}
+
+    var ip=parts[0].trim();
+    var prefix=parseInt(parts[1],10);
+
+    if(!validateIP(ip)){err.textContent='IP 地址格式无效';err.style.display='block';return}
+    if(isNaN(prefix)||prefix<0||prefix>32){err.textContent='子网前缀必须在 0-32 之间';err.style.display='block';return}
+
+    var ipInt=ipToInt(ip);
+    var maskInt=maskToInt(prefix);
+    var netInt=(ipInt&maskInt)>>>0;
+    var bcastInt=(netInt|(~maskInt>>>0))>>>0;
+
+    var networkIp=intToIp(netInt);
+    var broadcastIp=intToIp(bcastInt);
+    var subnetMask=intToIp(maskInt);
+    var wildcardMask=intToIp(~maskInt>>>0);
+
+    var totalHosts=Math.pow(2,32-prefix);
+    var usableHosts=prefix>=31?0:totalHosts-2;
+    var firstUsable=prefix>=31?'N/A':intToIp(netInt+1);
+    var lastUsable=prefix>=31?'N/A':intToIp(bcastInt-1);
+
+    var ipClass;
+    var firstOctet=parseInt(ip.split('.')[0]);
+    if(firstOctet<128)ipClass='A 类';
+    else if(firstOctet<192)ipClass='B 类';
+    else if(firstOctet<224)ipClass='C 类';
+    else if(firstOctet<240)ipClass='D 类（组播）';
+    else ipClass='E 类（保留）';
+
+    var isPrivate=false;
+    if((firstOctet===10)||(firstOctet===172&amp;&amp;parseInt(ip.split('.')[1])>=16&amp;&amp;parseInt(ip.split('.')[1])<=31)||(firstOctet===192&amp;&amp;parseInt(ip.split('.')[1])===168)){
+        isPrivate=true;
+    }
+
+    // Build results
+    var items=[
+        {l:'网络地址',v:networkIp,h:false},
+        {l:'广播地址',v:broadcastIp,h:false},
+        {l:'子网掩码',v:subnetMask,h:false},
+        {l:'反掩码 (Wildcard)',v:wildcardMask,h:false},
+        {l:'首个可用 IP',v:firstUsable,h:true},
+        {l:'末个可用 IP',v:lastUsable,h:true},
+        {l:'可用主机数',v:usableHosts.toLocaleString(),h:true},
+        {l:'总 IP 数',v:totalHosts.toLocaleString(),h:false},
+        {l:'IP 类型',v:ipClass+(isPrivate?' (私有)':''),h:false},
+        {l:'CIDR 前缀',v:'/'+prefix,h:false},
+        {l:'二进制掩码',v:'1'.repeat(prefix)+'0'.repeat(32-prefix),h:false}
+    ];
+
+    var grid=document.getElementById('resultsGrid');
+    grid.innerHTML=items.map(function(it){
+        var cls=it.h?'result-item highlight':'result-item';
+        return '<div class="'+cls+'"><div class="label">'+it.l+'</div><div class="value">'+it.v+'</div></div>';
+    }).join('');
+
+    // Visual bar
+    var bar=document.getElementById('visualBar');
+    bar.innerHTML='<div class="net" style="width:'+prefix/32*100+'%"></div><div class="host" style="width:'+(32-prefix)/32*100+'%"></div>';
+    document.getElementById('netBits').textContent=prefix+' bits';
+    document.getElementById('hostBits').textContent=(32-prefix)+' bits';
+
+    // Binary table
+    var bin=ipToBinary(ip);
+    var binMask=ipToBinary(subnetMask);
+    var binNet=ipToBinary(networkIp);
+    var binBcast=ipToBinary(broadcastIp);
+
+    // Highlight network portion
+    var binSegs=bin.split('.');
+    var maskSegs=binMask.split('.');
+    var binaryHTML='<table style="width:100%;border-collapse:collapse;font-size:12px;font-family:monospace">';
+    var rows=[
+        {label:'IP 地址',bin:binSegs,mask:maskSegs},
+        {label:'子网掩码',bin:binMask.split('.'),mask:maskSegs},
+        {label:'网络地址',bin:binNet.split('.'),mask:maskSegs},
+        {label:'广播地址',bin:binBcast.split('.'),mask:maskSegs}
+    ];
+    rows.forEach(function(row){
+        binaryHTML+='<tr><td style="padding:4px 12px 4px 0;color:var(--text-muted);white-space:nowrap">'+row.label+'</td>';
+        row.bin.forEach(function(octet,i){
+            var bits=octet.split('');
+            var m=row.mask[i].split('');
+            var colored=bits.map(function(b,j){return m[j]==='1'?'<span style="color:var(--accent-light)">'+b+'</span>':'<span style="color:var(--text-muted)">'+b+'</span>'}).join('');
+            binaryHTML+='<td style="padding:4px 6px;letter-spacing:1px">'+colored+'</td>';
+            if(i<3)binaryHTML+='<td style="color:var(--border-color);padding:0 2px">.</td>';
+        });
+        binaryHTML+='</tr>';
+    });
+    binaryHTML+='</table>';
+    document.getElementById('binaryTable').innerHTML=binaryHTML;
+
+    document.getElementById('resultsSection').style.display='';
+}
+
+function setCIDR(val){
+    document.getElementById('cidrInput').value=val;
+    calculate();
+}
+
+function copyResult(){
+    var items=document.querySelectorAll('.result-item');
+    var text='';
+    items.forEach(function(item){
+        var l=item.querySelector('.label').textContent;
+        var v=item.querySelector('.value').textContent;
+        text+=l+': '+v+'\n';
+    });
+    navigator.clipboard.writeText(text).then(function(){showToast('✅ 子网信息已复制')});
+}
+
+function showToast(msg){
+    var t=document.getElementById('toast');
+    t.textContent=msg;t.classList.add('show');
+    setTimeout(function(){t.classList.remove('show')},2000);
+}
+
+// Auto-calculate on load with example
+window.addEventListener('DOMContentLoaded',function(){
+    document.getElementById('cidrInput').value='192.168.1.0/24';
+    calculate();
+});
+</script>
+</body>
+</html>

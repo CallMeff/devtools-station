@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">追剧读书清单 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #fdf2f8; --card-bg: #ffffff; --text: #5d3a5c;
+            --text-secondary: #9a7e9b; --accent: #f472b6; --accent-light: #fce7f3;
+            --accent-dark: #db2777; --border: #f5d4e8;
+            --shadow: 0 6px 24px rgba(244,114,182,0.1);
+            --radius: 18px; --radius-sm: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(145deg, #fef6fb 0%, #fdf2f8 25%, #f8e8f3 50%, #f3e0f0 75%, #fdf2f8 100%);
+            background-attachment: fixed;
+            min-height: 100vh; color: var(--text); line-height: 1.6;
+            padding: 20px; overflow-x: hidden;
+        }
+        .container { max-width: 560px; margin: 0 auto; position: relative; z-index: 1; }
+        h1 {
+            text-align: center; font-size: 2em; margin-bottom: 4px;
+            background: linear-gradient(135deg, #e91e63, #f472b6, #a855f7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle { text-align: center; color: #c084b2; font-size: 0.92em; margin-bottom: 20px; }
+
+        /* Stats bar */
+        .stats-row {
+            display: flex; gap: 12px; margin-bottom: 20px;
+        }
+        .stat-item {
+            flex: 1; background: #fff; border-radius: var(--radius-sm);
+            padding: 14px 12px; text-align: center;
+            box-shadow: var(--shadow); border: 2px solid var(--border);
+            transition: transform 0.3s;
+        }
+        .stat-item:hover { transform: translateY(-2px); }
+        .stat-num { font-size: 1.6em; font-weight: 800; color: var(--accent); }
+        .stat-label { font-size: 0.78em; color: var(--text-secondary); margin-top: 2px; }
+
+        /* Create form */
+        .create-card {
+            background: #fff; border-radius: var(--radius); padding: 20px;
+            margin-bottom: 16px; box-shadow: var(--shadow); border: 2px solid var(--border);
+        }
+        .create-card h3 {
+            margin-bottom: 14px; color: var(--accent-dark); font-size: 1em;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .form-row {
+            display: flex; gap: 10px; margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .form-group { flex: 1; min-width: 120px; }
+        .form-group label {
+            display: block; font-size: 0.8em; font-weight: 600;
+            color: var(--accent-dark); margin-bottom: 4px;
+        }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px 14px; border: 2px solid var(--border);
+            border-radius: 10px; font-size: 0.9em; color: var(--text);
+            background: #fdf2f8; font-family: inherit;
+            transition: all 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(244,114,182,0.12);
+            background: #fff;
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 10px 24px; border-radius: 25px; border: none;
+            font-weight: 700; cursor: pointer; transition: all 0.3s ease;
+            font-family: inherit; font-size: 0.9em;
+        }
+        .btn-pink {
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: #fff; box-shadow: 0 4px 14px rgba(244,114,182,0.3);
+        }
+        .btn-pink:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(244,114,182,0.4); }
+        .btn-outline {
+            background: #fff; color: var(--accent-dark);
+            border: 2px solid var(--accent);
+        }
+        .btn-outline:hover { background: var(--accent-light); }
+        .btn-xs {
+            padding: 5px 12px; font-size: 0.75em; border-radius: 15px;
+        }
+
+        /* Filter tabs */
+        .tabs {
+            display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+        }
+        .tab {
+            padding: 8px 18px; border-radius: 20px; border: 2px solid var(--border);
+            background: #fff; color: var(--text-secondary); cursor: pointer;
+            font-weight: 600; font-size: 0.85em; transition: all 0.3s;
+        }
+        .tab:hover { border-color: var(--accent); color: var(--accent-dark); }
+        .tab.active {
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: #fff; border-color: transparent;
+        }
+
+        /* Bookshelf */
+        .shelf { margin-bottom: 20px; }
+        .shelf-title {
+            font-size: 0.9em; font-weight: 700; color: var(--accent-dark);
+            margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+        }
+        .item-grid { display: flex; flex-direction: column; gap: 10px; }
+
+        .book-item {
+            background: #fff; border-radius: var(--radius-sm); padding: 14px 16px;
+            box-shadow: var(--shadow); border: 2px solid var(--border);
+            display: flex; gap: 12px; align-items: center; cursor: pointer;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .book-item:hover { transform: translateX(4px); border-color: var(--accent); }
+        .book-item.completed { opacity: 0.6; }
+        .book-item.completed .book-title { text-decoration: line-through; }
+
+        .book-cover {
+            width: 50px; height: 68px; border-radius: 8px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8em; position: relative; overflow: hidden;
+        }
+        .cover-book { background: linear-gradient(135deg, #fce7f3, #fbcfe8); }
+        .cover-show { background: linear-gradient(135deg, #dbeafe, #c7d2fe); }
+        .cover-anime { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+        .cover-movie { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+        .cover-podcast { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); }
+
+        .book-info { flex: 1; min-width: 0; }
+        .book-title { font-weight: 700; font-size: 0.95em; margin-bottom: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .book-meta { font-size: 0.78em; color: var(--text-secondary); }
+
+        .book-progress-wrap { flex-shrink: 0; width: 60px; text-align: right; }
+        .progress-bar-small {
+            height: 6px; background: #f5d4e8; border-radius: 3px;
+            margin-top: 4px; overflow: hidden;
+        }
+        .progress-bar-small-fill {
+            height: 100%; border-radius: 3px;
+            background: linear-gradient(90deg, #f472b6, #a855f7);
+        }
+        .book-actions {
+            display: flex; gap: 4px; flex-shrink: 0;
+        }
+        .action-btn {
+            width: 30px; height: 30px; border-radius: 10px; border: none;
+            background: #fdf2f8; color: var(--accent); cursor: pointer;
+            font-size: 0.85em; display: flex; align-items: center;
+            justify-content: center; transition: all 0.2s;
+        }
+        .action-btn:hover { background: var(--accent); color: #fff; }
+        .action-btn.done:hover { background: #22c55e; }
+
+        /* Toast */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: #fff; padding: 12px 26px; border-radius: 25px;
+            font-weight: 600; z-index: 200; font-size: 0.9em;
+            box-shadow: 0 8px 28px rgba(244,114,182,0.4);
+            animation: toastIn 0.4s ease, toastOut 0.4s ease 2s forwards;
+        }
+        @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(-20px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+        @keyframes toastOut { from { opacity:1; } to { opacity:0; transform: translateX(-50%) translateY(-20px); } }
+
+        /* Floating decorations */
+        .floaties { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .float-item {
+            position: absolute; font-size: 1.4em; opacity: 0;
+            animation: floatUp 12s ease-in-out infinite;
+        }
+        @keyframes floatUp {
+            0% { opacity:0; transform: translateY(100vh) rotate(0deg) scale(0.5); }
+            15% { opacity:0.5; }
+            85% { opacity:0.5; }
+            100% { opacity:0; transform: translateY(-10vh) rotate(360deg) scale(1.1); }
+        }
+
+        .empty-state { text-align: center; padding: 40px 20px; }
+        .empty-state .big-emoji { font-size: 4em; margin-bottom: 12px; }
+        .empty-state p { color: var(--text-secondary); font-size: 0.9em; }
+
+        .category-emoji {
+            margin-right: 4px; font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+<div class="floaties" id="floaties"></div>
+
+<div class="container">
+    <h1>📚 追剧读书清单</h1>
+    <p class="subtitle">记录每一本书、每一部剧的美好时光 ✨</p>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-item">
+            <div class="stat-num" id="statTotal">0</div>
+            <div class="stat-label">📋 清单总数</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num" id="statDone">0</div>
+            <div class="stat-label">✅ 已完成</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num" id="statProgress">0</div>
+            <div class="stat-label">📖 进行中</div>
+        </div>
+    </div>
+
+    <!-- Create form -->
+    <div class="create-card">
+        <h3>✨ 添加新的</h3>
+        <div class="form-row">
+            <div class="form-group" style="flex:2;min-width:150px;">
+                <label>📌 名称</label>
+                <input type="text" id="newTitle" placeholder="书名/剧名/影名" maxlength="50">
+            </div>
+            <div class="form-group" style="min-width:80px;">
+                <label>📂 分类</label>
+                <select id="newCategory">
+                    <option value="book">📖 看书</option>
+                    <option value="show">📺 追剧</option>
+                    <option value="anime">🎬 动漫</option>
+                    <option value="movie">🎥 电影</option>
+                    <option value="podcast">🎧 播客</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="min-width:80px;">
+                <label>📊 总进度</label>
+                <input type="number" id="newTotal" value="1" min="1" max="9999" placeholder="总数">
+            </div>
+            <div class="form-group" style="min-width:80px;">
+                <label>✍️ 备注</label>
+                <input type="text" id="newNote" placeholder="作者/平台" maxlength="30">
+            </div>
+        </div>
+        <button class="btn btn-pink" onclick="addItem()">➕ 加入清单</button>
+    </div>
+
+    <!-- Filter -->
+    <div class="tabs">
+        <div class="tab active" onclick="filterItems('all', this)">🌟 全部</div>
+        <div class="tab" onclick="filterItems('book', this)">📖 看书</div>
+        <div class="tab" onclick="filterItems('show', this)">📺 追剧</div>
+        <div class="tab" onclick="filterItems('anime', this)">🎬 动漫</div>
+        <div class="tab" onclick="filterItems('movie', this)">🎥 电影</div>
+        <div class="tab" onclick="filterItems('podcast', this)">🎧 播客</div>
+    </div>
+
+    <!-- Shelf -->
+    <div class="shelf" id="shelfContent">
+        <div class="empty-state" id="emptyState">
+            <div class="big-emoji">📚</div>
+            <p>还没有任何记录哦～</p>
+            <p>快添加你的第一本书或剧集吧！</p>
+        </div>
+    </div>
+    <div style="text-align:center;margin-top:10px;">
+        <button class="btn btn-outline btn-xs" onclick="clearCompleted()">🗑️ 清除已完成</button>
+    </div>
+</div>
+
+<script>
+(function(){
+    'use strict';
+    const STORAGE_KEY = 'bookshelf-data';
+    let items = [];
+    let currentFilter = 'all';
+
+    function load(){
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(raw) items = JSON.parse(raw);
+        if(items.length === 0){
+            // Default examples
+            items = [
+                { id: genId(), title: '《被讨厌的勇气》', cat: 'book', total: 5, done: 3, note: '岸见一郎', createdAt: Date.now()-100000 },
+                { id: genId(), title: '《繁花》', cat: 'show', total: 30, done: 8, note: '腾讯视频', createdAt: Date.now()-80000 },
+                { id: genId(), title: '《间谍过家家》', cat: 'anime', total: 25, done: 25, note: 'B站', createdAt: Date.now()-200000 },
+            ];
+            save();
+        }
+    }
+
+    function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+    function genId(){ return 'b'+Date.now()+'_'+Math.random().toString(36).slice(2,8); }
+
+    function getCoverClass(cat){
+        return { book:'cover-book', show:'cover-show', anime:'cover-anime', movie:'cover-movie', podcast:'cover-podcast' }[cat] || 'cover-book';
+    }
+
+    function getCoverEmoji(cat){
+        return { book:'📖', show:'📺', anime:'🎬', movie:'🎥', podcast:'🎧' }[cat] || '📖';
+    }
+
+    function getCatName(cat){
+        return { book:'看书', show:'追剧', anime:'动漫', movie:'电影', podcast:'播客' }[cat] || cat;
+    }
+
+    function updateUI(){
+        const filtered = currentFilter === 'all' ? items : items.filter(function(i){ return i.cat === currentFilter; });
+        const inProgress = filtered.filter(function(i){ return i.done < i.total; });
+        const completed = filtered.filter(function(i){ return i.done >= i.total; });
+
+        document.getElementById('statTotal').textContent = items.length;
+        document.getElementById('statDone').textContent = items.filter(function(i){ return i.done >= i.total; }).length;
+        document.getElementById('statProgress').textContent = items.filter(function(i){ return i.done > 0 && i.done < i.total; }).length;
+
+        const cont = document.getElementById('shelfContent');
+        const empty = document.getElementById('emptyState');
+
+        if(filtered.length === 0){
+            empty.style.display = 'block';
+            // remove non-empty items
+            cont.querySelectorAll('.shelf-title, .item-grid').forEach(function(el){ el.remove(); });
+        } else {
+            empty.style.display = 'none';
+            let html = '';
+
+            if(inProgress.length > 0){
+                html += '<div class="shelf-title">📖 进行中 ('+inProgress.length+')</div>';
+                html += '<div class="item-grid">' + inProgress.map(renderItem).join('') + '</div>';
+            }
+            if(completed.length > 0){
+                html += '<div class="shelf-title" style="margin-top:16px;">✅ 已完成 ('+completed.length+')</div>';
+                html += '<div class="item-grid">' + completed.map(renderItem).join('') + '</div>';
+            }
+            // Clear and set
+            cont.innerHTML = html + '<div id="emptyState" class="empty-state" style="display:none"><div class="big-emoji">📚</div><p>还没有任何记录哦～</p><p>快添加你的第一本书或剧集吧！</p></div>';
+        }
+    }
+
+    function renderItem(item){
+        const pct = item.total > 0 ? Math.round(item.done / item.total * 100) : 0;
+        const doneClass = item.done >= item.total ? ' completed' : '';
+        const cat = item.cat || 'book';
+        const progressText = item.total > 1 ? item.done + '/' + item.total : (item.done >= item.total ? '✅' : '☐');
+
+        return '<div class="book-item'+doneClass+'" id="item-'+item.id+'">' +
+            '<div class="book-cover '+getCoverClass(cat)+'">'+getCoverEmoji(cat)+'</div>' +
+            '<div class="book-info">' +
+            '<div class="book-title">'+escapeHtml(item.title)+'</div>' +
+            '<div class="book-meta">'+getCatName(cat) + (item.note ? ' · '+escapeHtml(item.note) : '')+'</div>' +
+            (item.total > 1 ? '<div class="progress-bar-small"><div class="progress-bar-small-fill" style="width:'+pct+'%"></div></div>' : '') +
+            '</div>' +
+            '<div class="book-progress-wrap"><div style="font-weight:700;color:var(--accent);font-size:0.85em;">'+progressText+'</div>' +
+            '<div style="font-size:0.7em;color:var(--text-secondary);">'+(pct+'%')+'</div></div>' +
+            '<div class="book-actions">' +
+            (item.total > 1 ? '<button class="action-btn" title="-1" onclick="adjustProgress(\''+item.id+'\',-1)">−</button>' : '') +
+            '<button class="action-btn done" title="推进" onclick="adjustProgress(\''+item.id+'\',1)">' +
+            (item.total === 1 ? '✅' : '+') +
+            '</button>' +
+            '<button class="action-btn" title="删除" onclick="deleteItem(\''+item.id+'\')" style="font-size:0.75em;">🗑</button>' +
+            '</div></div>';
+    }
+
+    window.addItem = function(){
+        const title = document.getElementById('newTitle').value.trim();
+        if(!title){ showToast('请输入名称哦～'); return; }
+        const cat = document.getElementById('newCategory').value;
+        const total = Math.max(1, parseInt(document.getElementById('newTotal').value) || 1);
+        const note = document.getElementById('newNote').value.trim();
+
+        items.unshift({
+            id: genId(), title: title, cat: cat,
+            total: total, done: 0, note: note,
+            createdAt: Date.now()
+        });
+        save(); updateUI();
+        document.getElementById('newTitle').value = '';
+        document.getElementById('newNote').value = '';
+        document.getElementById('newTotal').value = '1';
+        showToast('✨ 已加入清单！');
+    };
+
+    window.adjustProgress = function(id, delta){
+        const item = items.find(function(i){ return i.id === id; });
+        if(!item) return;
+        item.done = Math.max(0, Math.min(item.total, item.done + delta));
+        save(); updateUI();
+        if(item.done >= item.total) showToast('🎉 完成啦！太棒了～');
+    };
+
+    window.deleteItem = function(id){
+        if(!confirm('确定删除这条记录吗？')) return;
+        items = items.filter(function(i){ return i.id !== id; });
+        save(); updateUI();
+        showToast('🗑️ 已删除');
+    };
+
+    window.filterItems = function(filter, tabEl){
+        currentFilter = filter;
+        document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+        tabEl.classList.add('active');
+        updateUI();
+    };
+
+    window.clearCompleted = function(){
+        const completed = items.filter(function(i){ return i.done >= i.total; });
+        if(completed.length === 0){ showToast('没有已完成的项目哦～'); return; }
+        if(!confirm('确定清除所有 '+completed.length+' 个已完成的项目吗？')) return;
+        items = items.filter(function(i){ return i.done < i.total; });
+        save(); updateUI();
+        showToast('✅ 已清除完成项');
+    };
+
+    function showToast(msg){
+        const old = document.querySelector('.toast');
+        if(old) old.remove();
+        const t = document.createElement('div');
+        t.className = 'toast'; t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(function(){ t.remove(); }, 2400);
+    }
+
+    function escapeHtml(txt){
+        const d = document.createElement('div');
+        d.textContent = txt;
+        return d.innerHTML;
+    }
+
+    function createFloats(){
+        const c = document.getElementById('floaties');
+        const emojis = ['📚','🌸','✨','📖','💕','🎀','📺','🎬','🌟','💫'];
+        for(let i = 0; i < 8; i++){
+            const f = document.createElement('span');
+            f.className = 'float-item';
+            f.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+            f.style.left = (Math.random()*94)+'%';
+            f.style.animationDelay = (Math.random()*12)+'s';
+            f.style.animationDuration = (10+Math.random()*10)+'s';
+            c.appendChild(f);
+        }
+    }
+
+    load();
+    createFloats();
+    updateUI();
+
+    // Enter key to add
+    document.getElementById('newTitle').addEventListener('keydown', function(e){
+        if(e.key === 'Enter') addItem();
+    });
+})();
+</script>
+</body>
+</html>

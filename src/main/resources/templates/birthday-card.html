@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">生日贺卡生成器 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/themes.css">
+    <style>
+        :root {
+            --radius: 20px; --radius-sm: 14px;
+            --shadow: 0 6px 28px rgba(244,114,182,0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #fff5fb 0%, #fdf2f8 15%, #fce7f3 40%, #fdf4ff 65%, #fff5fb 100%);
+            background-size: 400% 400%;
+            animation: bgFloat 20s ease infinite;
+            min-height: 100vh; color: #5d3a5c; line-height: 1.6;
+        }
+        @keyframes bgFloat { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+        .float-deco { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .float-deco span {
+            position: absolute; opacity: 0.06; font-size: 2.2rem;
+            animation: floatDeco 22s infinite ease-in-out;
+        }
+        .float-deco span:nth-child(1){ top: 5%; left: 7%; animation-delay: 0s; }
+        .float-deco span:nth-child(2){ top: 14%; right: 12%; animation-delay: -6s; font-size: 2.8rem; }
+        .float-deco span:nth-child(3){ top: 40%; left: 4%; animation-delay: -12s; font-size: 3rem; }
+        .float-deco span:nth-child(4){ top: 62%; right: 6%; animation-delay: -17s; font-size: 2.4rem; }
+        .float-deco span:nth-child(5){ top: 78%; left: 22%; animation-delay: -4s; font-size: 2.6rem; }
+        .float-deco span:nth-child(6){ top: 25%; left: 52%; animation-delay: -10s; font-size: 1.9rem; }
+        @keyframes floatDeco {
+            0% { transform: translateY(0) rotate(0deg) scale(1); }
+            25% { transform: translateY(-34px) rotate(7deg) scale(1.13); }
+            50% { transform: translateY(-8px) rotate(-5deg) scale(0.91); }
+            75% { transform: translateY(-40px) rotate(5deg) scale(1.06); }
+            100% { transform: translateY(0) rotate(0deg) scale(1); }
+        }
+
+        .topbar {
+            display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+            background: rgba(255,255,255,0.88); backdrop-filter: blur(14px);
+            border-bottom: 1px solid #f5d4e8; position: sticky; top: 0; z-index: 10;
+            box-shadow: 0 2px 16px rgba(244,114,182,0.06);
+        }
+        .topbar a { color: #b48ab4; text-decoration: none; font-size: 13px; font-weight: 500; transition: color .2s; }
+        .topbar a:hover { color: #f472b6; }
+        .topbar .title { font-size: 15px; font-weight: 600; flex: 1; background: linear-gradient(135deg, #ec4899, #f59e0b, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .content { max-width: 900px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+
+        /* Left: Editor */
+        .editor-panel {
+            flex: 1; min-width: 300px; background: #fff; border-radius: var(--radius);
+            padding: 24px; box-shadow: var(--shadow); border: 1.5px solid #fce7f3;
+        }
+        .editor-panel h2 {
+            font-size: 1.1rem; margin-bottom: 16px;
+            background: linear-gradient(135deg, #ec4899, #a855f7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .form-group { margin-bottom: 14px; }
+        .form-group label {
+            display: block; font-size: 13px; font-weight: 600; color: #9a6e9a; margin-bottom: 5px;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; padding: 10px 14px; border: 1.5px solid #f5d4e8; border-radius: 14px;
+            font-size: 14px; font-family: inherit; outline: none; transition: border .2s;
+            background: #fffafc; color: #5d3a5c;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            border-color: #f472b6;
+        }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+
+        .theme-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .theme-card {
+            padding: 12px 8px; border-radius: 12px; text-align: center; cursor: pointer;
+            border: 2px solid transparent; font-size: 12px; font-weight: 600;
+            transition: all .22s;
+        }
+        .theme-card:hover { transform: translateY(-2px); }
+        .theme-card.selected { border-color: #ec4899; box-shadow: 0 0 0 3px rgba(236,72,153,0.12); }
+        .theme-card .emoji { font-size: 1.5rem; display: block; margin-bottom: 2px; }
+
+        .btn-row { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+        .btn {
+            padding: 10px 22px; border: none; border-radius: 25px; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all .22s;
+        }
+        .btn-generate {
+            flex: 1; background: linear-gradient(135deg, #f472b6, #e879f9);
+            color: #fff; box-shadow: 0 4px 16px rgba(244,114,182,0.3);
+        }
+        .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(244,114,182,0.4); }
+        .btn-download {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: #fff; box-shadow: 0 4px 14px rgba(245,158,11,0.25);
+        }
+        .btn-download:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,158,11,0.35); }
+
+        /* Right: Preview */
+        .preview-panel {
+            flex: 1; min-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 14px;
+        }
+        .card-preview {
+            width: 100%; max-width: 400px; border-radius: 24px; overflow: hidden;
+            box-shadow: 0 12px 40px rgba(244,114,182,0.18);
+            transition: all .3s;
+            border: 2px solid #fce7f3;
+        }
+        .card-preview canvas {
+            width: 100%; height: auto; display: block;
+        }
+
+        .preview-label {
+            font-size: 13px; color: #b48ab4; text-align: center;
+        }
+
+        /* Confetti effect on generate */
+        .confetti-container {
+            position: fixed; top: 0; left: 0; pointer-events: none; z-index: 200;
+        }
+        .confetti-piece {
+            position: absolute; width: 10px; height: 10px; border-radius: 3px;
+            animation: confettiFall 3s ease-out forwards;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #ec4899, #a855f7); color: #fff;
+            padding: 10px 24px; border-radius: 25px; font-size: 13px; font-weight: 500;
+            z-index: 200; opacity: 0; transition: opacity .3s;
+            box-shadow: 0 8px 28px rgba(236,72,153,0.35);
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+
+        @media (max-width: 768px) { .content { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="float-deco">
+        <span>🎂</span><span>🎉</span><span>🎁</span><span>🎈</span><span>💝</span><span>🎀</span>
+    </div>
+
+    <div class="topbar">
+        <a href="/">← 首页</a>
+        <span class="title">🎂 生日贺卡生成器</span>
+    </div>
+
+    <div class="content">
+        <div class="editor-panel">
+            <h2>💌 定制你的贺卡</h2>
+
+            <div class="form-group">
+                <label>🎯 收卡人名字</label>
+                <input type="text" id="recipient" placeholder="寿星的名字" value="小可爱" maxlength="20">
+            </div>
+            <div class="form-group">
+                <label>✍️ 你的名字</label>
+                <input type="text" id="sender" placeholder="你的名字" value="你的好朋友" maxlength="20">
+            </div>
+            <div class="form-group">
+                <label>💬 祝福语</label>
+                <textarea id="message" placeholder="写下你的生日祝福..." maxlength="80">生日快乐！愿你每天都开心幸福，永远18岁~ 🎂💕</textarea>
+            </div>
+
+            <label style="display:block;font-size:13px;font-weight:600;color:#9a6e9a;margin-bottom:8px;">🎨 选择贺卡风格</label>
+            <div class="theme-picker" id="themePicker">
+                <div class="theme-card selected" data-theme="pink" style="background:linear-gradient(135deg,#ffe4ec,#ffd6e7)">
+                    <span class="emoji">🌸</span> 甜蜜粉
+                </div>
+                <div class="theme-card" data-theme="purple" style="background:linear-gradient(135deg,#f3e8ff,#e8dbff)">
+                    <span class="emoji">💜</span> 梦幻紫
+                </div>
+                <div class="theme-card" data-theme="warm" style="background:linear-gradient(135deg,#fff7ed,#ffedd5)">
+                    <span class="emoji">🧡</span> 橘子汽水
+                </div>
+                <div class="theme-card" data-theme="sky" style="background:linear-gradient(135deg,#e0f2fe,#dbeafe)">
+                    <span class="emoji">💙</span> 晴空蓝
+                </div>
+                <div class="theme-card" data-theme="mint" style="background:linear-gradient(135deg,#dcfce7,#d1fae5)">
+                    <span class="emoji">💚</span> 薄荷绿
+                </div>
+                <div class="theme-card" data-theme="rainbow" style="background:linear-gradient(135deg,#fce7f3,#e8daef,#d4e6f1,#d5f5e3,#fdebd0,#fadbd8)">
+                    <span class="emoji">🌈</span> 彩虹糖
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-generate" onclick="generate()">🎂 生成贺卡</button>
+                <button class="btn btn-download" onclick="downloadCard()">💾 下载贺卡</button>
+            </div>
+        </div>
+
+        <div class="preview-panel">
+            <div class="card-preview" id="cardPreview">
+                <canvas id="cardCanvas" width="800" height="1000"></canvas>
+            </div>
+            <p class="preview-label">↑ 这里是贺卡预览，点击「生成贺卡」刷新 ↑</p>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <div class="confetti-container" id="confetti"></div>
+
+    <script>
+        let currentTheme = 'pink';
+        let canvas, ctx;
+
+        const themeConfig = {
+            pink: {
+                bg1: '#ffe4ec', bg2: '#ffd6e7', accent: '#ec4899', accent2: '#f472b6',
+                text: '#831843', subtitle: '#be185d', light: '#fce7f3',
+                deco: ['🌸','💕','🎀','✨','💖','🌷']
+            },
+            purple: {
+                bg1: '#f3e8ff', bg2: '#e8dbff', accent: '#8b5cf6', accent2: '#a78bfa',
+                text: '#4c1d95', subtitle: '#7c3aed', light: '#ede9fe',
+                deco: ['💜','✨','🔮','🌟','💫','🌙']
+            },
+            warm: {
+                bg1: '#fff7ed', bg2: '#ffedd5', accent: '#f97316', accent2: '#fb923c',
+                text: '#7c2d12', subtitle: '#c2410c', light: '#ffedd5',
+                deco: ['🧡','🍊','☀️','🌟','🍂','⭐']
+            },
+            sky: {
+                bg1: '#e0f2fe', bg2: '#dbeafe', accent: '#3b82f6', accent2: '#60a5fa',
+                text: '#1e3a5f', subtitle: '#1d4ed8', light: '#eff6ff',
+                deco: ['💙','☁️','🫧','🌟','🦋','✨']
+            },
+            mint: {
+                bg1: '#dcfce7', bg2: '#d1fae5', accent: '#059669', accent2: '#34d399',
+                text: '#064e3b', subtitle: '#047857', light: '#ecfdf5',
+                deco: ['💚','🍀','🌿','✨','🌱','🍃']
+            },
+            rainbow: {
+                bg1: '#fce7f3', bg2: '#e0f2fe', accent: '#ec4899', accent2: '#8b5cf6',
+                text: '#5b21b6', subtitle: '#db2777', light: '#fdf2f8',
+                deco: ['🌈','💖','✨','🎀','💝','🌟']
+            }
+        };
+
+        function init() {
+            canvas = document.getElementById('cardCanvas');
+            ctx = canvas.getContext('2d');
+            canvas.width = 800;
+            canvas.height = 1000;
+
+            // Theme picker
+            document.getElementById('themePicker').addEventListener('click', function(e) {
+                const card = e.target.closest('.theme-card');
+                if (!card) return;
+                document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                currentTheme = card.dataset.theme;
+                generate();
+            });
+
+            // Live preview on input change
+            ['recipient','sender','message'].forEach(id => {
+                document.getElementById(id).addEventListener('input', generate);
+            });
+
+            generate();
+        }
+
+        function generate() {
+            const t = themeConfig[currentTheme];
+            const recipient = document.getElementById('recipient').value || '寿星';
+            const sender = document.getElementById('sender').value || '朋友';
+            const message = document.getElementById('message').value || '生日快乐！🎂';
+
+            const W = canvas.width, H = canvas.height;
+            ctx.clearRect(0, 0, W, H);
+
+            // Background gradient
+            const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+            bgGrad.addColorStop(0, t.bg1);
+            bgGrad.addColorStop(1, t.bg2);
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, W, H);
+
+            // Decorative dots
+            ctx.fillStyle = t.accent + '15';
+            for (let i = 0; i < 40; i++) {
+                const x = Math.random() * W, y = Math.random() * H;
+                const r = 6 + Math.random() * 16;
+                ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // Top decorative border
+            ctx.fillStyle = t.accent + '30';
+            ctx.beginPath(); ctx.moveTo(0, 0);
+            for (let x = 0; x <= W; x += 40) {
+                ctx.lineTo(x, 20 + Math.sin(x * 0.05) * 8);
+            }
+            ctx.lineTo(W, 0); ctx.fill();
+
+            // Center card
+            const cardX = 50, cardY = 100, cardW = W - 100, cardH = H - 200;
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = t.accent + '20';
+            ctx.shadowBlur = 40;
+            ctx.shadowOffsetY = 6;
+            roundRect(ctx, cardX, cardY, cardW, cardH, 28);
+            ctx.fill();
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+
+            // Inner border
+            ctx.strokeStyle = t.accent + '25';
+            ctx.lineWidth = 2;
+            roundRect(ctx, cardX + 20, cardY + 20, cardW - 40, cardH - 40, 20);
+            ctx.stroke();
+
+            // Decorative emojis around content
+            ctx.font = '28px sans-serif';
+            t.deco.forEach((emoji, i) => {
+                const angle = (i / t.deco.length) * Math.PI * 2;
+                const cx = W/2 + Math.cos(angle) * 280;
+                const cy = H/2 - 60 + Math.sin(angle) * 260;
+                ctx.fillText(emoji, cx - 14, cy + 10);
+            });
+
+            // Balloon cluster (top)
+            drawBalloon(W * 0.25, 160, t.accent, '🎈');
+            drawBalloon(W * 0.5, 140, t.accent2, '🎈');
+            drawBalloon(W * 0.75, 155, t.accent, '🎈');
+
+            // Cake icon
+            ctx.font = '72px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎂', W/2, 360);
+
+            // "HAPPY BIRTHDAY" text
+            ctx.font = 'bold 32px "PingFang SC","Microsoft YaHei",sans-serif';
+            ctx.fillStyle = t.accent;
+            ctx.textAlign = 'center';
+            ctx.fillText('🎂 Happy Birthday 🎂', W/2, 440);
+
+            // Recipient name
+            ctx.font = 'bold 52px "PingFang SC","Microsoft YaHei",sans-serif';
+            const nameGrad = ctx.createLinearGradient(W/2 - 150, 0, W/2 + 150, 0);
+            nameGrad.addColorStop(0, t.accent);
+            nameGrad.addColorStop(0.5, t.accent2);
+            nameGrad.addColorStop(1, t.accent);
+            ctx.fillStyle = nameGrad;
+            ctx.fillText(recipient, W/2, 520);
+
+            // Subtitle
+            ctx.font = '22px "PingFang SC","Microsoft YaHei",sans-serif';
+            ctx.fillStyle = t.subtitle;
+            ctx.fillText('生 日 快 乐', W/2, 568);
+
+            // Divider dots
+            ctx.fillStyle = t.accent + '50';
+            for (let x = W/2 - 120; x <= W/2 + 120; x += 16) {
+                ctx.beginPath(); ctx.arc(x, 600, 3, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // Message
+            ctx.font = '20px "PingFang SC","Microsoft YaHei",sans-serif';
+            ctx.fillStyle = t.text;
+            ctx.textAlign = 'center';
+            // Word wrap
+            const maxWidth = cardW - 80;
+            const lines = wrapText(ctx, message, maxWidth);
+            lines.forEach((line, i) => {
+                ctx.fillText(line, W/2, 650 + i * 34);
+            });
+
+            // Heart & from
+            const msgEndY = 650 + lines.length * 34 + 30;
+            ctx.font = '26px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('💝', W/2, msgEndY);
+
+            ctx.font = 'italic 18px "PingFang SC","Microsoft YaHei",sans-serif';
+            ctx.fillStyle = t.subtitle;
+            ctx.fillText('— 来自 ' + sender, W/2, msgEndY + 46);
+
+            // Bottom: date
+            const now = new Date();
+            const dateStr = `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日`;
+            ctx.font = '14px "PingFang SC","Microsoft YaHei",sans-serif';
+            ctx.fillStyle = t.subtitle + '88';
+            ctx.fillText(dateStr + ' · Generated by DevTools Station 💕', W/2, cardY + cardH - 24);
+
+            // Sparkle animation effect (static dots)
+            for (let i = 0; i < 20; i++) {
+                const sx = 100 + Math.random() * (W - 200), sy = 300 + Math.random() * 400;
+                const sr = 2 + Math.random() * 3;
+                ctx.fillStyle = t.accent2 + '40';
+                ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // Launch confetti
+            launchConfetti();
+        }
+
+        function drawBalloon(x, y, color, emoji) {
+            // Balloon body
+            ctx.fillStyle = color + '30';
+            ctx.beginPath();
+            ctx.ellipse(x, y, 28, 36, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = color + '50';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            // String
+            ctx.strokeStyle = color + '40';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x, y + 36);
+            ctx.quadraticCurveTo(x + 8, y + 80, x - 5, y + 120);
+            ctx.stroke();
+            // Emoji
+            ctx.font = '20px sans-serif';
+            ctx.fillText(emoji, x - 10, y + 8);
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        function wrapText(ctx, text, maxWidth) {
+            const lines = [];
+            let current = '';
+            for (const char of text) {
+                const test = current + char;
+                if (ctx.measureText(test).width > maxWidth && current.length > 0) {
+                    lines.push(current);
+                    current = char;
+                } else {
+                    current = test;
+                }
+            }
+            if (current) lines.push(current);
+            return lines.length ? lines : [text];
+        }
+
+        function downloadCard() {
+            const link = document.createElement('a');
+            link.download = `生日贺卡-${document.getElementById('recipient').value || 'ta'}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast('💾 贺卡已下载~');
+        }
+
+        function launchConfetti() {
+            const container = document.getElementById('confetti');
+            const colors = ['#f472b6','#e879f9','#fbbf24','#60a5fa','#34d399','#f97316','#fb7185'];
+            let html = '';
+            for (let i = 0; i < 40; i++) {
+                const x = Math.random() * window.innerWidth;
+                const y = -Math.random() * 200;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const size = 6 + Math.random() * 10;
+                const delay = Math.random() * 0.5;
+                const duration = 2 + Math.random() * 2;
+                html += `<div class="confetti-piece" style="left:${x}px;top:${y}px;width:${size}px;height:${size}px;background:${color};animation-delay:${delay}s;animation-duration:${duration}s;border-radius:${Math.random()>0.5?'50%':'2px'}"></div>`;
+            }
+            container.innerHTML = html;
+            setTimeout(() => { container.innerHTML = ''; }, 4000);
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), 1800);
+        }
+
+        init();
+    </script>
+</body>
+</html>

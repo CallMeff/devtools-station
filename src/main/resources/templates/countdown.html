@@ -1,0 +1,339 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">倒数日 · 纪念日 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/themes.css">
+    <style>
+        :root {
+            --bg: #fdf4ff; --card-bg: #ffffff; --text: #4a3a5c; --text-secondary: #9078a8;
+            --accent: #a855f7; --accent2: #f472b6; --accent3: #60a5fa;
+            --border: #e8d5f5; --radius: 18px; --radius-sm: 12px;
+            --shadow: 0 4px 24px rgba(168, 85, 247, 0.08);
+            --gradient: linear-gradient(135deg, #fdf4ff, #fce7f3, #f0e6ff);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--gradient); min-height: 100vh; color: var(--text); line-height: 1.6;
+        }
+        .topbar {
+            display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+            background: rgba(255,255,255,0.85); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
+        }
+        .topbar a { color: var(--text-secondary); text-decoration: none; font-size: 13px; transition: color .2s; }
+        .topbar a:hover { color: var(--accent2); }
+        .topbar h1 { font-size: 16px; font-weight: 600; flex: 1; background: linear-gradient(135deg, #a855f7, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .content { max-width: 640px; margin: 0 auto; padding: 20px; }
+
+        /* Add Form */
+        .add-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 16px 20px; margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+        .add-card .row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .add-card input, .add-card select {
+            flex: 1; min-width: 100px; padding: 10px 14px; border: 1.5px solid var(--border);
+            border-radius: 25px; font-size: 14px; outline: none; transition: border .2s;
+            background: var(--bg); color: var(--text);
+        }
+        .add-card input:focus, .add-card select:focus { border-color: var(--accent); }
+        .add-card .add-btn {
+            padding: 10px 24px; border: none; border-radius: 25px;
+            background: linear-gradient(135deg, #a855f7, #f472b6);
+            color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s;
+            white-space: nowrap;
+        }
+        .add-card .add-btn:hover { transform: scale(1.03); box-shadow: 0 4px 16px rgba(168,85,247,0.3); }
+
+        /* Event Cards */
+        .event-list { display: flex; flex-direction: column; gap: 12px; }
+
+        .event-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 20px;
+            box-shadow: var(--shadow); position: relative; overflow: hidden;
+            display: flex; gap: 16px; align-items: center;
+            transition: transform .2s;
+        }
+        .event-card:hover { transform: translateY(-2px); }
+        .event-card .icon-area {
+            width: 56px; height: 56px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 28px;
+            flex-shrink: 0;
+        }
+        .event-card .info { flex: 1; min-width: 0; }
+        .event-card .name { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+        .event-card .date-str { font-size: 12px; color: var(--text-secondary); }
+        .event-card .countdown {
+            text-align: right; flex-shrink: 0;
+        }
+        .event-card .countdown .days {
+            font-size: 36px; font-weight: 800; line-height: 1;
+            background: linear-gradient(135deg, #a855f7, #f472b6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .event-card .countdown .label { font-size: 11px; color: var(--text-secondary); }
+        .event-card .past-badge {
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(168,85,247,0.1); color: var(--accent);
+            font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+        }
+        .event-card .delete-btn {
+            position: absolute; top: 8px; right: 8px;
+            width: 22px; height: 22px; border-radius: 50%; border: none;
+            background: rgba(239,68,68,0.1); color: #ef4444; cursor: pointer;
+            font-size: 12px; line-height: 22px; text-align: center; opacity: 0;
+            transition: opacity .2s;
+        }
+        .event-card:hover .delete-btn { opacity: 1; }
+
+        /* Color themes for events */
+        .theme-pink .icon-area { background: #fce7f3; }
+        .theme-purple .icon-area { background: #f3e8ff; }
+        .theme-blue .icon-area { background: #dbeafe; }
+        .theme-green .icon-area { background: #dcfce7; }
+        .theme-orange .icon-area { background: #fff7ed; }
+        .theme-yellow .icon-area { background: #fefce8; }
+
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--text-secondary);
+        }
+        .empty-state .emoji { font-size: 56px; display: block; margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; }
+
+        /* Category tabs */
+        .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+        .tab {
+            flex: 1; padding: 8px; text-align: center; border-radius: 25px;
+            cursor: pointer; font-size: 13px; font-weight: 600; border: 1.5px solid transparent;
+            transition: all .2s; color: var(--text-secondary);
+        }
+        .tab:hover { background: rgba(168,85,247,0.06); }
+        .tab.active { background: rgba(168,85,247,0.1); border-color: var(--accent); color: var(--accent); }
+
+        @media (max-width: 500px) {
+            .add-card .row { flex-direction: column; }
+            .event-card { flex-direction: column; align-items: flex-start; }
+            .event-card .countdown { text-align: left; }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="/">← 首页</a>
+        <h1>⏳ <span th:text="${tool.name}">倒数日 · 纪念日</span></h1>
+        <span style="font-size:12px;color:var(--text-secondary)">珍惜每一个重要日子 💕</span>
+    </div>
+
+    <div class="content">
+        <!-- Add form -->
+        <div class="add-card">
+            <div class="row">
+                <input type="text" id="eventName" placeholder="📝 事件名称" maxlength="20">
+                <input type="date" id="eventDate">
+            </div>
+            <div class="row">
+                <select id="eventIcon">
+                    <option value="💕">💕 纪念日</option>
+                    <option value="🎂">🎂 生日</option>
+                    <option value="🎓">🎓 考试</option>
+                    <option value="✈️">✈️ 旅行</option>
+                    <option value="💼">💼 项目截止</option>
+                    <option value="🎄">🎄 节日</option>
+                    <option value="💍">💍 求婚/婚礼</option>
+                    <option value="🏠">🏠 搬家</option>
+                    <option value="🎯">🎯 目标日</option>
+                    <option value="📅">📅 自定义</option>
+                </select>
+                <select id="eventTheme">
+                    <option value="theme-pink">🌸 粉色</option>
+                    <option value="theme-purple">💜 紫色</option>
+                    <option value="theme-blue">💙 蓝色</option>
+                    <option value="theme-green">💚 绿色</option>
+                    <option value="theme-orange">🧡 橙色</option>
+                    <option value="theme-yellow">💛 黄色</option>
+                </select>
+                <button class="add-btn" onclick="addEvent()">+ 添加</button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" onclick="filterEvents('all', this)">全部</div>
+            <div class="tab" onclick="filterEvents('upcoming', this)">⏳ 即将到来</div>
+            <div class="tab" onclick="filterEvents('past', this)">✅ 已过</div>
+        </div>
+
+        <!-- Event list -->
+        <div class="event-list" id="eventList"></div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'countdown-events';
+        let events = [];
+        let filterType = 'all';
+
+        const themeColors = {
+            'theme-pink': '#fce7f3', 'theme-purple': '#f3e8ff', 'theme-blue': '#dbeafe',
+            'theme-green': '#dcfce7', 'theme-orange': '#fff7ed', 'theme-yellow': '#fefce8'
+        };
+
+        function loadEvents() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                events = raw ? JSON.parse(raw) : [];
+            } catch (e) { events = []; }
+            if (events.length === 0) {
+                // Add demo events
+                const today = new Date();
+                const nextYear = new Date(today); nextYear.setFullYear(today.getFullYear() + 1);
+                const lastWeek = new Date(today); lastWeek.setDate(today.getDate() - 7);
+                events = [
+                    { id: 1, name:'我的生日 🎂', date:fmtDate(nextYear), icon:'🎂', theme:'theme-pink', repeatYearly:true },
+                    { id: 2, name:'五一假期', date:fmtDate(new Date(today.getFullYear(), 4, 1)), icon:'✈️', theme:'theme-green', repeatYearly:true },
+                    { id: 3, name:'上次旅行', date:fmtDate(lastWeek), icon:'✈️', theme:'theme-blue', repeatYearly:false }
+                ];
+                saveEvents();
+            }
+        }
+
+        function saveEvents() { localStorage.setItem(STORAGE_KEY, JSON.stringify(events)); }
+
+        function fmtDate(d) {
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        function getCountdown(eventDate, repeatYearly) {
+            const now = new Date(); now.setHours(0,0,0,0);
+            let target = new Date(eventDate + 'T00:00:00');
+
+            // If repeat yearly and date is past, advance to next year
+            if (repeatYearly && target < now) {
+                target.setFullYear(now.getFullYear());
+                if (target < now) target.setFullYear(now.getFullYear() + 1);
+            }
+
+            const diffMs = target - now;
+            const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+            return { days: diffDays, isPast: diffDays < 0, targetDate: target };
+        }
+
+        function formatCountdown(days) {
+            const abs = Math.abs(days);
+            if (days === 0) return { days: '今天', label: '就是今天！🎉' };
+            if (days > 0) {
+                if (abs <= 30) return { days: `${days}`, label: `天` };
+                if (abs <= 365) return { days: `${Math.floor(abs/30)}`, label: `个月` };
+                return { days: `${(abs/365).toFixed(1)}`, label: `年` };
+            }
+            if (abs <= 30) return { days: `-${abs}`, label: `天前` };
+            if (abs <= 365) return { days: `-${Math.floor(abs/30)}`, label: `个月前` };
+            return { days: `-${(abs/365).toFixed(1)}`, label: `年前` };
+        }
+
+        function filterEvents(type, tabEl) {
+            filterType = type;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            if (tabEl) tabEl.classList.add('active');
+            renderEvents();
+        }
+
+        function renderEvents() {
+            const list = document.getElementById('eventList');
+
+            const filtered = events.filter(e => {
+                const cd = getCountdown(e.date, e.repeatYearly);
+                if (filterType === 'upcoming') return cd.days >= 0;
+                if (filterType === 'past') return cd.days < 0;
+                return true;
+            });
+
+            // Sort: upcoming by days asc, past by days desc
+            filtered.sort((a, b) => {
+                const ca = getCountdown(a.date, a.repeatYearly);
+                const cb = getCountdown(b.date, b.repeatYearly);
+                if (ca.isPast !== cb.isPast) return ca.isPast ? 1 : -1;
+                return ca.isPast ? cb.days - ca.days : ca.days - cb.days;
+            });
+
+            if (filtered.length === 0) {
+                list.innerHTML = `<div class="empty-state">
+                    <span class="emoji">📅</span>
+                    <p>还没有倒数日哦~<br>添加你的第一个重要日子吧！</p>
+                </div>`;
+                return;
+            }
+
+            list.innerHTML = filtered.map(e => {
+                const cd = getCountdown(e.date, e.repeatYearly);
+                const fmt = formatCountdown(cd.days);
+                const dateObj = new Date(e.date + 'T00:00:00');
+                const weekDays = ['日','一','二','三','四','五','六'];
+                const dateStr = `${dateObj.getFullYear()}/${dateObj.getMonth()+1}/${dateObj.getDate()} 周${weekDays[dateObj.getDay()]}`;
+
+                return `<div class="event-card ${e.theme}">
+                    <div class="icon-area">${e.icon}</div>
+                    <div class="info">
+                        <div class="name">${e.name}${e.repeatYearly?' 🔁':''}</div>
+                        <div class="date-str">${dateStr}</div>
+                    </div>
+                    <div class="countdown">
+                        <div class="days">${fmt.days}</div>
+                        <div class="label">${fmt.label}</div>
+                    </div>
+                    ${cd.isPast ? '<div class="past-badge">已过</div>' : ''}
+                    <button class="delete-btn" onclick="deleteEvent(${e.id})" title="删除">✕</button>
+                </div>`;
+            }).join('');
+        }
+
+        function addEvent() {
+            const name = document.getElementById('eventName').value.trim();
+            const date = document.getElementById('eventDate').value;
+            const icon = document.getElementById('eventIcon').value;
+            const theme = document.getElementById('eventTheme').value;
+
+            if (!name) { alert('请输入事件名称'); return; }
+            if (!date) { alert('请选择日期'); return; }
+
+            events.push({
+                id: Date.now(),
+                name: icon + ' ' + name,
+                date: date,
+                icon: icon,
+                theme: theme,
+                repeatYearly: ['🎂','🎄','💕','💍'].includes(icon)
+            });
+
+            saveEvents();
+            document.getElementById('eventName').value = '';
+            document.getElementById('eventDate').value = '';
+            renderEvents();
+        }
+
+        function deleteEvent(id) {
+            events = events.filter(e => e.id !== id);
+            saveEvents();
+            renderEvents();
+        }
+
+        // Enter key to add
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'eventName') {
+                addEvent();
+            }
+        });
+
+        // Init
+        loadEvents();
+        filterEvents('all');
+    </script>
+</body>
+</html>

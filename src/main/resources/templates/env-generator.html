@@ -1,0 +1,365 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">.env 环境变量生成器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent-color,#6366f1);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+        .topbar button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s}
+        .topbar button:hover{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+
+        .page-content{flex:1;max-width:1200px;margin:0 auto;width:100%;padding:20px;display:flex;gap:20px}
+        .control-panel{width:380px;flex-shrink:0;display:flex;flex-direction:column;gap:16px}
+        .preview-panel{flex:1;display:flex;flex-direction:column;gap:16px;min-width:0}
+
+        .card{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:12px;padding:18px}
+        .card h3{font-size:13px;font-weight:600;color:var(--text-muted,#888);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+
+        .template-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+        .template-chip{padding:10px 8px;border:1px solid var(--border-color,#444);border-radius:10px;background:var(--bg-tertiary,#2a2a3a);cursor:pointer;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px}
+        .template-chip:hover{border-color:var(--accent-color,#6366f1)}
+        .template-chip.active{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+        .template-chip .t-emoji{font-size:22px}
+        .template-chip .t-name{font-size:11px;font-weight:600}
+
+        .var-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto}
+        .var-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:8px;transition:all .15s}
+        .var-item:hover{border-color:var(--accent-color,#6366f1)}
+        .var-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent-color,#6366f1);cursor:pointer;flex-shrink:0}
+        .var-item .var-key{font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:12px;font-weight:600;color:var(--accent-light,#a5b4fc);min-width:120px;cursor:pointer}
+        .var-item .var-desc{font-size:11px;color:var(--text-muted,#888);flex:1}
+        .var-item .var-val{font-size:11px;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;color:#4ecb71;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+        .custom-section{margin-top:12px;border-top:1px solid var(--border-color,#333);padding-top:12px}
+        .custom-row{display:flex;gap:6px;margin-bottom:8px}
+        .custom-row input{flex:1;padding:7px 10px;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:6px;color:var(--text-primary,#ddd);font-size:12px;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;outline:none}
+        .custom-row input:focus{border-color:var(--accent-color,#6366f1)}
+        .custom-row input.key-input{max-width:140px}
+        .custom-row button{padding:7px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:12px;transition:all .15s;white-space:nowrap}
+        .custom-row button:hover{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+
+        .env-preview{position:relative}
+        .env-preview .header-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--card-bg,#141416);border:1px solid var(--border-color,#333);border-radius:10px 10px 0 0;border-bottom:none}
+        .env-preview .header-bar span{font-size:11px;color:var(--text-muted,#888)}
+        .env-preview .preview-code{padding:14px;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#333);border-radius:0 0 10px 10px;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:12px;line-height:1.8;color:var(--text-primary,#ddd);min-height:300px;max-height:500px;overflow-y:auto;white-space:pre-wrap;user-select:all}
+
+        .env-preview .line-key{color:var(--accent-light,#a5b4fc);font-weight:600}
+        .env-preview .line-eq{color:var(--text-muted,#666)}
+        .env-preview .line-val{color:#4ecb71}
+        .env-preview .line-comment{color:var(--text-muted,#555);font-style:italic}
+
+        .btn-row{display:flex;gap:8px;flex-wrap:wrap}
+        .btn{padding:8px 18px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s;display:flex;align-items:center;gap:6px}
+        .btn:hover{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+        .btn.primary{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+
+        .toggle-all{display:flex;gap:8px;margin-bottom:8px}
+        .toggle-all button{padding:4px 10px;border:1px solid var(--border-color,#444);border-radius:4px;background:transparent;color:var(--text-secondary,#aaa);cursor:pointer;font-size:11px;transition:all .15s}
+        .toggle-all button:hover{color:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1)}
+
+        .active-badge{font-size:10px;background:var(--accent-color,#6366f1);color:#fff;padding:1px 6px;border-radius:8px;margin-left:6px}
+
+        .toast{position:fixed;top:50px;left:50%;transform:translateX(-50%);background:var(--accent-color,#6366f1);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+        .toast.show{opacity:1}
+
+        @media(max-width:768px){.page-content{flex-direction:column}.control-panel{width:100%}}
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <div class="brand">
+        <a href="/">⚡ DevTools</a>
+        <span class="sep">/</span>
+        <span class="tool-name" th:text="${tool.name}">.env 环境变量生成器</span>
+    </div>
+</div>
+
+<div class="page-content">
+    <div class="control-panel">
+        <div class="card">
+            <h3>📦 选择框架模板</h3>
+            <div class="template-grid" id="templateGrid"></div>
+        </div>
+
+        <div class="card">
+            <h3 style="display:flex;justify-content:space-between;align-items:center">
+                环境变量
+                <div class="toggle-all">
+                    <button onclick="toggleAll(true)">全选</button>
+                    <button onclick="toggleAll(false)">全不选</button>
+                </div>
+            </h3>
+            <div class="var-list" id="varList"></div>
+
+            <div class="custom-section">
+                <h3 style="font-size:12px;margin-bottom:8px">➕ 自定义变量</h3>
+                <div class="custom-row">
+                    <input type="text" id="customKey" class="key-input" placeholder="KEY" onkeydown="if(event.key==='Enter')addCustom()">
+                    <input type="text" id="customVal" placeholder="值 (可选)">
+                    <button onclick="addCustom()">添加</button>
+                </div>
+                <div id="customVars"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="preview-panel">
+        <div class="env-preview">
+            <div class="header-bar">
+                <span id="fileLabel">.env</span>
+                <span id="varCount" style="color:var(--accent-color,#6366f1)">0 个变量</span>
+            </div>
+            <div class="preview-code" id="previewCode"></div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn primary" onclick="copyEnv()">📋 复制 .env</button>
+            <button class="btn" onclick="downloadEnv()">💾 下载 .env 文件</button>
+            <button class="btn" onclick="resetAll()">🔄 重置</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const templates = {
+    'nodejs':{name:'Node.js',emoji:'🟢',color:'#4ecb71',vars:[
+        {key:'NODE_ENV',val:'development',desc:'运行环境',def:true},
+        {key:'PORT',val:'3000',desc:'服务端口',def:true},
+        {key:'HOST',val:'localhost',desc:'绑定地址',def:false},
+        {key:'DATABASE_URL',val:'postgresql://localhost:5432/mydb',desc:'数据库连接串',def:true},
+        {key:'JWT_SECRET',val:'your-jwt-secret-here',desc:'JWT 签名密钥',def:true},
+        {key:'API_KEY',val:'',desc:'第三方 API 密钥',def:false},
+        {key:'REDIS_URL',val:'redis://localhost:6379',desc:'Redis 连接串',def:false},
+        {key:'CORS_ORIGIN',val:'http://localhost:3000',desc:'CORS 允许源',def:false},
+        {key:'LOG_LEVEL',val:'debug',desc:'日志级别',def:false},
+        {key:'SESSION_SECRET',val:'session-secret-change-me',desc:'Session 密钥',def:false},
+    ]},
+    'python':{name:'Python',emoji:'🐍',color:'#4584b6',vars:[
+        {key:'DJANGO_SECRET_KEY',val:'django-insecure-change-me',desc:'Django 密钥',def:true},
+        {key:'DJANGO_DEBUG',val:'True',desc:'Debug 模式',def:true},
+        {key:'DATABASE_URL',val:'sqlite:///db.sqlite3',desc:'数据库连接',def:true},
+        {key:'FLASK_ENV',val:'development',desc:'Flask 环境',def:false},
+        {key:'PYTHONPATH',val:'.',desc:'Python 模块路径',def:false},
+        {key:'REDIS_URL',val:'redis://localhost:6379/0',desc:'Redis 连接',def:false},
+        {key:'CELERY_BROKER_URL',val:'redis://localhost:6379/1',desc:'Celery Broker',def:false},
+        {key:'ALLOWED_HOSTS',val:'localhost,127.0.0.1',desc:'允许的主机',def:false},
+    ]},
+    'java':{name:'Java/Spring',emoji:'☕',color:'#f89820',vars:[
+        {key:'SPRING_PROFILES_ACTIVE',val:'dev',desc:'激活的 Profile',def:true},
+        {key:'SERVER_PORT',val:'8080',desc:'服务端口',def:true},
+        {key:'DB_URL',val:'jdbc:mysql://localhost:3306/mydb',desc:'数据库 URL',def:true},
+        {key:'DB_USERNAME',val:'root',desc:'数据库用户名',def:true},
+        {key:'DB_PASSWORD',val:'',desc:'数据库密码',def:true},
+        {key:'JWT_SECRET',val:'your-256-bit-secret',desc:'JWT 密钥',def:false},
+        {key:'REDIS_HOST',val:'localhost',desc:'Redis 主机',def:false},
+        {key:'REDIS_PORT',val:'6379',desc:'Redis 端口',def:false},
+        {key:'LOG_LEVEL',val:'DEBUG',desc:'日志级别',def:false},
+    ]},
+    'go':{name:'Go',emoji:'🐹',color:'#00add8',vars:[
+        {key:'APP_ENV',val:'development',desc:'运行环境',def:true},
+        {key:'APP_PORT',val:'8080',desc:'服务端口',def:true},
+        {key:'DB_DSN',val:'host=localhost user=postgres dbname=mydb sslmode=disable',desc:'数据库 DSN',def:true},
+        {key:'JWT_SECRET',val:'change-me',desc:'JWT 密钥',def:true},
+        {key:'REDIS_ADDR',val:'localhost:6379',desc:'Redis 地址',def:false},
+        {key:'LOG_FORMAT',val:'json',desc:'日志格式',def:false},
+        {key:'CORS_ORIGINS',val:'http://localhost:3000',desc:'CORS 源',def:false},
+    ]},
+    'docker':{name:'Docker',emoji:'🐳',color:'#2496ed',vars:[
+        {key:'COMPOSE_PROJECT_NAME',val:'myproject',desc:'项目名',def:true},
+        {key:'MYSQL_ROOT_PASSWORD',val:'rootpassword',desc:'MySQL root 密码',def:true},
+        {key:'MYSQL_DATABASE',val:'mydb',desc:'MySQL 数据库名',def:true},
+        {key:'MYSQL_USER',val:'user',desc:'MySQL 用户名',def:true},
+        {key:'MYSQL_PASSWORD',val:'userpassword',desc:'MySQL 用户密码',def:true},
+        {key:'POSTGRES_PASSWORD',val:'pgpassword',desc:'Postgres 密码',def:false},
+        {key:'REDIS_PASSWORD',val:'',desc:'Redis 密码',def:false},
+        {key:'NGINX_PORT',val:'80',desc:'Nginx 端口',def:false},
+        {key:'APP_PORT',val:'8080',desc:'应用端口',def:true},
+    ]},
+    'react':{name:'React/Vite',emoji:'⚛️',color:'#61dafb',vars:[
+        {key:'VITE_API_BASE_URL',val:'http://localhost:8080/api',desc:'API 基础地址',def:true},
+        {key:'VITE_APP_TITLE',val:'My App',desc:'应用标题',def:true},
+        {key:'VITE_ENABLE_MOCK',val:'false',desc:'启用 Mock',def:false},
+        {key:'VITE_SENTRY_DSN',val:'',desc:'Sentry DSN',def:false},
+        {key:'VITE_GA_ID',val:'',desc:'Google Analytics ID',def:false},
+    ]},
+};
+
+let selectedTemplate='nodejs';
+let checkedVars={};
+let customVars=[];
+
+function initTemplate(){
+    Object.keys(templates).forEach(k=>{
+        checkedVars[k]={};
+        templates[k].vars.forEach(v=>{checkedVars[k][v.key]=v.def;});
+    });
+}
+
+function getCurrentTemplate(){return templates[selectedTemplate];}
+function getCheckedVars(){return checkedVars[selectedTemplate]||{};}
+
+function renderTemplates(){
+    document.getElementById('templateGrid').innerHTML=Object.entries(templates).map(([k,t])=>`
+        <div class="template-chip ${k===selectedTemplate?'active':''}" onclick="selectTemplate('${k}')">
+            <span class="t-emoji">${t.emoji}</span>
+            <span class="t-name">${t.name}</span>
+        </div>
+    `).join('');
+}
+
+function selectTemplate(k){
+    selectedTemplate=k;
+    renderTemplates();
+    renderVars();
+    updatePreview();
+}
+
+function renderVars(){
+    const t=getCurrentTemplate();
+    const chk=getCheckedVars();
+    document.getElementById('varList').innerHTML=t.vars.map(v=>`
+        <div class="var-item">
+            <input type="checkbox" ${chk[v.key]?'checked':''} onchange="toggleVar('${v.key}',this.checked)">
+            <span class="var-key" title="点击复制变量名" onclick="copyKey('${v.key}')">${v.key}</span>
+            <span class="var-desc">${v.desc}</span>
+            <span class="var-val">${v.val||'(空)'}</span>
+        </div>
+    `).join('');
+    renderCustomVars();
+}
+
+function toggleVar(key,checked){
+    if(!checkedVars[selectedTemplate]) checkedVars[selectedTemplate]={};
+    checkedVars[selectedTemplate][key]=checked;
+    updatePreview();
+}
+
+function toggleAll(checked){
+    if(!checkedVars[selectedTemplate]) checkedVars[selectedTemplate]={};
+    getCurrentTemplate().vars.forEach(v=>{checkedVars[selectedTemplate][v.key]=checked;});
+    renderVars();
+    updatePreview();
+}
+
+function addCustom(){
+    const keyEl=document.getElementById('customKey');
+    const valEl=document.getElementById('customVal');
+    const key=keyEl.value.trim();
+    if(!key) return;
+    customVars.push({key,val:valEl.value.trim()});
+    keyEl.value='';valEl.value='';
+    renderCustomVars();
+    updatePreview();
+}
+
+function removeCustom(i){
+    customVars.splice(i,1);
+    renderCustomVars();
+    updatePreview();
+}
+
+function renderCustomVars(){
+    document.getElementById('customVars').innerHTML=customVars.map((v,i)=>`
+        <div style="display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--bg-tertiary,#2a2a3a);border-radius:4px;margin-top:4px;font-size:12px">
+            <span style="font-family:monospace;color:var(--accent-light,#a5b4fc);flex:1">${v.key}=${v.val||'(空)'}</span>
+            <button onclick="removeCustom(${i})" style="background:none;border:none;color:var(--text-muted,#888);cursor:pointer;font-size:14px">×</button>
+        </div>
+    `).join('');
+}
+
+function updatePreview(){
+    const t=getCurrentTemplate();
+    const chk=getCheckedVars();
+    const active=t.vars.filter(v=>chk[v.key]);
+    document.getElementById('fileLabel').textContent='.env ('+t.name+' 模板)';
+    document.getElementById('varCount').textContent=(active.length+customVars.length)+' 个变量';
+
+    let lines=[`# ${t.emoji} ${t.name} 环境变量配置`,`# 由 DevTools Station .env 生成器生成`,`# 模板: ${t.name}`,``];
+    active.forEach(v=>{
+        lines.push(`# ${v.desc}`);
+        lines.push(`${v.key}=${v.val}`);
+        lines.push('');
+    });
+    if(customVars.length>0){
+        lines.push('# --- 自定义变量 ---');
+        customVars.forEach(v=>lines.push(`${v.key}=${v.val}`));
+        lines.push('');
+    }
+
+    const code=document.getElementById('previewCode');
+    code.innerHTML=lines.map(l=>{
+        if(l.startsWith('#')) return `<span class="line-comment">${l}</span>`;
+        if(!l) return '';
+        const eq=l.indexOf('=');
+        if(eq<0) return l;
+        const key=l.substring(0,eq);
+        const val=l.substring(eq+1);
+        return `<span class="line-key">${key}</span><span class="line-eq">=</span><span class="line-val">${val}</span>`;
+    }).join('\n');
+}
+
+function getPlainEnv(){
+    const t=getCurrentTemplate();
+    const chk=getCheckedVars();
+    const active=t.vars.filter(v=>chk[v.key]);
+    let lines=[`# ${t.name} 环境变量配置`,`# 由 DevTools Station .env 生成器生成`,``];
+    active.forEach(v=>{lines.push(`# ${v.desc}`);lines.push(`${v.key}=${v.val}`);lines.push('');});
+    if(customVars.length>0){lines.push('# --- 自定义变量 ---');customVars.forEach(v=>lines.push(`${v.key}=${v.val}`));}
+    return lines.join('\n');
+}
+
+function copyEnv(){
+    navigator.clipboard.writeText(getPlainEnv()).then(()=>showToast('✅ .env 内容已复制'));
+}
+
+function downloadEnv(){
+    const blob=new Blob([getPlainEnv()],{type:'text/plain'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='.env';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('✅ .env 文件已下载');
+}
+
+function resetAll(){
+    initTemplate();
+    customVars=[];
+    renderVars();
+    renderCustomVars();
+    updatePreview();
+    showToast('🔄 已重置');
+}
+
+function copyKey(key){
+    navigator.clipboard.writeText(key).then(()=>showToast('✅ 变量名已复制: '+key));
+}
+
+function showToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+    initTemplate();
+    renderTemplates();
+    renderVars();
+    updatePreview();
+});
+</script>
+</body>
+</html>

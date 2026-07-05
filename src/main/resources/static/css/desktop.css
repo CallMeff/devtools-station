@@ -1,0 +1,820 @@
+/* ============================================
+   Desktop.css - 苹果桌面风格首页
+   ============================================ */
+
+/* ========== 桌面容器 ========== */
+.desktop {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    z-index: 1;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 桌面背景 */
+.desktop-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+        /* 细微网格 */
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-color: var(--desktop-bg, var(--bg-color, #0a0a0b));
+}
+
+/* 明亮模式网格 */
+body.theme-light .desktop-bg {
+    background:
+        linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-color: var(--desktop-bg, var(--bg-color, #f5f5f7));
+}
+
+/* 二次元模式网格 */
+body.theme-anime .desktop-bg {
+    background:
+        linear-gradient(rgba(255,105,180,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,105,180,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-color: var(--desktop-bg, var(--bg-color, #fff0f5));
+}
+
+/* 🌸 桌面浮动装饰粒子 */
+.desktop-particles {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+}
+.desktop-particles .particle {
+    position: absolute; bottom: -40px;
+    font-size: 1.2rem; opacity: 0;
+    animation: particleRise 12s infinite ease-in;
+}
+.desktop-particles .particle:nth-child(1) { left: 5%; animation-delay: 0s; font-size: 1.5rem; }
+.desktop-particles .particle:nth-child(2) { left: 15%; animation-delay: -3s; font-size: 1rem; }
+.desktop-particles .particle:nth-child(3) { left: 28%; animation-delay: -6s; font-size: 1.3rem; }
+.desktop-particles .particle:nth-child(4) { left: 42%; animation-delay: -9s; font-size: 1.1rem; }
+.desktop-particles .particle:nth-child(5) { left: 55%; animation-delay: -1s; font-size: 1.6rem; }
+.desktop-particles .particle:nth-child(6) { left: 68%; animation-delay: -7s; font-size: 1rem; }
+.desktop-particles .particle:nth-child(7) { left: 78%; animation-delay: -4s; font-size: 1.4rem; }
+.desktop-particles .particle:nth-child(8) { left: 90%; animation-delay: -10s; font-size: 1.2rem; }
+@keyframes particleRise {
+    0% { transform: translateY(0) rotate(0deg) scale(0); opacity: 0; }
+    10% { opacity: 0.12; }
+    50% { opacity: 0.15; }
+    90% { opacity: 0.05; }
+    100% { transform: translateY(-110vh) rotate(180deg) scale(1.5); opacity: 0; }
+}
+/* 只在 anime 主题显示粒子 */
+body:not(.theme-anime) .desktop-particles { display: none; }
+
+/* Macaron 桌面渐变动画 */
+.desktop-bg::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(244,114,182,0.07) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(168,85,247,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(236,72,153,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 70%, rgba(251,191,36,0.03) 0%, transparent 50%);
+    z-index: 0; pointer-events: none; animation: bgShift 20s ease-in-out infinite;
+}
+/* Light mode: warmer pink glow */
+body.theme-light .desktop-bg::after {
+    background: radial-gradient(ellipse at 20% 50%, rgba(244,114,182,0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(168,85,247,0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(236,72,153,0.10) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 70%, rgba(251,191,36,0.06) 0%, transparent 50%);
+}
+@keyframes bgShift {
+    0%, 100% { opacity: 0.5; }
+    33% { opacity: 0.8; }
+    66% { opacity: 0.3; }
+}
+
+/* ========== 桌面图标容器 ========== */
+.desktop-icons {
+    position: absolute;
+    inset: 24px;
+    z-index: 1;
+}
+
+/* ========== 单个桌面图标 ========== */
+.desktop-icon {
+    position: absolute;
+    width: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: grab;
+    transition: transform 0.15s ease, filter 0.15s ease;
+    z-index: 1;
+    padding: 6px 4px;
+    border-radius: 12px;
+}
+
+.desktop-icon:hover {
+    z-index: 10;
+    background: rgba(255,255,255,0.06);
+}
+
+body.theme-light .desktop-icon:hover {
+    background: rgba(0,0,0,0.04);
+}
+
+.desktop-icon:active {
+    cursor: grabbing;
+}
+
+/* 图标被选中 */
+.desktop-icon.selected {
+    background: rgba(99,102,241,0.15);
+    border-radius: 12px;
+    z-index: 10;
+}
+
+body.theme-light .desktop-icon.selected {
+    background: rgba(99,102,241,0.1);
+}
+
+/* 图标拖拽中 */
+.desktop-icon.dragging {
+    z-index: 100 !important;
+    cursor: grabbing;
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.5));
+    transform: scale(1.08);
+    opacity: 0.92;
+    background: rgba(255,255,255,0.1);
+}
+
+body.theme-light .desktop-icon.dragging {
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.2));
+    background: rgba(0,0,0,0.05);
+}
+
+/* 图标动画进入 */
+.desktop-icon.just-added {
+    animation: iconPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes iconPop {
+    0% { transform: scale(0.3); opacity: 0; }
+    60% { transform: scale(1.12); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* 图标主体 */
+.desktop-icon-icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    border-radius: 16px;
+    background: var(--icon-bg);
+    transition: all 0.2s;
+    position: relative;
+}
+
+.desktop-icon:hover .desktop-icon-icon {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--card-shadow);
+}
+
+.desktop-icon.dragging .desktop-icon-icon {
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+/* NEW 标签 */
+.desktop-icon-badge {
+    position: absolute;
+    top: -4px;
+    right: -8px;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+}
+
+/* 删除按钮 */
+.desktop-icon-remove {
+    position: absolute;
+    top: -6px;
+    right: -4px;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(239,68,68,0.9);
+    color: #fff;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    transition: transform 0.15s;
+    padding: 0;
+}
+
+.desktop-icon:hover .desktop-icon-remove {
+    display: flex;
+}
+
+.desktop-icon-remove:hover {
+    transform: scale(1.15);
+    background: #ef4444;
+}
+
+/* 图标标题 */
+.desktop-icon-name {
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-align: center;
+    line-height: 1.3;
+    max-width: 86px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-all;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+
+body.theme-light .desktop-icon-name {
+    text-shadow: none;
+}
+
+.desktop-icon.selected .desktop-icon-name {
+    background: rgba(99,102,241,0.2);
+    color: var(--accent-color);
+}
+
+/* ========== 空状态 ========== */
+.desktop-empty {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 2;
+    padding: 48px;
+    border-radius: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+    max-width: 420px;
+}
+
+.desktop-empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.desktop-empty h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.desktop-empty p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.desktop-empty .btn-primary {
+    padding: 12px 28px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.3);
+}
+
+.desktop-empty .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(99,102,241,0.4);
+}
+
+/* ========== 桌面信息 ========== */
+.desktop-info {
+    position: absolute;
+    bottom: 16px;
+    right: 24px;
+    z-index: 2;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(8px);
+    font-size: 12px;
+    color: var(--text-muted);
+    border: 1px solid rgba(255,255,255,0.06);
+    pointer-events: none;
+}
+
+body.theme-light .desktop-info {
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(0,0,0,0.06);
+}
+
+/* ========== 右键菜单 ========== */
+.context-menu {
+    position: fixed;
+    z-index: 2000;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+    padding: 6px;
+    min-width: 160px;
+    display: none;
+    animation: contextIn 0.12s ease;
+}
+
+.context-menu.active {
+    display: block;
+}
+
+@keyframes contextIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.context-item {
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.context-item:hover {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+}
+
+.context-danger {
+    color: #f87171;
+}
+
+.context-danger:hover {
+    background: rgba(239,68,68,0.12);
+    color: #f87171;
+}
+
+.context-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 4px 8px;
+}
+
+/* 桌面空白右键菜单 */
+.desktop-context-menu {
+    position: fixed;
+    z-index: 2000;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+    padding: 6px;
+    min-width: 160px;
+    display: none;
+    animation: contextIn 0.12s ease;
+}
+
+.desktop-context-menu.active {
+    display: block;
+}
+
+/* ========== 工具商店面板 ========== */
+.store-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.store-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.store-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 420px;
+    max-width: 92vw;
+    z-index: 2001;
+    background: var(--card-bg);
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: -8px 0 40px rgba(0,0,0,0.3);
+}
+
+.store-panel.active {
+    transform: translateX(0);
+}
+
+.store-header {
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.store-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.store-header p {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.store-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 10px;
+    background: var(--hover-bg);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.store-close:hover {
+    background: rgba(239,68,68,0.12);
+    color: #f87171;
+}
+
+/* 商店内搜索 */
+.store-search {
+    padding: 16px 24px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.store-search svg {
+    position: absolute;
+    left: 38px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.store-search input {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.store-search input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-shadow);
+}
+
+.store-search input::placeholder {
+    color: var(--text-muted);
+}
+
+/* 商店工具列表 */
+.store-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 24px 24px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.store-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.store-body::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+/* 商店分类 */
+.store-category {
+    margin-bottom: 28px;
+}
+
+.store-cat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.store-cat-icon {
+    font-size: 20px;
+}
+
+.store-cat-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.store-cat-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 1px 8px;
+    border-radius: 8px;
+    background: var(--hover-bg);
+}
+
+/* 商店工具项 */
+.store-tool {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    margin-bottom: 6px;
+    transition: background 0.15s;
+    position: relative;
+}
+
+.store-tool:hover {
+    background: var(--hover-bg);
+}
+
+.store-tool-icon {
+    font-size: 24px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--icon-bg);
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.store-tool-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.store-tool-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.store-tool-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.store-tool-added {
+    font-size: 11px;
+    color: var(--accent-color);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 商店添加/移除按钮 */
+.store-btn {
+    flex-shrink: 0;
+    padding: 7px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--accent-color);
+    background: transparent;
+    color: var(--accent-color);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.store-btn:hover {
+    background: var(--accent-color);
+    color: #fff;
+}
+
+.store-btn.remove {
+    border-color: rgba(239,68,68,0.3);
+    color: var(--text-muted);
+}
+
+.store-btn.remove:hover {
+    border-color: #f87171;
+    background: rgba(239,68,68,0.12);
+    color: #f87171;
+}
+
+/* 商店搜索无结果 */
+.store-no-result {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* ========== 导航栏商店按钮 ========== */
+.btn-store {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--accent-color);
+    background: rgba(99,102,241,0.08);
+    color: var(--accent-color);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.btn-store:hover {
+    background: var(--accent-color);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.3);
+}
+
+.btn-store svg {
+    flex-shrink: 0;
+}
+
+/* ========== Toast ========== */
+.desktop-toast {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    padding: 10px 24px;
+    border-radius: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+    z-index: 3000;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.desktop-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ========== 桌面布局辅助 ========== */
+/* 一键排列按钮 */
+.desktop-arrange-btn {
+    position: absolute;
+    bottom: 16px;
+    left: 24px;
+    z-index: 2;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(8px);
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.desktop-arrange-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-primary);
+    border-color: var(--accent-color);
+}
+
+body.theme-light .desktop-arrange-btn {
+    background: rgba(255,255,255,0.6);
+    border-color: rgba(0,0,0,0.06);
+}
+
+/* ========== 桌面底部适配任务栏 ========== */
+.desktop.has-taskbar {
+    bottom: 48px;
+}
+
+.desktop.has-taskbar .desktop-info {
+    bottom: 8px;
+}
+
+.desktop.has-taskbar .desktop-arrange-btn {
+    bottom: 8px;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 640px) {
+    .store-panel {
+        width: 100vw;
+        max-width: 100vw;
+    }
+
+    .btn-store span {
+        display: none;
+    }
+
+    .desktop-icon {
+        width: 76px;
+    }
+
+    .desktop-icon-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 28px;
+        border-radius: 13px;
+    }
+
+    .desktop-icon-name {
+        font-size: 10px;
+        max-width: 72px;
+    }
+
+    .desktop-empty {
+        margin: 0 20px;
+        padding: 32px 24px;
+        max-width: calc(100vw - 40px);
+    }
+
+    .desktop-empty-icon {
+        font-size: 48px;
+    }
+
+    .desktop-empty h2 {
+        font-size: 18px;
+    }
+}

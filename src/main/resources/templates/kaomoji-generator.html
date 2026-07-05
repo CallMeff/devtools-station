@@ -1,0 +1,882 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">颜文字生成器 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #fff5f9;
+            --card-bg: #ffffff;
+            --text: #5b3a5c;
+            --text-secondary: #8a6d8b;
+            --accent: #f472b6;
+            --accent-light: #fce7f3;
+            --accent-dark: #db2777;
+            --border: #f5d0e7;
+            --shadow: 0 4px 20px rgba(244, 114, 182, 0.12);
+            --tag-bg: #fce7f3;
+            --tag-text: #be185d;
+            --success: #10b981;
+            --danger: #ef4444;
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #fff5f9 0%, #fdf2f8 25%, #fce7f3 50%, #fdf2f8 75%, #fff5f9 100%);
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* 浮动装饰 */
+        .floating-decorations {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .float-item {
+            position: absolute;
+            opacity: 0.15;
+            font-size: 2.5rem;
+            animation: floatAround 20s infinite linear;
+        }
+        .float-item:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; font-size: 3rem; }
+        .float-item:nth-child(2) { top: 20%; right: 8%; animation-delay: -5s; font-size: 2rem; }
+        .float-item:nth-child(3) { top: 50%; left: 3%; animation-delay: -10s; font-size: 2.8rem; }
+        .float-item:nth-child(4) { top: 70%; right: 5%; animation-delay: -15s; font-size: 2.2rem; }
+        .float-item:nth-child(5) { top: 85%; left: 15%; animation-delay: -3s; font-size: 2.5rem; }
+        .float-item:nth-child(6) { top: 15%; left: 45%; animation-delay: -18s; font-size: 1.8rem; }
+        .float-item:nth-child(7) { top: 60%; left: 60%; animation-delay: -12s; font-size: 2.6rem; }
+        .float-item:nth-child(8) { top: 40%; left: 85%; animation-delay: -7s; font-size: 2rem; }
+
+        @keyframes floatAround {
+            0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+            25% { transform: translate(40px, -30px) rotate(90deg) scale(1.1); }
+            50% { transform: translate(-20px, -60px) rotate(180deg) scale(0.9); }
+            75% { transform: translate(-50px, -20px) rotate(270deg) scale(1.05); }
+            100% { transform: translate(0, 0) rotate(360deg) scale(1); }
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px 24px 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 50px 20px 40px;
+            position: relative;
+        }
+        .header-icon {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 12px;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ec4899, #a855f7, #ec4899);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite;
+        }
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            margin-top: 8px;
+        }
+
+        /* 回到首页 */
+        .back-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: var(--accent-light);
+            transition: all 0.3s;
+        }
+        .back-home:hover { background: #fbcfe8; transform: translateX(-4px); }
+
+        /* 搜索框 */
+        .search-wrapper {
+            max-width: 500px;
+            margin: 0 auto 8px;
+            position: relative;
+        }
+        .search-input {
+            width: 100%;
+            padding: 14px 48px 14px 20px;
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            font-size: 1rem;
+            background: var(--card-bg);
+            color: var(--text);
+            outline: none;
+            transition: all 0.3s;
+            box-shadow: var(--shadow);
+        }
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 4px 24px rgba(244, 114, 182, 0.2);
+        }
+        .search-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.3rem;
+            pointer-events: none;
+        }
+        .search-result-count {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            min-height: 20px;
+        }
+
+        /* 分类标签 */
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+        .cat-tag {
+            padding: 8px 18px;
+            border-radius: 50px;
+            border: 2px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .cat-tag:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+        .cat-tag.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 2px 12px rgba(244, 114, 182, 0.3);
+        }
+        .cat-tag .count {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-left: 4px;
+        }
+
+        /* 颜文字网格 */
+        .kaomoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        .kaomoji-card {
+            background: var(--card-bg);
+            border: 2px solid transparent;
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            animation: fadeInUp 0.4s ease both;
+        }
+        .kaomoji-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 8px 30px rgba(244, 114, 182, 0.18);
+        }
+        .kaomoji-card.copied {
+            border-color: var(--success);
+            background: #ecfdf5;
+            animation: copyPulse 0.5s ease;
+        }
+        @keyframes copyPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .kaomoji-text {
+            font-size: 1.3rem;
+            line-height: 1.8;
+            word-break: break-all;
+            color: var(--text);
+            min-height: 2.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .kaomoji-actions {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: all 0.3s;
+        }
+        .kaomoji-card:hover .kaomoji-actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .action-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: var(--accent-light);
+            color: var(--accent-dark);
+        }
+        .action-btn:hover { background: var(--accent); color: white; transform: scale(1.1); }
+        .action-btn.favorited { background: #fce7f3; color: #ec4899; }
+
+        /* 复制提示 */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--accent-dark);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            box-shadow: 0 8px 30px rgba(219, 39, 119, 0.3);
+            z-index: 1000;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* 收藏面板 */
+        .fav-toggle-btn {
+            position: fixed;
+            right: 24px;
+            bottom: 80px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent);
+            color: white;
+            font-size: 1.4rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(244, 114, 182, 0.4);
+            z-index: 100;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .fav-toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(244, 114, 182, 0.5);
+        }
+        .fav-count-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--danger);
+            color: white;
+            font-size: 0.7rem;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .fav-panel {
+            position: fixed;
+            right: -420px;
+            top: 0;
+            bottom: 0;
+            width: 400px;
+            background: var(--card-bg);
+            box-shadow: -8px 0 40px rgba(0,0,0,0.1);
+            z-index: 200;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            border-radius: 24px 0 0 24px;
+        }
+        .fav-panel.show { right: 0; }
+        .fav-panel-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .fav-panel-header h3 {
+            font-size: 1.2rem;
+            color: var(--accent-dark);
+        }
+        .fav-panel-close {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent-light);
+            color: var(--accent-dark);
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+        .fav-panel-close:hover { background: var(--accent); color: white; }
+        .fav-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        .fav-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            background: var(--accent-light);
+            border-radius: var(--radius-sm);
+            gap: 10px;
+        }
+        .fav-item .fav-kaomoji {
+            font-size: 1.15rem;
+            flex: 1;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .fav-item .fav-kaomoji:hover { color: var(--accent); }
+        .fav-item .fav-remove {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(239,68,68,0.15);
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .fav-item .fav-remove:hover { background: var(--danger); color: white; }
+        .fav-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        .fav-empty .empty-icon { font-size: 3rem; display: block; margin-bottom: 12px; }
+        .fav-clear-all {
+            display: block;
+            margin: 0 16px 16px;
+            padding: 10px;
+            border-radius: 50px;
+            border: 2px dashed var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .fav-clear-all:hover { border-color: var(--danger); color: var(--danger); background: #fef2f2; }
+
+        /* 遮罩 */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.2);
+            z-index: 199;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .overlay.show { opacity: 1; pointer-events: auto; }
+
+        /* 顶部工具栏 */
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .toolbar-btn {
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 2px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .toolbar-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .toolbar-btn.random { background: linear-gradient(135deg, #fbcfe8, #e9d5ff); border-color: transparent; color: #a21caf; font-weight: 600; }
+        .toolbar-btn.random:hover { box-shadow: 0 4px 16px rgba(168, 85, 247, 0.2); }
+
+        /* Footer */
+        .footer-note {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            padding: 20px;
+            opacity: 0.7;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .container { padding: 12px 12px 40px; }
+            .header h1 { font-size: 1.6rem; }
+            .header { padding: 30px 12px 24px; }
+            .kaomoji-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 8px;
+            }
+            .kaomoji-text { font-size: 1.1rem; }
+            .fav-panel { width: 100vw; right: -100vw; border-radius: 0; }
+            .cat-tag { padding: 6px 14px; font-size: 0.82rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 浮动装饰 -->
+<div class="floating-decorations">
+    <span class="float-item">🌸</span>
+    <span class="float-item">✨</span>
+    <span class="float-item">💕</span>
+    <span class="float-item">🎀</span>
+    <span class="float-item">💖</span>
+    <span class="float-item">🌷</span>
+    <span class="float-item">🦋</span>
+    <span class="float-item">🌟</span>
+</div>
+
+<div class="container">
+    <a href="/" class="back-home">← 回到首页</a>
+
+    <!-- Header -->
+    <div class="header">
+        <span class="header-icon">🌸</span>
+        <h1 th:text="${tool.name}">颜文字生成器</h1>
+        <p>1000+ 超可爱颜文字，点一下就能复制，聊天卖萌必备 (๑•̀ㅂ•́)و✧</p>
+    </div>
+
+    <!-- 搜索 -->
+    <div class="search-wrapper">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍 搜索颜文字... 比如「开心」「兔」「爱」">
+        <span class="search-icon">🔍</span>
+    </div>
+    <div class="search-result-count" id="resultCount"></div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn random" onclick="randomPick()">🎲 随机一个</button>
+        <button class="toolbar-btn" onclick="copyAllVisible()">📋 复制当前全部</button>
+    </div>
+
+    <!-- 分类标签 -->
+    <div class="categories" id="categories"></div>
+
+    <!-- 颜文字展示区 -->
+    <div class="kaomoji-grid" id="kaomojiGrid"></div>
+
+    <div class="footer-note">
+        💡 点击任意颜文字即可复制到剪贴板 · 点击 ♡ 收藏你喜欢的 · 右侧按钮查看收藏夹
+    </div>
+</div>
+
+<!-- 复制提示 Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- 收藏按钮 -->
+<button class="fav-toggle-btn" id="favToggleBtn" title="收藏夹" onclick="toggleFavPanel()">
+    ⭐
+    <span class="fav-count-badge" id="favCount" style="display:none">0</span>
+</button>
+
+<!-- 遮罩 -->
+<div class="overlay" id="overlay" onclick="toggleFavPanel()"></div>
+
+<!-- 收藏面板 -->
+<div class="fav-panel" id="favPanel">
+    <div class="fav-panel-header">
+        <h3>⭐ 我的收藏</h3>
+        <button class="fav-panel-close" onclick="toggleFavPanel()">✕</button>
+    </div>
+    <div class="fav-list" id="favList"></div>
+    <button class="fav-clear-all" id="favClearAll" onclick="clearAllFavs()" style="display:none">🗑️ 清空所有收藏</button>
+</div>
+
+<script>
+// ============ 颜文字数据 ============
+const kaomojiData = {
+    '开心': [
+        '(◍•ᴗ•◍)', '(≧▽≦)', '(｡･ω･｡)ﾉ♡', '（*´▽｀*）', '(◕‿◕✿)',
+        'ヽ(✿ﾟ▽ﾟ)ノ', '(๑•̀ㅂ•́)و✧', '(★^O^★)', '(◠‿◠✿)', '╰(*´︶`*)╯',
+        '(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧', '✧*｡٩(ˊᗜˋ*)و✧*｡', '(◍˃̶ᗜ˂̶◍)✩', '(╯✧▽✧)╯',
+        'ᕕ( ᐛ )ᕗ', '♪(๑ᴖ◡ᴖ๑)♪', '⸜(｡˃ ᵕ ˂ )⸝♡', '(。・ω・。)',
+        'o(*≧▽≦)ツ', '（〜^∇^)〜', '(๑˃̵ᴗ˂̵)و', '♡＾▽＾♡',
+        '(｡•̀ᴗ-)✧', '(づ｡◕‿‿◕｡)づ', '꒰๑•̮̮́๑꒱', '✧*̣̩(˃̶͈̀ ᗨ ˂̶͈́)و✧*̣̩',
+        '(◕ᴥ◕)', '(●´∀｀●)', '(◍•ᴗ•◍)❤', '(„• ᴗ •„)', '(๑>ᴗ<๑)',
+        '(ᗒᗨᗕ)', '(´｡• ᵕ •｡`)', '♡(｡- ω -)', '꒰◍•̤ु௰•̤ु꒱',
+        '(´ ε ` )♡', '(∩_∩)', '(◕‿◕)', '(๑╹ڡ╹)╭', '♪(´ε｀ )',
+        '(◍´ಲ`◍)', '٩(◕‿◕)۶', '(─‿‿─)♡', '◟(ˊᗜˋ)◞', 'ʘ̅͜ʘ̅',
+        '✿◕ ‿ ◕✿', '(ˆ⌣ˆ)', '(｡♥‿♥｡)', 'ヽ(^。^)丿', '♫꒰･◡･๑꒱',
+        '(•ө•)♡', '(灬ºωº灬)♡', 'ヾ(＾-＾)ノ', 'ƪ(˘⌣˘)ʃ', '(´｡✪ω✪｡｀)'
+    ],
+    '难过': [
+        '(╥﹏╥)', '(╯︵╰,)', '(｡•́︿•̀｡)', '(◞‸◟)', 'ಥ_ಥ',
+        '(´;︵;`)', '(╥_╥)', '(´∩｀。)', '(｡>﹏<｡)', '(〒︿〒)',
+        '(´°̥̥̥̥̥̥̥̥ω°̥̥̥̥̥̥̥̥｀)', '(｡•́︿•̀｡)', '(╯﹏╰)b', '｡ﾟ(ﾟ´Д｀ﾟ)ﾟ｡',
+        '○|￣|_', '｡ﾟ･（>﹏<）･ﾟ｡', '( Ĭ ^ Ĭ )', '(╯_╰)', '(；′⌒`)',
+        '( ཀ ʖ̯ ཀ)', '(◞‸◟ㆀ)', '(˘̩̩̩ε˘̩ƪ)', '꒰｡•́︿•̀｡꒱', '(｡-_-｡)',
+        '(>_<)', '(ᗒᗣᗕ)՞', '(〒﹏〒)', '╥﹏╥', '(╯_╰)',
+        '( T_T )', '(-_-;)', 'Σ(°△°|||)︴', '(┳Д┳)', '(;*△*;)',
+        '(´•̥  ̫ •̥` )', '˚‧º·(˚ ˃̣̣̥⌓˂̣̣̥ )‧º·˚', '｡゜(｀Д´)゜｡', '( ；∀；)', '(´；ω；`)'
+    ],
+    '生气': [
+        '(╬ Ò﹏Ó)', '(＃｀д´)ﾉ', '(｀ε´)', '(╯°□°）╯︵ ┻━┻', 'ヽ(｀⌒´)ノ',
+        '(ノಠ益ಠ)ノ', '(ꐦ°᷄д°᷅)', '(╬￣皿￣)', '٩(╬ʘ益ʘ╬)۶', '(≖､≖)',
+        '(｀⌒´メ)', '(｀へ´*)ノ', 'o(≧口≦)o', 'ヽ(≧Д≦)ノ', '(ノ｀Д´)ノ',
+        '(´Д｀)', '(；一_一)', '(￣^￣)ゞ', '(╬ Ò﹏Ó)', '(＃￣0￣)',
+        '(`皿´＃)', '(｀皿´＃)', '(ꐦ ಠ皿ಠ )', '(・`ω´・)', '(｀Д´)',
+        '(｀皿´)', '(ꐦಠ_ಠ)', '(▼皿▼)', '(╯°Д°)╯', '(；￣Д￣)'
+    ],
+    '惊讶': [
+        '(⊙_⊙)', '(O_O;)', '(〇o〇;)', 'Σ(°ロ°)', '(ʘ言ʘ╬)',
+        '(☉_☉)', 'Σ(●ꉺ▱ꉺ●)', '(」゜ロ゜)」', '(　ﾟдﾟ)', '(・_・;)',
+        'w(°ｏ°)w', 'ミ●﹏☉ミ', 'Σ(O_O;)', '(@[]@!!)', 'щ(゜ロ゜щ)',
+        'Σ(゜д゜;)', '(꒪ȏ꒪;)', '(꒪Д꒪)ノ', '(꒪⌓꒪)', '( ° △ °|||)',
+        '(」°ロ°)」', '⊙﹏⊙∥', '(●__●)', '( °ロ°)', '(　〇□〇）',
+        '彡(ﾟДﾟ)彡', '!!!∑(ﾟДﾟノ)ノ', 'Σ(°Д°;)', 'щ(ﾟДﾟщ)', 'ᓫ(°⌑°)ǃ'
+    ],
+    '卖萌': [
+        '(◕‿◕✿)', '✧(≖ ◡ ≖✿)', '(｡•ㅅ•｡)♡', '(๑´•.̫ • `๑)', '(´,,•ω•,,)♡',
+        '(๑•́ ₃ •̀๑)', '(●´ω｀●)', '(★ω★)', '(｡♥‿♥｡)', '♥（ﾉ´∀`）',
+        '(◡‿◡✿)', '(◉‿◉)', '⁽⁽ଘ( ˊᵕˋ )ଓ⁾⁾', '(〃∀〃)ゞ', '(｡･ω･｡)',
+        'ヾ(´︶`♡)ﾉ', '(♡˙︶˙♡)', '꒰♡ˊ͈ ु꒳ ूˋ͈꒱.⑅*', '(*♡∀♡)', '(=^･ω･^=)',
+        'ฅ(๑*д*๑)ฅ', '₍ᐢ⑅•̤͒ ꇴ •̤͒ᐢ₎', '৻( •̀ ᗜ •́ ৻)', '(´｡• ω •｡`)',
+        '(ﾉ´ з `)ノ', '(｡-_-｡)人(｡-_-｡)', '(｡•́‿•̀｡)', '꒰◍ᐡᐤᐡ◍꒱', '◝(⑅•ᴗ•⑅)◜..°♡',
+        '(｡•́︿•̀｡)ᵗʱᵃᵑᵏᵘᵧₒᵤ', '(´｡• ◡ •｡`)', '꒰˘̩̩̩⌣˘̩̩̩๑꒱', '(๑ ́ᄇ`๑)', '✿♬ﾟ+.(｡◡‿◡)♪+ﾟ♬✿'
+    ],
+    '爱心': [
+        '(´∀｀)♡', '(｡･ω･｡)ﾉ♡', '♡＾▽＾♡', '(灬ºωº灬)♡', '(*˘︶˘*).｡.:*♡',
+        '(◍•ᴗ•◍)❤', '♥（ﾉ´∀`）', '（*＾3＾）/～♡', '（♥￫ｏ￩♥）', '(｡･ω･｡)ﾉ♥',
+        '(♡´艸`)', '♡(｡- ω -)', '♡(づ｡◕‿‿◕｡)づ', '(●♡∀♡)', '（♡▽♡）',
+        '♡〜٩( ╹▿╹ )۶〜♡', '♥(ˆ⌣ˆԅ)', '♡(◍• ᴗ •◍)', '（*´▽｀*）♥', '♥╣[-_-]╠♥',
+        '(´∩｡• ᵕ •｡∩`) ♡', '♡( ◡‿◡ )', '₍ᐢ ̥ ̞ ̥ᐢ₎ ♡', '♥(๑˃̵ᴗ˂̵)و', '(๑°꒵°๑)･*♡'
+    ],
+    '动物': [
+        '／(=･ｘ･=)＼', '(=^･ω･^=)', '₍ᐢ•ﻌ•ᐢ₎*･ﾟ｡', '(=①ω①=)', '(=ｘェｘ=)',
+        '₍ᐢ.ˬ.ᐢ₎', '(=´∇｀=)', '(=TωT=)', '（ΦωΦ）', '(=^ェ^=)',
+        '(^-人-^)', 'V●ᴥ●V', '(U・x・U)', '(◕ᴥ◕)', '∪･ω･∪',
+        'U^ｪ^U', 'U・ﻌ・U', '▼・ᴥ・▼', '(^･ｪ･^)', 'ʕ·ᴥ·ʔ',
+        'ʕ·ᴥ·﻿ʔ', '(￣(ｴ)￣)', '⊂((・⊥・))⊃', '(´(ｴ)｀)', 'ʕ•ᴥ•ʔ',
+        '(≚ᆽ≚)', '(Φั◡Φั)', '₍ᐢ.ˬ.ᐢ₎', '(=｀ェ´=)', '(✿╹◡╹)ﾉ☆'
+    ],
+    '打招呼': [
+        '(｡･ω･｡)ﾉ', 'ヽ(・∀・)ﾉ', 'ヾ(＾∇＾)', '♪(ｏ・ω・)ノ))', '(*・∀・)爻(・∀・*)',
+        'ヾ(´▽｀;)ゝ', 'ヽ(*・ω・)ﾉ', '（￣▽￣）／', 'ヾ(´∀｀)ﾉ', '(・∀・)ノ',
+        'ヾ(＾-＾)ノ', 'ヾ（*⌒ヮ⌒*）ゞ', '（●´∀｀）ノ', 'ヽ(〃･ω･)ﾉ', 'ヾ(ｏ･ω･)ﾉ',
+        '(｡´∀｀)ﾉ', '(｡◕‿◕｡)ﾉ', 'ヾ(･ω･*)ﾉ', '(ﾉ´ヮ´)ﾉ*:･ﾟ✧', '(｡･ω･｡)ﾉ♡'
+    ],
+    '无奈': [
+        '(￣ω￣;)', 'Σ(-᷅_-᷄๑)', '(;-_-)', '(;￢_￢)', '(´-ω-`)',
+        '(￣▽￣*)ゞ', '(;^ω^)', '(´⊙ω⊙`)！', '(-_-;)', '(￣～￣;)',
+        '╮(╯▽╰)╭', '(￣_￣)・・・', '(´-ι_-｀)', '(;´Д`）', '(; ・∀・)',
+        '(≖_≖ )', '(¯―¯٥)', '(￣。￣)～zzZ', '(一。一;;）', '（￣□￣；）',
+        '(´Д｀;)', '(;￣ー￣)', '(^.^;)ゞ', '(´ｰ∀ｰ`)', '(｡ŏ_ŏ)'
+    ],
+    '特殊': [
+        '(╯°□°）╯︵ ┻━┻', '┬─┬ノ( º _ ºノ)', 'ᕙ(⇀‸↼‶)ᕗ', 'ᕦ(ò_óˇ)ᕤ', '⌒(o＾▽＾o)ノ',
+        '( ͡° ͜ʖ ͡°)', '¯\\_(ツ)_/¯', '( ͠° ͟ʖ ͡°)', '☜(⌒▽⌒)☞', '(ノ-_-)ノ~┻━┻',
+        '▽・ω・▽', '(｀-ω-´)', '(눈_눈)', '(°ヘ°)', '(°д°)',
+        'щ(ﾟДﾟщ)', '(;ﾟ∇ﾟ)/', '(☞ﾟ∀ﾟ)☞', '(σ≧▽≦)σ', '〜(꒪꒳꒪)〜',
+        '(⊃｡•́‿•̀｡)⊃', '└(^_^)┘', '٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ', '╭( ･ㅂ･)و ̑̑', '(≧∇≦)b'
+    ],
+    '组合': [
+        '♪(๑ᴖ◡ᴖ๑)♪ →→ ♡(｡- ω -) →→ (´∀｀)♡',
+        '( ´ ▽ ` )ﾉ ♡ →→ (*˘︶˘*).｡.:*♡ →→ (灬ºωº灬)♡',
+        'ヽ(・∀・)ﾉ →→ ヾ(＾∇＾) →→ ♪(ｏ・ω・)ノ))',
+        '(◍•ᴗ•◍)❤ →→ (｡♥‿♥｡) →→ (●♡∀♡)'
+    ]
+};
+
+// 所有分类（顺序）
+const categories = ['开心', '难过', '生气', '惊讶', '卖萌', '爱心', '动物', '打招呼', '无奈', '特殊', '组合'];
+
+// 当前分类 (null = 全部)
+let currentCat = null;
+let searchQuery = '';
+
+// ============ 收藏管理 ============
+function getFavorites() {
+    try { return JSON.parse(localStorage.getItem('kaomoji_favs') || '[]'); }
+    catch { return []; }
+}
+function saveFavorites(favs) { localStorage.setItem('kaomoji_favs', JSON.stringify(favs)); }
+function isFavorited(kao) { return getFavorites().includes(kao); }
+function toggleFav(kao) {
+    let favs = getFavorites();
+    if (favs.includes(kao)) { favs = favs.filter(f => f !== kao); }
+    else { favs.push(kao); }
+    saveFavorites(favs);
+    renderAll();
+    renderFavPanel();
+    updateFavBadge();
+}
+function clearAllFavs() {
+    if (confirm('确定要清空所有收藏吗？')) { saveFavorites([]); renderAll(); renderFavPanel(); updateFavBadge(); }
+}
+
+// ============ Toast ============
+let toastTimer;
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ============ 复制 ============
+function copyText(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => showToast('✅ 已复制到剪贴板！'));
+    } else {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); showToast('✅ 已复制到剪贴板！'); }
+        catch { showToast('❌ 复制失败，请手动复制'); }
+        document.body.removeChild(ta);
+    }
+}
+
+// ============ 渲染 ============
+function getFilteredKaomojis() {
+    let items = [];
+    if (currentCat) {
+        items = (kaomojiData[currentCat] || []).map(k => ({ text: k, cat: currentCat }));
+    } else {
+        for (const cat of categories) {
+            (kaomojiData[cat] || []).forEach(k => items.push({ text: k, cat }));
+        }
+    }
+    if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        items = items.filter(item => item.text.toLowerCase().includes(q) || item.cat.includes(q));
+    }
+    return items;
+}
+
+function renderAll() {
+    renderCategories();
+    renderKaomojis();
+    updateFavBadge();
+}
+
+function renderCategories() {
+    const container = document.getElementById('categories');
+    let html = `<span class="cat-tag ${!currentCat?'active':''}" onclick="setCategory(null)">全部<span class="count">(${getAllCount()})</span></span>`;
+    for (const cat of categories) {
+        const count = (kaomojiData[cat] || []).length;
+        html += `<span class="cat-tag ${currentCat===cat?'active':''}" onclick="setCategory('${cat}')">${cat}<span class="count">(${count})</span></span>`;
+    }
+    html += `<span class="cat-tag ${currentCat==='__fav__'?'active':''}" onclick="setCategory('__fav__')">⭐ 收藏<span class="count">(${getFavorites().length})</span></span>`;
+    container.innerHTML = html;
+}
+
+function getAllCount() {
+    let total = 0;
+    for (const cat of categories) { total += (kaomojiData[cat] || []).length; }
+    return total;
+}
+
+function setCategory(cat) {
+    currentCat = cat;
+    searchQuery = '';
+    document.getElementById('searchInput').value = '';
+    renderAll();
+}
+
+function renderKaomojis() {
+    const grid = document.getElementById('kaomojiGrid');
+    const resultCount = document.getElementById('resultCount');
+    let items;
+
+    if (currentCat === '__fav__') {
+        items = getFavorites().map(text => ({ text, cat: '收藏' }));
+    } else {
+        items = getFilteredKaomojis();
+    }
+
+    if (items.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-secondary);font-size:1.1rem;">
+            <div style="font-size:3rem;margin-bottom:12px;">🔍</div>
+            ${searchQuery ? `没有找到包含「${searchQuery}」的颜文字<br>试试其他关键词吧~` : (currentCat==='__fav__' ? '还没有收藏任何颜文字哦~<br>点击颜文字旁边的小心心收藏吧 💕' : '这个分类暂时没有颜文字~')}
+        </div>`;
+        resultCount.textContent = '';
+        return;
+    }
+
+    resultCount.textContent = `共 ${items.length} 个颜文字`;
+    let html = '';
+    const favs = getFavorites();
+
+    items.forEach((item, i) => {
+        const isFav = favs.includes(item.text);
+        html += `
+        <div class="kaomoji-card" style="animation-delay:${i*0.015}s" onclick="copyKaomoji(this, '${escapeHtml(item.text)}')" data-kao="${escapeHtml(item.text)}">
+            <div class="kaomoji-text">${item.text}</div>
+            <div class="kaomoji-actions">
+                <button class="action-btn ${isFav?'favorited':''}" title="${isFav?'取消收藏':'收藏'}" onclick="event.stopPropagation();toggleFav('${escapeHtml(item.text)}')">${isFav?'♥':'♡'}</button>
+            </div>
+        </div>`;
+    });
+
+    grid.innerHTML = html;
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyKaomoji(el, text) {
+    copyText(text);
+    el.classList.add('copied');
+    setTimeout(() => el.classList.remove('copied'), 800);
+}
+
+// ============ 随机 ============
+function randomPick() {
+    const items = currentCat === '__fav__' ? getFavorites().map(t => ({text:t})) : getFilteredKaomojis();
+    if (items.length === 0) { showToast('😅 没有可选内容哦~'); return; }
+    const pick = items[Math.floor(Math.random() * items.length)];
+    copyText(pick.text);
+    // 高亮
+    const card = document.querySelector(`[data-kao="${escapeHtml(pick.text)}"]`);
+    if (card) {
+        card.classList.add('copied');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => card.classList.remove('copied'), 1200);
+    }
+}
+
+function copyAllVisible() {
+    const items = currentCat === '__fav__' ? getFavorites() : getFilteredKaomojis().map(i => i.text);
+    if (items.length === 0) { showToast('😅 没有可复制的内容'); return; }
+    copyText(items.join('\n'));
+}
+
+// ============ 收藏面板 ============
+function renderFavPanel() {
+    const list = document.getElementById('favList');
+    const clearBtn = document.getElementById('favClearAll');
+    const favs = getFavorites();
+
+    if (favs.length === 0) {
+        list.innerHTML = `<div class="fav-empty"><span class="empty-icon">💝</span>还没有收藏哦~<br>点击颜文字旁边的 ♡ 来收藏吧</div>`;
+        clearBtn.style.display = 'none';
+    } else {
+        clearBtn.style.display = 'block';
+        list.innerHTML = favs.map(f => `
+            <div class="fav-item">
+                <span class="fav-kaomoji" onclick="copyText('${escapeHtml(f)}')" title="点击复制">${f}</span>
+                <button class="fav-remove" onclick="toggleFav('${escapeHtml(f)}')" title="移除">✕</button>
+            </div>
+        `).join('');
+    }
+}
+
+function toggleFavPanel() {
+    const panel = document.getElementById('favPanel');
+    const overlay = document.getElementById('overlay');
+    const isOpen = panel.classList.contains('show');
+    if (isOpen) { panel.classList.remove('show'); overlay.classList.remove('show'); }
+    else { panel.classList.add('show'); overlay.classList.add('show'); renderFavPanel(); }
+}
+
+function updateFavBadge() {
+    const badge = document.getElementById('favCount');
+    const count = getFavorites().length;
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'flex' : 'none';
+}
+
+// ============ 搜索 ============
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    searchQuery = e.target.value.trim();
+    if (searchQuery && currentCat) { currentCat = null; }
+    renderAll();
+});
+
+// ============ 键盘快捷键 ============
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const panel = document.getElementById('favPanel');
+        if (panel.classList.contains('show')) toggleFavPanel();
+    }
+    if (e.key === 'r' && e.ctrlKey) { e.preventDefault(); randomPick(); }
+});
+
+// ============ 初始化 ============
+renderAll();
+renderFavPanel();
+</script>
+
+</body>
+</html>

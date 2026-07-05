@@ -1,0 +1,369 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">MBTI 趣味测试 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #fff5fb;
+            --card-bg: #ffffff;
+            --text: #5d3a5c;
+            --text-secondary: #9a7e9b;
+            --accent: #f472b6;
+            --accent-light: #fce7f3;
+            --accent-dark: #db2777;
+            --border: #f5d4e8;
+            --shadow: 0 6px 30px rgba(244,114,182,0.13);
+            --radius: 18px;
+            --radius-sm: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #fff5fb 0%, #fdf2f8 20%, #fce7f3 50%, #f3e8ff 80%, #fff5fb 100%);
+            min-height: 100vh; color: var(--text); line-height: 1.6;
+        }
+        .floating-decorations { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .float-item { position: absolute; opacity: 0.1; font-size: 2.2rem; animation: floatHeart 20s infinite ease-in-out; }
+        .float-item:nth-child(1) { top: 5%; left: 10%; animation-delay: 0s; }
+        .float-item:nth-child(2) { top: 15%; right: 12%; animation-delay: -5s; font-size: 1.8rem; }
+        .float-item:nth-child(3) { top: 40%; left: 6%; animation-delay: -10s; font-size: 2.8rem; }
+        .float-item:nth-child(4) { top: 60%; right: 8%; animation-delay: -15s; font-size: 2rem; }
+        .float-item:nth-child(5) { top: 75%; left: 25%; animation-delay: -3s; font-size: 2.5rem; }
+        .float-item:nth-child(6) { top: 30%; left: 55%; animation-delay: -18s; font-size: 1.6rem; }
+        @keyframes floatHeart {
+            0% { transform: translateY(0) rotate(0deg) scale(1); }
+            25% { transform: translateY(-30px) rotate(8deg) scale(1.12); }
+            50% { transform: translateY(-10px) rotate(-4deg) scale(0.92); }
+            75% { transform: translateY(-38px) rotate(6deg) scale(1.05); }
+            100% { transform: translateY(0) rotate(0deg) scale(1); }
+        }
+
+        .container { max-width: 720px; margin: 0 auto; padding: 20px 20px 60px; position: relative; z-index: 1; }
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 24px; margin-bottom: 10px;
+            background: rgba(255,255,255,0.85); backdrop-filter: blur(12px);
+            border-radius: var(--radius-sm); box-shadow: var(--shadow);
+        }
+        .topbar .brand { font-size: 0.95rem; font-weight: 600; color: var(--accent-dark); }
+        .topbar .page-title { font-size: 0.9rem; color: var(--text-secondary); }
+
+        /* Header */
+        .header { text-align: center; padding: 35px 20px 20px; }
+        .header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #ec4899, #a855f7, #f472b6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 8px; letter-spacing: -0.3px;
+        }
+        .header .subtitle { color: var(--text-secondary); font-size: 1rem; }
+
+        /* Progress */
+        .progress-wrap { margin-bottom: 24px; }
+        .progress-bar {
+            width: 100%; height: 6px; background: #fce7f3; border-radius: 20px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, #f472b6, #a855f7);
+            border-radius: 20px; transition: width 0.4s ease;
+        }
+        .progress-text {
+            text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px;
+        }
+
+        /* Card */
+        .card {
+            background: var(--card-bg); border-radius: var(--radius); padding: 32px 30px;
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+            transition: transform 0.3s, opacity 0.3s;
+        }
+        .card.slide-out { transform: translateX(-30px); opacity: 0; }
+        .card.slide-in { animation: slideIn 0.4s ease; }
+        @keyframes slideIn { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        .question-num {
+            display: inline-block; background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: #fff; padding: 4px 14px; border-radius: 20px; font-size: 0.85rem;
+            font-weight: 600; margin-bottom: 18px;
+        }
+        .question-text { font-size: 1.25rem; font-weight: 600; color: var(--text); margin-bottom: 28px; line-height: 1.5; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn {
+            display: flex; align-items: center; gap: 14px;
+            padding: 16px 20px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+            background: #fefefe; cursor: pointer; transition: all 0.25s;
+            font-size: 1rem; color: var(--text); text-align: left;
+        }
+        .option-btn:hover {
+            border-color: #f472b6; background: #fdf2f8; transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(244,114,182,0.15);
+        }
+        .option-btn .emoji-badge {
+            font-size: 1.8rem; flex-shrink: 0; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            background: #fce7f3; border-radius: 12px;
+        }
+
+        /* Result */
+        .result-type {
+            text-align: center; font-size: 3.5rem; font-weight: 800;
+            background: linear-gradient(135deg, #ec4899, #a855f7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 8px;
+        }
+        .result-nickname { text-align: center; font-size: 1.2rem; color: var(--accent-dark); font-weight: 600; margin-bottom: 20px; }
+        .result-card {
+            background: linear-gradient(135deg, #fdf2f8, #f3e8ff);
+            border-radius: var(--radius-sm); padding: 20px;
+            margin-bottom: 14px; border: 1px solid var(--border);
+        }
+        .result-card h3 { font-size: 1rem; color: var(--accent-dark); margin-bottom: 8px; }
+        .result-card p { font-size: 0.95rem; color: var(--text); line-height: 1.7; }
+        .dim-bars { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+        .dim-bar {
+            flex: 1; min-width: 140px; background: #fce7f3; border-radius: 20px;
+            padding: 12px 16px; text-align: center;
+        }
+        .dim-bar .label { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px; }
+        .dim-bar .val { font-size: 1.3rem; font-weight: 700;
+            background: linear-gradient(135deg, #ec4899, #a855f7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .dim-bar .bar-outer { height: 6px; background: #fdf2f8; border-radius: 10px; margin-top: 6px; overflow: hidden; }
+        .dim-bar .bar-inner {
+            height: 100%; background: linear-gradient(90deg, #f472b6, #a855f7);
+            border-radius: 10px; transition: width 0.8s ease;
+        }
+
+        .btn-primary {
+            display: inline-block; padding: 14px 36px;
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: #fff; border: none; border-radius: 28px; font-size: 1.05rem;
+            font-weight: 600; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(244,114,182,0.35);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 26px rgba(244,114,182,0.45); }
+        .btn-ghost {
+            display: inline-block; padding: 12px 30px;
+            background: transparent; color: var(--accent-dark);
+            border: 2px solid var(--border); border-radius: 28px;
+            font-size: 1rem; cursor: pointer; transition: all 0.3s;
+        }
+        .btn-ghost:hover { border-color: #f472b6; background: #fdf2f8; }
+        .btn-row { text-align: center; margin-top: 24px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+        .hidden { display: none !important; }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(244,114,182,0.95); color: #fff; padding: 12px 28px;
+            border-radius: 25px; font-size: 0.95rem; z-index: 999;
+            animation: toastIn 0.4s ease, toastOut 0.4s 1.8s ease forwards;
+            box-shadow: 0 8px 30px rgba(244,114,182,0.3);
+        }
+        @keyframes toastIn { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+        @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
+    </style>
+</head>
+<body>
+<div class="floating-decorations">
+    <span class="float-item">🧩</span><span class="float-item">💫</span><span class="float-item">✨</span>
+    <span class="float-item">💖</span><span class="float-item">🌟</span><span class="float-item">🔮</span>
+</div>
+
+<div class="container">
+    <div class="topbar">
+        <span class="brand">🌸 DevTools Station</span>
+        <span class="page-title" th:text="${tool.name}">MBTI 趣味测试</span>
+    </div>
+
+    <div class="header">
+        <h1>🧩 MBTI 趣味测试</h1>
+        <p class="subtitle">12道题测测你是什么人格小可爱 ✨</p>
+    </div>
+
+    <!-- Quiz Section -->
+    <div id="quizSection">
+        <div class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+            <p class="progress-text" id="progressText">第 1 / 12 题</p>
+        </div>
+
+        <div class="card" id="questionCard">
+            <div class="question-num" id="qNum">Q1</div>
+            <div class="question-text" id="qText"></div>
+            <div class="options" id="qOptions"></div>
+        </div>
+    </div>
+
+    <!-- Result Section -->
+    <div id="resultSection" class="hidden">
+        <div class="card" style="animation: slideIn 0.6s ease;">
+            <div class="result-type" id="rType"></div>
+            <div class="result-nickname" id="rNickname"></div>
+
+            <div class="dim-bars">
+                <div class="dim-bar"><div class="label" id="d1Label"></div><div class="val" id="d1Val"></div><div class="bar-outer"><div class="bar-inner" id="d1Bar" style="width:50%"></div></div></div>
+                <div class="dim-bar"><div class="label" id="d2Label"></div><div class="val" id="d2Val"></div><div class="bar-outer"><div class="bar-inner" id="d2Bar" style="width:50%"></div></div></div>
+                <div class="dim-bar"><div class="label" id="d3Label"></div><div class="val" id="d3Val"></div><div class="bar-outer"><div class="bar-inner" id="d3Bar" style="width:50%"></div></div></div>
+                <div class="dim-bar"><div class="label" id="d4Label"></div><div class="val" id="d4Val"></div><div class="bar-outer"><div class="bar-inner" id="d4Bar" style="width:50%"></div></div></div>
+            </div>
+
+            <div class="result-card"><h3>💡 你是一个...</h3><p id="rDesc"></p></div>
+            <div class="result-card"><h3>💼 适合的职业</h3><p id="rCareer"></p></div>
+            <div class="result-card"><h3>💕 恋爱匹配度</h3><p id="rLove"></p></div>
+
+            <div class="btn-row">
+                <button class="btn-primary" onclick="retakeTest()">🔄 重新测试</button>
+                <button class="btn-ghost" onclick="shareResult()">📋 复制结果</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const questions = [
+        { text: '周末你会怎么过？', opts: [{ emoji: '🎉', text: '约朋友出去玩，人越多越开心', trait: 'E' }, { emoji: '🏠', text: '窝在家看剧/读书，独处充电最舒服', trait: 'I' }] },
+        { text: '新认识一群人时，你通常？', opts: [{ emoji: '💬', text: '主动开启话题，跟谁都能聊起来', trait: 'E' }, { emoji: '👀', text: '先观察，等别人来找我', trait: 'I' }] },
+        { text: '遇到烦恼时，你倾向于？', opts: [{ emoji: '📞', text: '立刻找闺蜜/朋友倾诉', trait: 'E' }, { emoji: '📝', text: '自己先消化整理思绪', trait: 'I' }] },
+        { text: '学新东西时，你更喜欢？', opts: [{ emoji: '📖', text: '先了解理论框架和整体概念', trait: 'N' }, { emoji: '🔧', text: '直接动手实践，边做边学', trait: 'S' }] },
+        { text: '做决定时，你更依靠？', opts: [{ emoji: '✨', text: '直觉和灵感，相信第六感', trait: 'N' }, { emoji: '📊', text: '事实和数据，亲眼看过的才信', trait: 'S' }] },
+        { text: '描述一件事时，你通常？', opts: [{ emoji: '🎨', text: '用比喻和联想，说得天花乱坠', trait: 'N' }, { emoji: '📝', text: '按时间顺序，一五一十讲清楚', trait: 'S' }] },
+        { text: '朋友找你哭诉，你第一反应？', opts: [{ emoji: '🤗', text: '先给拥抱和安慰，情绪最重要', trait: 'F' }, { emoji: '💡', text: '分析问题给解决方案', trait: 'T' }] },
+        { text: '你更看重一个人？', opts: [{ emoji: '💖', text: '善良、温暖、有同理心', trait: 'F' }, { emoji: '🧠', text: '聪明、理性、逻辑清晰', trait: 'T' }] },
+        { text: '面对冲突时你倾向于？', opts: [{ emoji: '🕊️', text: '维护和谐关系，退一步海阔天空', trait: 'F' }, { emoji: '⚖️', text: '据理力争，对错分明', trait: 'T' }] },
+        { text: '旅行前你会？', opts: [{ emoji: '📋', text: '做好详细攻略，每天安排得明明白白', trait: 'J' }, { emoji: '🎒', text: '只定大方向，到了再随性发挥', trait: 'P' }] },
+        { text: '你的书桌/房间通常是？', opts: [{ emoji: '✨', text: '整整齐齐，每样东西有固定位置', trait: 'J' }, { emoji: '🌈', text: '随性摆放，乱中有序有烟火气', trait: 'P' }] },
+        { text: 'Deadline 前你通常？', opts: [{ emoji: '⏰', text: '提前完成，不喜欢最后一刻赶工', trait: 'J' }, { emoji: '🔥', text: '最后冲刺，deadline 是第一生产力', trait: 'P' }] }
+    ];
+
+    const results = {
+        'INTJ': { name: '建筑师', emoji: '🏰', desc: '独立、理性、有远见的战略家。你像一座坚固的城堡，有自己的世界和规划。不喜欢被打扰，但内心丰富得惊人。', career: '科学家、工程师、战略顾问、律师', love: 'ENFP — 热情的追梦人能融化你的理性外壳' },
+        'INTP': { name: '逻辑学家', emoji: '🔬', desc: '安静的好奇宝宝，对万事万物充满探索欲。你活在自己的思维宇宙里，每天都在发现新大陆。', career: '程序员、教授、研究员、数据分析师', love: 'ESTJ — 实干家能把你拉回现实世界' },
+        'ENTJ': { name: '指挥官', emoji: '👑', desc: '天生的领导者，目标明确行动力超强。你就是团队里那个喊"跟我冲"而不是"给我上"的人。', career: 'CEO、项目经理、创业者、军官', love: 'INTP — 安静的天才让你学会放慢脚步' },
+        'ENTP': { name: '辩论家', emoji: '🦊', desc: '脑洞突破天际的创意发电机！你总能想到别人想不到的点子，热爱头脑风暴和有趣的争论。', career: '创业者、记者、发明家、演讲者', love: 'INFJ — 神秘感让你永远探索不完' },
+        'INFJ': { name: '提倡者', emoji: '🌙', desc: '温柔又坚定的理想主义者，你像月光一样柔和却有力量。能看透人心，是朋友们最信任的倾诉对象。', career: '心理咨询师、作家、教育者、HR', love: 'ENTP — 有趣的灵魂能点亮你的世界' },
+        'INFP': { name: '调停者', emoji: '🦋', desc: '温柔浪漫的梦想家，内心有个五彩斑斓的小宇宙。你相信善良，追求意义感，是治愈系小天使。', career: '艺术家、作家、社工、设计师', love: 'ENFJ — 热情的他能陪你一起做梦' },
+        'ENFJ': { name: '主人公', emoji: '🌟', desc: '温暖有感染力的天生领袖！你像太阳一样照亮身边的人，关心每个人的成长，是最会带团队的小太阳。', career: '教师、演讲者、咨询师、外交官', love: 'INFP — 温柔的他懂得你的每一分付出' },
+        'ENFP': { name: '竞选者', emoji: '🎈', desc: '自由快乐的人间小精灵！对新事物永远三分钟热度，但这三分钟能燃烧得比谁都灿烂。你的人生就是一场冒险。', career: '记者、编剧、市场策划、自由职业', love: 'INTJ — 沉稳的TA是你最好的锚' },
+        'ISTJ': { name: '物流师', emoji: '⚓', desc: '靠谱稳重的实干派，你说到就一定做到。像大海中的锚一样让人安心，是最值得信赖的伙伴。', career: '会计师、审计师、公务员、军人', love: 'ESFP — 活泼的他带你去冒险' },
+        'ISFJ': { name: '守卫者', emoji: '🛡️', desc: '默默守护的温柔天使，你记得每个人的喜好和生日。不善言辞但用行动表达爱，是最暖的存在。', career: '护士、教师、行政、社工', love: 'ESTP — 大胆的他带你见识新世界' },
+        'ESTJ': { name: '总经理', emoji: '🏗️', desc: '执行力爆表的组织高手！你说一不二，做事雷厉风行，是任何团队都离不开的核心执行者。', career: '管理者、法官、财务总监、军官', love: 'ISFP — 温柔的艺术家让你学会柔软' },
+        'ESFJ': { name: '执政官', emoji: '🎪', desc: '热情周到的社交达人，你是聚会的气氛担当。关心每个人的感受，是朋友最多的那个人。', career: '销售、公关、活动策划、护理', love: 'ISTP — 冷静的他的神秘吸引你' },
+        'ISTP': { name: '鉴赏家', emoji: '🔧', desc: '冷静动手的小能手，动手能力一流！你是那个在混乱中最镇定的人，危机时刻的救火队长。', career: '工程师、机械师、飞行员、刑警', love: 'ESFJ — 热情的他让你感受被照顾的温暖' },
+        'ISFP': { name: '探险家', emoji: '🎨', desc: '安静低调的艺术家灵魂，你用眼睛捕捉世界的美。不争不抢，但内心有自己的坚持和热爱。', career: '设计师、音乐家、摄影师、宠物医生', love: 'ESTJ — 强大的他给你满满安全感' },
+        'ESTP': { name: '企业家', emoji: '🔥', desc: '活在当下的行动派！你说干就干，从不拖泥带水。充满魅力和感染力，是最会活跃气氛的人。', career: '销售精英、创业家、运动员、急救员', love: 'ISFJ — 温柔的他治愈你的锋芒' },
+        'ESFP': { name: '表演者', emoji: '🎭', desc: '天生的快乐制造机！你的存在就是聚会的理由。热爱生活，享受当下，是所有人眼中的小太阳。', career: '演员、导游、主持人、幼师', love: 'ISTJ — 稳重的他让你有了温暖的避风港' }
+    };
+
+    let currentQ = 0;
+    let answers = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+
+    function renderQuestion() {
+        if (currentQ >= questions.length) { showResult(); return; }
+        var q = questions[currentQ];
+        document.getElementById('qNum').textContent = 'Q' + (currentQ + 1);
+        document.getElementById('qText').textContent = q.text;
+        var optsHtml = '';
+        for (var i = 0; i < q.opts.length; i++) {
+            optsHtml += '<button class="option-btn" onclick="selectAnswer(\'' + q.opts[i].trait + '\')">' +
+                '<span class="emoji-badge">' + q.opts[i].emoji + '</span>' +
+                '<span>' + q.opts[i].text + '</span></button>';
+        }
+        document.getElementById('qOptions').innerHTML = optsHtml;
+        document.getElementById('progressFill').style.width = (currentQ / questions.length * 100) + '%';
+        document.getElementById('progressText').textContent = '第 ' + (currentQ + 1) + ' / ' + questions.length + ' 题';
+    }
+
+    window.selectAnswer = function(trait) {
+        answers[trait]++;
+        currentQ++;
+        var card = document.getElementById('questionCard');
+        card.classList.add('slide-out');
+        setTimeout(function() {
+            renderQuestion();
+            card.classList.remove('slide-out');
+            card.classList.add('slide-in');
+            setTimeout(function() { card.classList.remove('slide-in'); }, 400);
+        }, 300);
+    };
+
+    function getType() {
+        var e = answers.E > answers.I ? 'E' : 'I';
+        var n = answers.N > answers.S ? 'N' : 'S';
+        var f = answers.F > answers.T ? 'F' : 'T';
+        var j = answers.J > answers.P ? 'J' : 'P';
+        return e + n + f + j;
+    }
+
+    function getPercent(a, b) { var t = a + b; return t === 0 ? 50 : Math.round(a / t * 100); }
+
+    function showResult() {
+        document.getElementById('quizSection').classList.add('hidden');
+        document.getElementById('resultSection').classList.remove('hidden');
+
+        var type = getType();
+        var r = results[type];
+        document.getElementById('rType').textContent = type;
+        document.getElementById('rNickname').textContent = r.emoji + ' ' + r.name;
+        document.getElementById('rDesc').textContent = r.desc;
+        document.getElementById('rCareer').textContent = r.career;
+        document.getElementById('rLove').textContent = r.love;
+
+        var ep = getPercent(answers.E, answers.I);
+        var np = getPercent(answers.N, answers.S);
+        var fp = getPercent(answers.F, answers.T);
+        var jp = getPercent(answers.J, answers.P);
+
+        document.getElementById('d1Label').textContent = 'E' + ep + '% : ' + (100 - ep) + '% I';
+        document.getElementById('d1Val').textContent = '外向 vs 内向';
+        setTimeout(function() { document.getElementById('d1Bar').style.width = ep + '%'; }, 200);
+
+        document.getElementById('d2Label').textContent = 'N' + np + '% : ' + (100 - np) + '% S';
+        document.getElementById('d2Val').textContent = '直觉 vs 感觉';
+        setTimeout(function() { document.getElementById('d2Bar').style.width = np + '%'; }, 400);
+
+        document.getElementById('d3Label').textContent = 'F' + fp + '% : ' + (100 - fp) + '% T';
+        document.getElementById('d3Val').textContent = '情感 vs 思考';
+        setTimeout(function() { document.getElementById('d3Bar').style.width = fp + '%'; }, 600);
+
+        document.getElementById('d4Label').textContent = 'J' + jp + '% : ' + (100 - jp) + '% P';
+        document.getElementById('d4Val').textContent = '判断 vs 感知';
+        setTimeout(function() { document.getElementById('d4Bar').style.width = jp + '%'; }, 800);
+    }
+
+    window.retakeTest = function() {
+        currentQ = 0;
+        answers = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+        document.getElementById('quizSection').classList.remove('hidden');
+        document.getElementById('resultSection').classList.add('hidden');
+        renderQuestion();
+        window.scrollTo(0, 0);
+    };
+
+    window.shareResult = function() {
+        var type = getType();
+        var r = results[type];
+        var text = '🧩 我的 MBTI 是 ' + type + '（' + r.name + '）' + r.emoji + '\n\n' + r.desc + '\n\n💼 ' + r.career + '\n💕 ' + r.love + '\n\n📋 快来测测你的人格 → ';
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(function() { showToast('📋 结果已复制，快去分享！'); });
+        }
+    };
+
+    function showToast(msg) {
+        var t = document.querySelector('.toast');
+        if (t) t.remove();
+        t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(function() { t.remove(); }, 2400);
+    }
+
+    renderQuestion();
+})();
+</script>
+</body>
+</html>

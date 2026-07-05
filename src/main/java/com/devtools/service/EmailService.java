@@ -151,11 +151,11 @@ public class EmailService {
                 <div style="max-width:600px;margin:0 auto;padding:32px 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;border-radius:12px;color:#e2e8f0;">
                     <div style="text-align:center;margin-bottom:28px;">
                         <h1 style="color:#818cf8;font-size:24px;margin:0 0 4px;">DevTools Station</h1>
-                        <p style="color:#94a3b8;font-size:14px;margin:0;">一站式开发者在线工具箱</p>
+                        <p style="color:#94a3b8;font-size:14px;margin:0;">🌅 摸鱼快乐，效率翻倍</p>
                     </div>
                     <div style="background:#1e293b;border-radius:8px;padding:24px;margin-bottom:24px;">
                         <p style="font-size:15px;margin:0 0 12px;color:#cbd5e1;">您好！</p>
-                        <p style="font-size:15px;margin:0 0 8px;color:#cbd5e1;">您正在注册 <strong style="color:#818cf8;">DevTools Station</strong> 开发者工具箱账号。</p>
+                        <p style="font-size:15px;margin:0 0 8px;color:#cbd5e1;">您正在注册 <strong style="color:#818cf8;">DevTools Station</strong> 开发者在线工具箱账号。</p>
                         <p style="font-size:15px;margin:0 0 24px;color:#cbd5e1;">您的验证码为：</p>
                         <div style="text-align:center;margin-bottom:24px;">
                             <span style="display:inline-block;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:16px 40px;font-size:32px;font-weight:700;letter-spacing:8px;color:#a5b4fc;font-family:'Courier New',monospace;">%s</span>
@@ -202,7 +202,7 @@ public class EmailService {
                 <div style="max-width:600px;margin:0 auto;padding:32px 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;border-radius:12px;color:#e2e8f0;">
                     <div style="text-align:center;margin-bottom:28px;">
                         <h1 style="color:#818cf8;font-size:24px;margin:0 0 4px;">DevTools Station</h1>
-                        <p style="color:#94a3b8;font-size:14px;margin:0;">一站式开发者在线工具箱</p>
+                        <p style="color:#94a3b8;font-size:14px;margin:0;">🌅 摸鱼快乐，效率翻倍</p>
                     </div>
                     <div style="background:#1e293b;border-radius:8px;padding:24px;margin-bottom:24px;">
                         <p style="font-size:15px;margin:0 0 12px;color:#cbd5e1;">您好！</p>

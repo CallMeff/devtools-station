@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">桌面宠物 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #fff5fb;
+            --card-bg: #ffffff;
+            --text: #5d3a5c;
+            --text-secondary: #9a7e9b;
+            --accent: #f472b6;
+            --accent-light: #fce7f3;
+            --accent-dark: #db2777;
+            --border: #f5d4e8;
+            --shadow: 0 6px 30px rgba(244,114,182,0.13);
+            --radius: 18px;
+            --radius-sm: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+            background: linear-gradient(135deg, #fff5fb 0%, #fdf2f8 20%, #fce7f3 50%, #ede9fe 80%, #fff5fb 100%);
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* ─── 浮动装饰 ─── */
+        .floating-decorations {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .float-emoji {
+            position: absolute; font-size: 2.5rem;
+            opacity: 0.35; animation: floatAround 15s infinite ease-in-out;
+        }
+        .float-emoji:nth-child(1) { top: 8%; left: 5%; animation-delay: 0s; }
+        .float-emoji:nth-child(2) { top: 15%; right: 8%; animation-delay: -3s; font-size: 2rem; }
+        .float-emoji:nth-child(3) { bottom: 12%; left: 10%; animation-delay: -6s; font-size: 2.2rem; }
+        .float-emoji:nth-child(4) { bottom: 20%; right: 5%; animation-delay: -9s; }
+        .float-emoji:nth-child(5) { top: 45%; left: 3%; animation-delay: -12s; font-size: 1.8rem; }
+
+        @keyframes floatAround {
+            0%,100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-30px) rotate(8deg); }
+            50% { transform: translateY(-15px) rotate(-5deg); }
+            75% { transform: translateY(-40px) rotate(3deg); }
+        }
+
+        /* ─── 导航栏 ─── */
+        .navbar {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(244,114,182,0.15);
+            padding: 0 24px; height: 56px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .navbar .logo {
+            font-size: 1.25rem; font-weight: 700;
+            color: var(--accent-dark);
+            text-decoration: none; display: flex; align-items: center; gap: 8px;
+        }
+        .navbar .logo:hover { opacity: 0.8; }
+        .navbar .back-btn {
+            padding: 6px 16px; border-radius: 10px; border: 1.5px solid #c4b5fd;
+            background: rgba(168,85,247,0.06); color: #7c3aed;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            text-decoration: none; transition: all 0.2s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .navbar .back-btn:hover {
+            background: rgba(168,85,247,0.12); border-color: #a855f7;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 32px 20px 60px; position: relative; z-index: 1; }
+
+        /* ─── 标题区 ─── */
+        .hero { text-align: center; margin-bottom: 40px; }
+        .hero h1 {
+            font-size: 2.4rem; font-weight: 800;
+            background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #6366f1 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .hero p { color: var(--text-secondary); font-size: 1.05rem; max-width: 540px; margin: 0 auto 20px; }
+        .hero-badges {
+            display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+        }
+        .hero-badge {
+            padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+            background: var(--accent-light); color: var(--accent-dark);
+        }
+
+        /* ─── 当前宠物提示 ─── */
+        .current-pet-bar {
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            margin-bottom: 10px; padding: 14px 20px;
+            background: linear-gradient(135deg, #ede9fe, #fce7f3);
+            border-radius: 16px; border: 1.5px solid rgba(168,85,247,0.2);
+        }
+        .current-pet-bar .cp-thumb {
+            width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+            border: 2px solid #a855f7;
+        }
+        .current-pet-bar .cp-emoji { font-size: 2rem; }
+        .current-pet-bar .cp-info { font-size: 0.9rem; color: #5d3a5c; }
+        .current-pet-bar .cp-name { font-weight: 700; color: #7c3aed; }
+        .current-pet-bar .cp-goto {
+            padding: 6px 16px; border-radius: 10px; border: none;
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: white; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+            text-decoration: none; transition: all 0.2s;
+        }
+        .current-pet-bar .cp-goto:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(124,58,237,0.3); }
+        .current-pet-bar .cp-release {
+            padding: 5px 12px; border-radius: 8px; border: 1px solid #fca5a5;
+            background: transparent; color: #ef4444; font-size: 0.75rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .current-pet-bar .cp-release:hover { background: #fef2f2; }
+
+        /* ─── 自定义宠物上传区 ─── */
+        .custom-bar {
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            margin-bottom: 32px; flex-wrap: wrap;
+        }
+        .custom-upload-btn {
+            padding: 13px 30px; border-radius: 30px; border: none;
+            background: linear-gradient(135deg, #f472b6 0%, #a855f7 50%, #6366f1 100%);
+            color: white; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            transition: all 0.3s; box-shadow: 0 4px 20px rgba(168,85,247,0.3);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .custom-upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(168,85,247,0.45);
+        }
+        .custom-count-badge {
+            font-size: 0.85rem; color: var(--accent-dark); font-weight: 600;
+            background: var(--accent-light); padding: 4px 14px; border-radius: 14px;
+        }
+
+        /* ─── 上传弹窗 ─── */
+        .upload-dropzone {
+            border: 2.5px dashed #d4c4e0; border-radius: 20px;
+            padding: 44px 20px; text-align: center; cursor: pointer;
+            transition: all 0.3s; margin-bottom: 20px; background: #faf8ff;
+        }
+        .upload-dropzone:hover, .upload-dropzone.dragover {
+            border-color: var(--accent); background: #ede4ff;
+        }
+        .upload-dropzone .dz-icon { font-size: 3rem; margin-bottom: 8px; }
+        .upload-dropzone .dz-text { font-size: 0.95rem; color: var(--text-secondary); }
+        .upload-dropzone .dz-hint { font-size: 0.78rem; color: #cbd5e1; margin-top: 6px; }
+        .upload-preview-img {
+            width: 130px; height: 130px; border-radius: 16px; object-fit: cover;
+            margin: 0 auto 14px; display: none;
+            border: 3px solid var(--accent-light); box-shadow: 0 4px 14px rgba(168,85,247,0.15);
+        }
+        .upload-input-group {
+            display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;
+        }
+        .upload-input-group input {
+            padding: 10px 14px; border: 1.5px solid var(--border);
+            border-radius: 12px; font-size: 0.9rem; outline: none;
+            transition: border-color 0.2s; font-family: inherit;
+        }
+        .upload-input-group input:focus { border-color: var(--accent); }
+        .upload-submit-btn {
+            width: 100%; padding: 13px; border-radius: 14px; border: none;
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: white; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .upload-submit-btn:hover:not(:disabled) { opacity: 0.9; transform: scale(1.01); }
+        .upload-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .upload-error { color: #ef4444; font-size: 0.82rem; text-align: center; margin-top: 8px; display: none; }
+
+        /* ─── 自定义宠物卡片 ─── */
+        .pet-card.custom {
+            border: 2px dashed #c4b5fd; background: linear-gradient(135deg, #faf6ff, #fef9ff);
+        }
+        .pet-badge-custom {
+            position: absolute; top: 10px; right: 10px;
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: white; font-size: 0.7rem; padding: 2px 10px;
+            border-radius: 10px; font-weight: 600; z-index: 1; letter-spacing: 0.5px;
+        }
+        .pet-badge-active {
+            position: absolute; top: 10px; left: 10px;
+            background: #10b981; color: white; font-size: 0.7rem;
+            padding: 2px 10px; border-radius: 10px; font-weight: 600; z-index: 1;
+        }
+        .pet-thumb-img {
+            width: 72px; height: 72px; border-radius: 50%; object-fit: cover;
+            flex-shrink: 0; border: 2.5px solid var(--accent-light);
+        }
+
+        /* ─── 顶部标签 ─── */
+        .filter-tabs {
+            display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+            margin-bottom: 28px;
+        }
+        .filter-tab {
+            padding: 8px 20px; border-radius: 20px; border: 1.5px solid var(--border);
+            background: white; color: var(--text-secondary); font-size: 0.9rem;
+            cursor: pointer; transition: all 0.25s; font-weight: 500;
+        }
+        .filter-tab:hover { border-color: var(--accent); color: var(--accent-dark); }
+        .filter-tab.active {
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: white; border-color: transparent;
+        }
+        .pet-count { color: var(--text-secondary); font-size: 0.85rem; text-align: center; margin-bottom: 20px; }
+
+        /* ─── 宠物卡片网格 ─── */
+        .pet-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        .pet-card {
+            background: var(--card-bg); border-radius: var(--radius);
+            padding: 24px; box-shadow: var(--shadow);
+            border: 2px solid transparent;
+            cursor: pointer; transition: all 0.35s ease;
+            position: relative; overflow: hidden;
+        }
+        .pet-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, var(--pet-accent, #f472b6), var(--pet-accent2, #a855f7));
+            opacity: 0; transition: opacity 0.35s;
+        }
+        .pet-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 48px rgba(244,114,182,0.18);
+            border-color: rgba(244,114,182,0.2);
+        }
+        .pet-card:hover::before { opacity: 1; }
+        .pet-card.is-active { border-color: #10b981; box-shadow: 0 4px 20px rgba(16,185,129,0.12); }
+
+        .pet-header {
+            display: flex; align-items: flex-start; gap: 16px; margin-bottom: 14px;
+        }
+        .pet-avatar {
+            width: 72px; height: 72px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.6rem; flex-shrink: 0;
+            background: var(--pet-bg); position: relative;
+            transition: transform 0.3s;
+        }
+        .pet-card:hover .pet-avatar { transform: scale(1.1) rotate(-5deg); }
+        .pet-avatar-ring {
+            position: absolute; inset: -3px; border-radius: 50%;
+            border: 2.5px dashed var(--pet-accent, #f472b6);
+            animation: spin 10s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .pet-info { flex: 1; min-width: 0; }
+        .pet-name { font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+        .pet-personality { font-size: 0.82rem; color: var(--pet-accent, #f472b6); font-weight: 500; }
+
+        .pet-desc {
+            font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;
+            margin-bottom: 14px; display: -webkit-box;
+            -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .pet-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+        .pet-tag {
+            font-size: 0.75rem; padding: 3px 10px;
+            border-radius: 12px; font-weight: 500;
+            background: var(--pet-bg); color: var(--pet-accent, #f472b6);
+        }
+        .pet-actions {
+            display: flex; gap: 8px; margin-top: 14px; padding-top: 14px;
+            border-top: 1px solid rgba(0,0,0,0.04);
+        }
+        .pet-btn {
+            flex: 1; padding: 8px 14px; border-radius: 10px; border: none;
+            font-size: 0.82rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; text-align: center;
+        }
+        .pet-btn-primary {
+            background: linear-gradient(135deg, var(--pet-accent, #f472b6), var(--pet-accent2, #a855f7));
+            color: white;
+        }
+        .pet-btn-primary:hover { opacity: 0.9; transform: scale(1.02); }
+        .pet-btn-adopt {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        .pet-btn-adopt:hover { opacity: 0.9; transform: scale(1.02); }
+        .pet-btn-adopt.active-pet {
+            background: #10b981; cursor: default;
+        }
+        .pet-btn-outline {
+            background: white; color: var(--pet-accent, #f472b6);
+            border: 1.5px solid var(--pet-accent, #f472b6);
+        }
+        .pet-btn-outline:hover { background: var(--pet-bg); }
+
+        /* ─── 领养成功弹窗 ─── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+            z-index: 200; display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.2s;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal {
+            background: white; border-radius: 24px; padding: 36px;
+            max-width: 440px; width: 90%; max-height: 85vh; overflow-y: auto;
+            animation: slideUp 0.3s ease;
+            position: relative;
+        }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-close {
+            position: absolute; top: 16px; right: 16px;
+            width: 36px; height: 36px; border-radius: 50%;
+            border: none; background: #f3f4f6; font-size: 1.2rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .modal-close:hover { background: #fee2e2; color: #ef4444; }
+
+        .modal-avatar {
+            width: 100px; height: 100px; border-radius: 50%; margin: 0 auto;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3.5rem; margin-bottom: 16px;
+        }
+        .modal h2 { text-align: center; font-size: 1.5rem; margin-bottom: 4px; }
+        .modal .m-personality { text-align: center; color: var(--text-secondary); margin-bottom: 16px; }
+        .modal .m-desc { text-align: center; color: var(--text-secondary); line-height: 1.8; margin-bottom: 20px; }
+        .modal .m-tags { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+        .modal .m-section {
+            background: #fafafa; border-radius: 14px; padding: 16px;
+            margin-bottom: 16px;
+        }
+        .modal .m-section-label { font-size: 0.78rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+        /* ─── 领养成功 ─── */
+        .adopt-success {
+            text-align: center; padding: 20px;
+        }
+        .adopt-success .as-icon {
+            font-size: 4rem; animation: adoptBounce 0.6s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes adoptBounce {
+            0% { transform: scale(0); }
+            60% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .adopt-success h3 { font-size: 1.3rem; margin: 12px 0 6px; color: #059669; }
+        .adopt-success p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px; }
+        .adopt-success .as-preview {
+            width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
+            margin: 12px auto; display: block;
+            border: 3px solid #10b981;
+        }
+        .btn-gohome {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 32px; border-radius: 14px; border: none;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white; font-size: 1rem; font-weight: 600;
+            cursor: pointer; text-decoration: none; transition: all 0.2s;
+            box-shadow: 0 4px 16px rgba(16,185,129,0.3);
+        }
+        .btn-gohome:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(16,185,129,0.4); }
+
+        /* ─── 加载状态 ─── */
+        .loading {
+            text-align: center; padding: 60px 20px; color: var(--text-secondary);
+        }
+        .loading-spinner {
+            width: 40px; height: 40px; border: 4px solid var(--accent-light);
+            border-top-color: var(--accent); border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+        }
+        .empty-state {
+            text-align: center; padding: 60px 20px;
+        }
+        .empty-state .empty-icon { font-size: 4rem; margin-bottom: 16px; }
+        .empty-state p { color: var(--text-secondary); }
+
+        /* ─── 响应式 ─── */
+        @media (max-width: 700px) {
+            .hero h1 { font-size: 1.8rem; }
+            .pet-grid { grid-template-columns: 1fr; }
+            .navbar { padding: 0 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 浮动背景装饰 -->
+<div class="floating-decorations">
+    <div class="float-emoji">🐱</div>
+    <div class="float-emoji">🐰</div>
+    <div class="float-emoji">🦊</div>
+    <div class="float-emoji">🐶</div>
+    <div class="float-emoji">🌸</div>
+</div>
+
+<!-- 导航栏 -->
+<nav class="navbar">
+    <a href="/" class="logo">🏠 DevTools Station</a>
+    <div style="display:flex;align-items:center;gap:12px">
+        <span style="color:var(--text-secondary);font-size:0.9rem">🎀 桌面宠物画廊</span>
+        <a href="/" class="back-btn">← 回到桌面看宠物</a>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- 标题 -->
+    <div class="hero">
+        <h1>🐾 桌面宠物画廊</h1>
+        <p>挑选或上传你喜欢的小精灵，让它出现在你的网站桌面上陪你玩耍~</p>
+        <div class="hero-badges">
+            <span class="hero-badge">🎨 上传图片生成专属宠物</span>
+            <span class="hero-badge">🖱️ 桌面自由拖动互动</span>
+            <span class="hero-badge">🎮 右键弹出动作菜单</span>
+        </div>
+    </div>
+
+    <!-- 当前宠物提示 -->
+    <div class="current-pet-bar" id="currentPetBar" style="display:none">
+        <span style="font-size:0.85rem;color:var(--text-secondary)">当前宠物：</span>
+        <div id="currentPetDisplay"></div>
+        <span class="cp-info" id="currentPetInfo"></span>
+        <a href="/" class="cp-goto">🏠 回桌面逗它玩</a>
+        <button class="cp-release" onclick="releaseCurrentPet()">放生</button>
+    </div>
+
+    <!-- 自定义宠物上传入口 -->
+    <div class="custom-bar">
+        <button class="custom-upload-btn" onclick="openUploadModal()">
+            🎨 上传图片，创建你的专属宠物
+        </button>
+        <span class="custom-count-badge" id="customCountBadge" style="display:none">
+            我的专属 <span id="customPetCount">0</span> 只
+        </span>
+    </div>
+
+    <!-- 筛选标签 -->
+    <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">🐾 全部</button>
+        <button class="filter-tab" data-filter="cat">🐱 猫系</button>
+        <button class="filter-tab" data-filter="dog">🐶 犬系</button>
+        <button class="filter-tab" data-filter="fantasy">✨ 幻想</button>
+        <button class="filter-tab" data-filter="food">🍰 食物</button>
+    </div>
+    <div class="pet-count" id="petCount"></div>
+
+    <!-- 宠物网格 -->
+    <div class="pet-grid" id="petGrid">
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>正在召唤小精灵们...</p>
+        </div>
+    </div>
+</div>
+
+<!-- 领养成功弹窗 -->
+<div class="modal-overlay" id="successOverlay" style="display:none">
+    <div class="modal" id="successModal">
+        <button class="modal-close" onclick="closeSuccessModal()">✕</button>
+        <div class="adopt-success">
+            <div class="as-icon">🎉</div>
+            <h3 id="successTitle">领养成功！</h3>
+            <img class="as-preview" id="successPreview" alt="" style="display:none">
+            <p id="successMsg">你的桌面宠物已就绪</p>
+            <a href="/" class="btn-gohome">🏠 去桌面看我的宠物 →</a>
+        </div>
+    </div>
+</div>
+
+<!-- 详情弹窗 -->
+<div class="modal-overlay" id="detailOverlay" style="display:none">
+    <div class="modal" id="detailModal"></div>
+</div>
+
+<!-- 上传弹窗 -->
+<div class="modal-overlay" id="uploadOverlay" style="display:none">
+    <div class="modal" id="uploadModalContent">
+        <button class="modal-close" onclick="closeUploadModal()">✕</button>
+        <h2 style="text-align:center;margin-bottom:6px">🎨 创建你的专属宠物</h2>
+        <p style="text-align:center;color:var(--text-secondary);font-size:0.9rem;margin-bottom:20px">
+            上传一张你喜欢的角色图片，点击生成后就能直接在桌面看到它了！
+        </p>
+
+        <div class="upload-dropzone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <div class="dz-icon" id="dzIcon">📁</div>
+            <div class="dz-text" id="dzText">点击或拖拽图片到此处</div>
+            <div class="dz-hint">支持 PNG / JPG / GIF / WebP / SVG，最大 5MB</div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" style="display:none"
+               onchange="handleFileSelect(this.files)">
+
+        <img class="upload-preview-img" id="previewImg" alt="预览">
+
+        <div class="upload-input-group">
+            <input type="text" id="petNameInput" placeholder="给你的宠物起个名字（可选）" maxlength="12">
+            <input type="text" id="petPersonalityInput" placeholder="性格描述（可选，如：元气开朗）" maxlength="20">
+        </div>
+
+        <div class="upload-error" id="uploadError"></div>
+
+        <button class="upload-submit-btn" id="uploadSubmitBtn" disabled onclick="uploadCustomPet()">
+            ✨ 生成并领养宠物
+        </button>
+    </div>
+</div>
+
+<script>
+    // ============ 全局状态 ============
+    var allPets = [];
+    var currentFilter = 'all';
+    var filterCategories = {
+        cat: ['mochi', 'milky'],
+        dog: ['coco'],
+        fantasy: ['starry', 'sakura'],
+        food: ['mochi', 'pudding'],
+    };
+    var customPets = [];
+    var currentDesktopPet = null; // 当前桌面上设置的宠物
+
+    // ============ 读取当前桌面宠物 ============
+    function loadCurrentPet() {
+        try {
+            var raw = localStorage.getItem('devtools_desktop_pet');
+            if (raw) currentDesktopPet = JSON.parse(raw);
+        } catch(e) { currentDesktopPet = null; }
+        updateCurrentPetBar();
+    }
+
+    function updateCurrentPetBar() {
+        var bar = document.getElementById('currentPetBar');
+        var display = document.getElementById('currentPetDisplay');
+        var info = document.getElementById('currentPetInfo');
+        if (!currentDesktopPet) {
+            bar.style.display = 'none';
+        } else {
+            bar.style.display = 'flex';
+            if (currentDesktopPet.imageUrl) {
+                display.innerHTML = '<img class="cp-thumb" src="' + currentDesktopPet.imageUrl + '" alt="' + (currentDesktopPet.name||'') + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'inline\'"><span class="cp-emoji" style="display:none">🐱</span>';
+            } else if (currentDesktopPet.emoji) {
+                display.innerHTML = '<span class="cp-emoji">' + currentDesktopPet.emoji + '</span>';
+            } else {
+                display.innerHTML = '<span class="cp-emoji">🐱</span>';
+            }
+            info.innerHTML = '<span class="cp-name">' + (currentDesktopPet.name || '小宠物') + '</span>';
+        }
+        renderPets();
+    }
+
+    function releaseCurrentPet() {
+        if (!confirm('确定要放生 ' + (currentDesktopPet.name || '当前宠物') + ' 吗？')) return;
+        localStorage.removeItem('devtools_desktop_pet');
+        currentDesktopPet = null;
+        updateCurrentPetBar();
+        if (window.PetManager && window.PetManager.removePet) {
+            window.PetManager.removePet();
+        }
+    }
+
+    function isCurrentPet(petId) {
+        return currentDesktopPet && currentDesktopPet.id === petId;
+    }
+
+    // ============ 加载宠物 ============
+    function loadPets() {
+        loadCurrentPet();
+        try {
+            var saved = localStorage.getItem('devtools_custom_pets');
+            if (saved) customPets = JSON.parse(saved);
+            updateCustomBadge();
+        } catch(e) { customPets = []; }
+
+        try {
+            var resp = fetch('/api/desktop-pets');
+            resp.then(function(r) { return r.json(); }).then(function(json) {
+                if (json.code === 200 && json.data) {
+                    allPets = json.data;
+                    renderPets();
+                    updatePetCount();
+                }
+            });
+        } catch (err) {
+            document.getElementById('petGrid').innerHTML =
+                '<div class="empty-state"><div class="empty-icon">😿</div><p>小精灵们暂时睡着了，请稍后再试...</p></div>';
+        }
+    }
+
+    function saveCustomPets() {
+        localStorage.setItem('devtools_custom_pets', JSON.stringify(customPets));
+        updateCustomBadge();
+    }
+
+    function updateCustomBadge() {
+        var badge = document.getElementById('customCountBadge');
+        var count = document.getElementById('customPetCount');
+        if (customPets.length > 0) {
+            badge.style.display = 'inline';
+            count.textContent = customPets.length;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    // ============ 领养宠物（核心操作） ============
+    function adoptPet(pet) {
+        var petData = {
+            id: pet.id,
+            name: pet.name,
+            personality: pet.personality,
+            emoji: pet.emoji || null,
+            imageUrl: pet.imageUrl || null,
+            description: pet.description || '',
+            isCustom: pet.isCustom || false,
+            x: null, y: null // 位置由 PetManager 默认
+        };
+
+        // 保存到 localStorage
+        localStorage.setItem('devtools_desktop_pet', JSON.stringify(petData));
+        currentDesktopPet = petData;
+
+        // 如果在桌面，更新 PetManager
+        if (window.PetManager && window.PetManager.setPet) {
+            window.PetManager.setPet(petData);
+        }
+
+        updateCurrentPetBar();
+
+        // 显示领养成功弹窗
+        var overlay = document.getElementById('successOverlay');
+        var title = document.getElementById('successTitle');
+        var msg = document.getElementById('successMsg');
+        var preview = document.getElementById('successPreview');
+
+        title.textContent = '领养成功！🎉';
+        msg.textContent = (petData.name || '小宠物') + ' 已经在你的桌面上等你啦！拖动它、戳它、右键菜单跟它互动吧~';
+
+        if (petData.imageUrl) {
+            preview.src = petData.imageUrl;
+            preview.style.display = 'block';
+            preview.onerror = function() { this.style.display = 'none'; };
+        } else {
+            preview.style.display = 'none';
+        }
+
+        overlay.style.display = 'flex';
+
+        // 关闭详情弹窗
+        document.getElementById('detailOverlay').style.display = 'none';
+    }
+
+    function closeSuccessModal() {
+        document.getElementById('successOverlay').style.display = 'none';
+    }
+
+    // ============ 上传专属宠物 ============
+    var selectedFile = null;
+
+    function openUploadModal() {
+        document.getElementById('uploadOverlay').style.display = 'flex';
+        resetUploadForm();
+    }
+
+    function closeUploadModal() {
+        document.getElementById('uploadOverlay').style.display = 'none';
+        resetUploadForm();
+    }
+
+    function resetUploadForm() {
+        selectedFile = null;
+        document.getElementById('fileInput').value = '';
+        document.getElementById('previewImg').style.display = 'none';
+        document.getElementById('previewImg').src = '';
+        document.getElementById('petNameInput').value = '';
+        document.getElementById('petPersonalityInput').value = '';
+        document.getElementById('dzIcon').textContent = '📁';
+        document.getElementById('dzText').textContent = '点击或拖拽图片到此处';
+        document.getElementById('uploadSubmitBtn').disabled = true;
+        document.getElementById('uploadError').style.display = 'none';
+    }
+
+    function handleFileSelect(files) {
+        if (!files || files.length === 0) return;
+        var file = files[0];
+        if (file.size > 5 * 1024 * 1024) {
+            showUploadError('图片不能超过 5MB');
+            return;
+        }
+        var allowed = ['image/png','image/jpeg','image/gif','image/webp','image/svg+xml'];
+        if (!allowed.includes(file.type)) {
+            showUploadError('仅支持 PNG / JPG / GIF / WebP / SVG');
+            return;
+        }
+        selectedFile = file;
+        document.getElementById('dzIcon').textContent = '✅';
+        document.getElementById('dzText').textContent = file.name;
+        document.getElementById('uploadSubmitBtn').disabled = false;
+        document.getElementById('uploadError').style.display = 'none';
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var img = document.getElementById('previewImg');
+            img.src = e.target.result;
+            img.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function showUploadError(msg) {
+        var el = document.getElementById('uploadError');
+        el.textContent = msg; el.style.display = 'block';
+    }
+
+    function uploadCustomPet() {
+        if (!selectedFile) return;
+        var btn = document.getElementById('uploadSubmitBtn');
+        btn.disabled = true; btn.textContent = '⏳ 正在生成...';
+
+        var formData = new FormData();
+        formData.append('image', selectedFile);
+        var name = document.getElementById('petNameInput').value.trim();
+        formData.append('name', name);
+        formData.append('personality', document.getElementById('petPersonalityInput').value.trim() || '独一无二');
+
+        fetch('/api/desktop-pets/custom/upload', { method: 'POST', body: formData })
+        .then(function(r) { return r.json(); })
+        .then(function(json) {
+            if (json.code === 200 && json.data && json.data.pet) {
+                var pet = json.data.pet;
+                customPets.unshift(pet);
+                saveCustomPets();
+                closeUploadModal();
+                renderPets();
+                updatePetCount();
+                // 自动领养
+                adoptPet(pet);
+            } else {
+                showUploadError(json.message || '上传失败，请重试');
+                btn.disabled = false; btn.textContent = '✨ 生成并领养宠物';
+            }
+        }).catch(function(err) {
+            showUploadError('网络错误，请稍后重试');
+            btn.disabled = false; btn.textContent = '✨ 生成并领养宠物';
+        });
+    }
+
+    // ============ 拖拽上传支持 ============
+    (function() {
+        var dz = document.getElementById('dropZone');
+        if (!dz) return;
+        ['dragenter','dragover','dragleave','drop'].forEach(function(evt) {
+            dz.addEventListener(evt, function(e) { e.preventDefault(); e.stopPropagation(); });
+        });
+        ['dragenter','dragover'].forEach(function(evt) {
+            dz.addEventListener(evt, function() { dz.classList.add('dragover'); });
+        });
+        ['dragleave','drop'].forEach(function(evt) {
+            dz.addEventListener(evt, function() { dz.classList.remove('dragover'); });
+        });
+        dz.addEventListener('drop', function(e) {
+            handleFileSelect(e.dataTransfer.files);
+        });
+    })();
+
+    // ============ 渲染宠物卡片 ============
+    function renderPets() {
+        var grid = document.getElementById('petGrid');
+        var all = [].concat(customPets).concat(allPets);
+        var filtered = all;
+
+        if (currentFilter !== 'all') {
+            if (currentFilter === 'custom') {
+                filtered = customPets;
+            } else {
+                var allowed = filterCategories[currentFilter] || [];
+                filtered = all.filter(function(p) { return !p.isCustom && allowed.includes(p.id); });
+            }
+        }
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>没有找到匹配的小精灵~</p></div>';
+        } else {
+            grid.innerHTML = filtered.map(function(p) {
+                return p.isCustom ? renderCustomPetCard(p) : renderCuratedPetCard(p);
+            }).join('');
+        }
+        updatePetCount();
+    }
+
+    function renderCuratedPetCard(p) {
+        var active = isCurrentPet(p.id);
+        var adoptBtnClass = active ? 'pet-btn pet-btn-adopt active-pet' : 'pet-btn pet-btn-adopt';
+        var adoptBtnText = active ? '✅ 已在桌面' : '🐾 领养这只宠物';
+        var cardClass = active ? 'pet-card is-active' : 'pet-card';
+
+        return '<div class="' + cardClass + '" onclick="openDetail(\'' + p.id + '\', false)"' +
+            ' style="--pet-bg:' + p.bgColor + ';--pet-accent:' + p.accent + ';--pet-accent2:' + lightenColor(p.accent) + '">' +
+            (active ? '<span class="pet-badge-active">🌟 已领养</span>' : '') +
+            '<div class="pet-header">' +
+                '<div class="pet-avatar" style="background:' + p.bgColor + '">' +
+                    '<span>' + p.emoji + '</span>' +
+                    '<div class="pet-avatar-ring" style="border-color:' + p.accent + '"></div>' +
+                '</div>' +
+                '<div class="pet-info">' +
+                    '<div class="pet-name">' + p.name + '</div>' +
+                    '<div class="pet-personality" style="color:' + p.accent + '">' + p.personality + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="pet-desc">' + p.description + '</div>' +
+            '<div class="pet-tags">' +
+                p.tags.split(',').map(function(t) { return '<span class="pet-tag" style="background:' + p.bgColor + ';color:' + p.accent + '">' + t.trim() + '</span>'; }).join('') +
+            '</div>' +
+            '<div class="pet-actions">' +
+                '<button class="pet-btn pet-btn-outline" style="--pet-accent:' + p.accent + '"' +
+                    'onclick="event.stopPropagation();openDetail(\'' + p.id + '\', false)">' +
+                    '👀 查看详情</button>' +
+                '<button class="' + adoptBtnClass + '"' +
+                    (active ? '' : 'onclick="event.stopPropagation();adoptPet(getPetById(\'' + p.id + '\'))"') + '>' +
+                    adoptBtnText + '</button>' +
+            '</div>' +
+            '</div>';
+    }
+
+    function renderCustomPetCard(p) {
+        var tags = Array.isArray(p.tags) ? p.tags : p.tags.split(',');
+        var active = isCurrentPet(p.id);
+        var adoptBtnClass = active ? 'pet-btn pet-btn-adopt active-pet' : 'pet-btn pet-btn-adopt';
+        var adoptBtnText = active ? '✅ 已在桌面' : '🐾 领养这只宠物';
+
+        return '<div class="pet-card custom' + (active ? ' is-active' : '') + '" onclick="openDetail(\'' + p.id + '\', true)"' +
+            ' style="--pet-bg:#f5f3ff;--pet-accent:#8b5cf6;--pet-accent2:#c4b5fd">' +
+            '<span class="pet-badge-custom">⭐ 我的专属</span>' +
+            (active ? '<span class="pet-badge-active">🌟 已领养</span>' : '') +
+            '<div class="pet-header">' +
+                (p.imageUrl
+                    ? '<img class="pet-thumb-img" src="' + p.imageUrl + '" alt="' + p.name + '" onerror="this.style.display=\'none\'">'
+                    : '<div class="pet-avatar" style="background:#f5f3ff"><span>🖼️</span></div>') +
+                '<div class="pet-info">' +
+                    '<div class="pet-name">' + p.name + '</div>' +
+                    '<div class="pet-personality" style="color:#8b5cf6">' + (p.personality || '独一无二') + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="pet-desc">' + p.description + '</div>' +
+            '<div class="pet-tags">' +
+                tags.map(function(t) { return '<span class="pet-tag" style="background:#ede9fe;color:#7c3aed">' + (typeof t === 'string' ? t.trim() : t) + '</span>'; }).join('') +
+            '</div>' +
+            '<div class="pet-actions">' +
+                '<button class="pet-btn pet-btn-outline" style="--pet-accent:#8b5cf6"' +
+                    'onclick="event.stopPropagation();openDetail(\'' + p.id + '\', true)">' +
+                    '👀 查看详情</button>' +
+                '<button class="' + adoptBtnClass + '"' +
+                    (active ? '' : 'onclick="event.stopPropagation();adoptPet(getPetById(\'' + p.id + '\'))"') + '>' +
+                    adoptBtnText + '</button>' +
+            '</div>' +
+            '<button style="position:absolute;bottom:8px;right:8px;background:none;border:none;font-size:1rem;' +
+                'cursor:pointer;opacity:0.5;padding:4px" title="删除此宠物"' +
+                'onclick="event.stopPropagation();deleteCustomPet(\'' + p.id + '\')">🗑️</button>' +
+            '</div>';
+    }
+
+    function deleteCustomPet(petId) {
+        if (!confirm('确定要删除这只专属宠物吗？')) return;
+        if (isCurrentPet(petId)) {
+            releaseCurrentPet();
+        }
+        customPets = customPets.filter(function(p) { return p.id !== petId; });
+        saveCustomPets();
+        renderPets();
+        updatePetCount();
+    }
+
+    function updatePetCount() {
+        var all = [].concat(customPets).concat(allPets);
+        var filtered = all;
+        if (currentFilter !== 'all') {
+            if (currentFilter === 'custom') {
+                filtered = customPets;
+            } else {
+                var allowed = filterCategories[currentFilter] || [];
+                filtered = all.filter(function(p) { return !p.isCustom && allowed.includes(p.id); });
+            }
+        }
+        document.getElementById('petCount').textContent = '共 ' + filtered.length + ' 只小精灵';
+    }
+
+    function lightenColor(hex) {
+        var h = parseInt(hex.slice(1,3), 16);
+        var l = parseInt(hex.slice(3,5), 16);
+        var d = parseInt(hex.slice(5,7), 16);
+        var nl = Math.min(255, l + 80);
+        var nd = Math.min(255, d + 60);
+        return '#' + h.toString(16).padStart(2,'0') + nl.toString(16).padStart(2,'0') + nd.toString(16).padStart(2,'0');
+    }
+
+    // ============ 详情弹窗（简化版，只展示 + 领养按钮） ============
+    function getPetById(petId) {
+        return customPets.find(function(p) { return p.id === petId; }) ||
+               allPets.find(function(p) { return p.id === petId; });
+    }
+
+    function openDetail(petId, isCustom) {
+        var pet = getPetById(petId);
+        if (!pet) return;
+
+        var overlay = document.getElementById('detailOverlay');
+        var content = document.getElementById('detailModal');
+        var animList = (pet.animations || '').split(',').map(function(a) { return a.trim(); });
+
+        var avatarHtml = pet.isCustom && pet.imageUrl
+            ? '<img src="' + pet.imageUrl + '" style="width:100px;height:100px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 16px;border:3px solid #c4b5fd" alt="' + pet.name + '">'
+            : '<div class="modal-avatar" style="background:' + (pet.bgColor || '#f5f3ff') + '">' + (pet.emoji || '🖼️') + '</div>';
+
+        var tagsHtml = Array.isArray(pet.tags)
+            ? pet.tags.map(function(t) { return '<span class="pet-tag" style="background:#ede9fe;color:#7c3aed">' + t + '</span>'; }).join('')
+            : (pet.tags || '').split(',').map(function(t) { return '<span class="pet-tag" style="background:' + (pet.bgColor||'#ede9fe') + ';color:' + (pet.accent||'#7c3aed') + '">' + t.trim() + '</span>'; }).join('');
+
+        var active = isCurrentPet(pet.id);
+
+        content.innerHTML =
+            '<button class="modal-close" onclick="closeDetailModal()">✕</button>' +
+            avatarHtml +
+            '<h2>' + (pet.isCustom ? '🎨 ' : '') + pet.name + '</h2>' +
+            '<p class="m-personality">' + (pet.personality || '独一无二') + '</p>' +
+            '<p class="m-desc">' + pet.description + '</p>' +
+            '<div class="m-tags">' + tagsHtml + '</div>' +
+            '<div class="m-section">' +
+                '<div class="m-section-label">🎬 互动方式</div>' +
+                '<p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.8">' +
+                    '🖱️ <strong>左键点击</strong>：戳戳它，它会做出反应<br>' +
+                    '🖱️ <strong>右键点击</strong>：弹出动作菜单（喂食/玩耍/睡觉）<br>' +
+                    '🖱️ <strong>拖拽</strong>：把它放到你喜欢的位置<br>' +
+                    '🐾 <strong>自动行走</strong>：它会在桌面上自由漫步' +
+                '</p>' +
+            '</div>' +
+            (pet.isCustom && pet.imageUrl ?
+            '<div class="m-section">' +
+                '<div class="m-section-label">🖼️ 宠物图片</div>' +
+                '<img src="' + pet.imageUrl + '" style="max-width:100%;border-radius:12px;display:block" alt="' + pet.name + '">' +
+            '</div>' : '') +
+            '<div style="text-align:center;margin-top:16px">' +
+                (active
+                    ? '<button class="btn-gohome" onclick="window.location.href=\'/\'" style="background:linear-gradient(135deg,#10b981,#059669)">✅ 已在桌面，回去看它 →</button>'
+                    : '<button class="btn-gohome" onclick="adoptPet(getPetById(\'' + pet.id + '\'))">🐾 领养这只宠物</button>') +
+            '</div>';
+
+        overlay.style.display = 'flex';
+    }
+
+    function closeDetailModal() {
+        document.getElementById('detailOverlay').style.display = 'none';
+    }
+
+    // 弹窗点击覆盖层关闭
+    document.getElementById('detailOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeDetailModal();
+    });
+    document.getElementById('uploadOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeUploadModal();
+    });
+    document.getElementById('successOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeSuccessModal();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeUploadModal();
+            closeDetailModal();
+            closeSuccessModal();
+        }
+    });
+
+    // ============ 筛选按钮 ============
+    document.querySelectorAll('.filter-tab').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-tab').forEach(function(b) { b.classList.remove('active'); });
+            this.classList.add('active');
+            currentFilter = this.dataset.filter;
+            renderPets();
+        });
+    });
+
+    // ============ 启动 ============
+    loadPets();
+</script>
+</body>
+</html>

@@ -1,0 +1,396 @@
+/* ============================================
+   pet.css - 桌面宠物样式
+   浮动动画、交互反应、右键菜单
+   ============================================ */
+
+/* ─── 宠物主体容器 ─── */
+.desktop-pet-container {
+    position: fixed;
+    z-index: 500;
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.desktop-pet-container * {
+    pointer-events: auto;
+}
+
+/* ─── 宠物元素 ─── */
+.desktop-pet {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: filter 0.2s;
+}
+
+.desktop-pet:active {
+    cursor: grabbing;
+}
+
+.desktop-pet:hover {
+    filter: drop-shadow(0 4px 12px rgba(168, 85, 247, 0.35));
+}
+
+/* ─── 宠物身体（图片容器） ─── */
+.pet-body {
+    width: 72px;
+    height: 72px;
+    margin: 4px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f5f3ff, #fce7f3);
+    border: 2.5px solid rgba(168, 85, 247, 0.4);
+    box-shadow: 0 4px 14px rgba(168, 85, 247, 0.15);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+                border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+.pet-body img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.pet-body .pet-emoji-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.4rem;
+}
+
+/* ─── 宠物眼睛 ─── */
+.pet-eyes {
+    position: absolute;
+    top: 26px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.pet-eye {
+    width: 8px;
+    height: 10px;
+    background: #1e1b4b;
+    border-radius: 50%;
+    transition: transform 0.15s;
+}
+
+/* ─── 宠物表情/气泡 ─── */
+.pet-bubble {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 14px;
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    color: #5d3a5c;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.pet-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid rgba(255, 255, 255, 0.95);
+}
+
+.pet-bubble.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ─── 宠物名字标签 ─── */
+.pet-name-tag {
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--accent-color, #a855f7);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    pointer-events: none;
+    letter-spacing: 0.5px;
+}
+
+/* ─── 粒子效果 ─── */
+.pet-particle-burst {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.pet-particle {
+    position: absolute;
+    font-size: 0.9rem;
+    animation: petParticleFly 0.8s ease-out forwards;
+}
+
+@keyframes petParticleFly {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--px, 0), var(--py, 0)) scale(0);
+        opacity: 0;
+    }
+}
+
+/* ─── 宠物右键菜单 ─── */
+.pet-context-menu {
+    position: fixed;
+    z-index: 2500;
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border-color, #f0d4e0);
+    border-radius: 14px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(168, 85, 247, 0.1);
+    padding: 6px;
+    min-width: 150px;
+    display: none;
+    animation: petMenuIn 0.15s ease;
+}
+
+.pet-context-menu.active {
+    display: block;
+}
+
+@keyframes petMenuIn {
+    from { opacity: 0; transform: scale(0.9) translateY(-4px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.pet-menu-item {
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: var(--text-secondary, #6b5b7b);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+
+.pet-menu-item:hover {
+    background: var(--hover-bg, #f8f4ff);
+    color: var(--text-primary, #3d2a4c);
+}
+
+.pet-menu-item.danger {
+    color: #f87171;
+}
+
+.pet-menu-item.danger:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: #f87171;
+}
+
+.pet-menu-divider {
+    height: 1px;
+    background: var(--border-color, #f0d4e0);
+    margin: 4px 8px;
+}
+
+/* ─── 动画状态 ─── */
+
+/* 待机浮动 */
+.pet-idle {
+    animation: petFloat 3.5s ease-in-out infinite;
+}
+
+@keyframes petFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-6px) rotate(1deg); }
+    50% { transform: translateY(-2px) rotate(-0.5deg); }
+    75% { transform: translateY(-8px) rotate(0.5deg); }
+}
+
+/* 被戳反应 */
+.pet-poked .pet-body {
+    animation: petBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes petBounce {
+    0% { transform: scale(1); }
+    20% { transform: scale(0.9, 1.1); }
+    40% { transform: scale(1.15, 0.9); }
+    60% { transform: scale(0.95, 1.05); }
+    80% { transform: scale(1.05, 0.95); }
+    100% { transform: scale(1); }
+}
+
+/* 被拖动 */
+.pet-dragged .pet-body {
+    animation: petSquish 0.3s ease;
+}
+
+@keyframes petSquish {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.1, 0.9); }
+    60% { transform: scale(0.95, 1.05); }
+    100% { transform: scale(1); }
+}
+
+/* 开心 */
+.pet-happy .pet-body {
+    animation: petHappy 0.6s ease;
+}
+
+@keyframes petHappy {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.1) rotate(-5deg); }
+    50% { transform: scale(1.1) rotate(5deg); }
+    75% { transform: scale(1.05) rotate(-3deg); }
+}
+
+/* 吃东西 */
+.pet-eating .pet-body {
+    animation: petEat 0.4s ease infinite;
+}
+
+@keyframes petEat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(0.95, 1.05); }
+}
+
+/* 睡觉（Zzz） */
+.pet-sleeping .pet-body {
+    animation: petSleep 2s ease-in-out infinite;
+}
+
+@keyframes petSleep {
+    0%, 100% { transform: scale(1) translateY(0); }
+    50% { transform: scale(0.97) translateY(3px); }
+}
+
+.pet-zzz {
+    position: absolute;
+    top: -20px;
+    right: -12px;
+    font-size: 0.9rem;
+    opacity: 0;
+    animation: petZzz 2s ease-out infinite;
+    pointer-events: none;
+}
+
+.pet-zzz.show {
+    opacity: 0.7;
+}
+
+@keyframes petZzz {
+    0% { transform: translateY(0) scale(0.7); opacity: 0.5; }
+    50% { transform: translateY(-15px) scale(1.1); opacity: 0.8; }
+    100% { transform: translateY(-25px) scale(0.5); opacity: 0; }
+}
+
+/* ─── 暂无宠物提示 ─── */
+.pet-empty-tip {
+    position: fixed;
+    bottom: 80px;
+    right: 30px;
+    z-index: 490;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1.5px dashed #c4b5fd;
+    border-radius: 14px;
+    padding: 10px 18px;
+    font-size: 0.82rem;
+    color: #8b5cf6;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(168, 85, 247, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pet-empty-tip:hover {
+    background: #faf6ff;
+    border-color: #a855f7;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(168, 85, 247, 0.2);
+}
+
+/* ─── 暗色主题适配 ─── */
+body.theme-dark .desktop-pet {
+    filter: drop-shadow(0 4px 12px rgba(168, 85, 247, 0.2));
+}
+
+body.theme-dark .pet-body {
+    border-color: rgba(168, 85, 247, 0.5);
+}
+
+body.theme-dark .pet-bubble {
+    background: rgba(30, 27, 46, 0.95);
+    border-color: rgba(168, 85, 247, 0.3);
+    color: #e2d8f0;
+}
+
+body.theme-dark .pet-bubble::after {
+    border-top-color: rgba(30, 27, 46, 0.95);
+}
+
+body.theme-dark .pet-name-tag {
+    background: rgba(30, 27, 46, 0.9);
+    color: #c4b5fd;
+}
+
+body.theme-dark .pet-empty-tip {
+    background: rgba(30, 27, 46, 0.92);
+    border-color: rgba(168, 85, 247, 0.4);
+    color: #c4b5fd;
+}
+
+body.theme-dark .pet-empty-tip:hover {
+    background: rgba(30, 27, 46, 0.98);
+    border-color: #a855f7;
+}
+
+body.theme-dark .pet-context-menu {
+    background: rgba(30, 27, 46, 0.98);
+    border-color: rgba(168, 85, 247, 0.2);
+}
+
+body.theme-dark .pet-menu-item {
+    color: #c4b5fd;
+}
+
+body.theme-dark .pet-menu-item:hover {
+    background: rgba(168, 85, 247, 0.12);
+    color: #e2d8f0;
+}

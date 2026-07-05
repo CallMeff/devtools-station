@@ -97,7 +97,6 @@ public class AuthController {
             String username = body.get("username");
             String password = body.get("password");
             String email = body.get("email");
-            String verifyCode = body.get("verifyCode");
 
             if (username == null || username.trim().isEmpty()) {
                 return Result.error(400, "用户名不能为空");
@@ -114,15 +113,9 @@ public class AuthController {
             if (email == null || email.trim().isEmpty()) {
                 return Result.error(400, "邮箱不能为空");
             }
-            if (verifyCode == null || verifyCode.trim().isEmpty()) {
-                return Result.error(400, "验证码不能为空");
-            }
-            if (!verifyCode.trim().matches("^\\d{6}$")) {
-                return Result.error(400, "验证码为6位数字");
-            }
 
             Map<String, Object> userInfo = authService.register(
-                    username.trim(), password, email.trim(), verifyCode.trim());
+                    username.trim(), password, email.trim());
             return Result.success("注册成功", userInfo);
         } catch (RuntimeException e) {
             return Result.error(400, e.getMessage());
@@ -148,6 +141,34 @@ public class AuthController {
 
             Map<String, Object> userInfo = authService.login(
                     username.trim(), password, ip, ua);
+            return Result.success("登录成功", userInfo);
+        } catch (RuntimeException e) {
+            return Result.error(400, e.getMessage());
+        }
+    }
+
+    /**
+     * 邮箱直登（无需密码）
+     */
+    @PostMapping("/login-by-email")
+    public Result<Map<String, Object>> loginByEmail(@RequestBody Map<String, String> body,
+                                                     HttpServletRequest request) {
+        try {
+            String email = body.get("email");
+
+            if (email == null || email.trim().isEmpty()) {
+                return Result.error(400, "邮箱不能为空");
+            }
+
+            String cleanEmail = email.trim().toLowerCase();
+            if (!cleanEmail.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+                return Result.error(400, "邮箱格式不正确");
+            }
+
+            String ip = WebUtils.getClientIp(request);
+            String ua = request.getHeader("User-Agent");
+
+            Map<String, Object> userInfo = authService.loginByEmail(cleanEmail, ip, ua);
             return Result.success("登录成功", userInfo);
         } catch (RuntimeException e) {
             return Result.error(400, e.getMessage());

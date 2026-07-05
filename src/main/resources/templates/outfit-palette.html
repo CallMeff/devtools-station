@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">穿搭色卡工坊 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #fff5f5; --card-bg: #ffffff; --text: #4a3055;
+            --text-secondary: #9a7eab; --accent: #f472b6; --accent2: #a855f7;
+            --accent-light: #fce7f3; --border: #f0d4e8;
+            --shadow: 0 8px 32px rgba(244, 114, 182, 0.12);
+            --radius: 20px; --radius-sm: 14px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #fff5f5 0%, #fdf2f8 30%, #f5f3ff 60%, #fff5f5 100%);
+            background-size: 400% 400%; animation: bgFloat 15s ease infinite;
+            min-height: 100vh; color: var(--text); line-height: 1.6;
+            display: flex; flex-direction: column; align-items: center; padding: 20px;
+        }
+        @keyframes bgFloat {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .container { max-width: 580px; width: 100%; position: relative; z-index: 1; }
+
+        h1 {
+            text-align: center; font-size: 2em; margin-bottom: 4px;
+            background: linear-gradient(135deg, #ec4899, #f472b6, #a855f7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            background-size: 300% 300%; animation: titleShine 4s ease infinite;
+        }
+        @keyframes titleShine { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        .subtitle { text-align: center; color: #c084ba; font-size: 0.95em; margin-bottom: 24px; }
+
+        .card {
+            background: var(--card-bg); border-radius: var(--radius);
+            padding: 24px; margin-bottom: 16px;
+            box-shadow: var(--shadow); border: 2px solid var(--border);
+            position: relative;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #f472b6, #e879f9, #ec4899, #f472b6);
+            background-size: 300% 100%; animation: shimmer 3s ease infinite;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+        @keyframes shimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+        /* Category chips */
+        .cat-row {
+            display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;
+            justify-content: center;
+        }
+        .cat-chip {
+            padding: 8px 16px; border-radius: 20px; border: 2px solid var(--border);
+            cursor: pointer; font-size: 0.85em; font-weight: 600;
+            transition: all 0.3s ease; background: #fff; color: var(--text-secondary);
+        }
+        .cat-chip:hover { border-color: var(--accent); background: var(--accent-light); }
+        .cat-chip.active {
+            background: linear-gradient(135deg, #fce7f3, #f3e8ff);
+            border-color: var(--accent); color: var(--accent);
+        }
+
+        /* Palette card */
+        .palette-card {
+            background: var(--card-bg); border: 2px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden; margin-bottom: 14px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        .palette-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(244,114,182,0.18); }
+
+        .palette-colors {
+            display: flex; height: 80px;
+        }
+        .palette-color {
+            flex: 1; position: relative; display: flex;
+            align-items: flex-end; justify-content: center;
+            padding-bottom: 8px; transition: all 0.2s;
+        }
+        .palette-color .hex {
+            background: rgba(255,255,255,0.85); color: #333;
+            font-size: 0.7em; font-weight: 700; padding: 2px 8px;
+            border-radius: 10px; opacity: 0; transition: opacity 0.2s;
+            font-family: monospace; backdrop-filter: blur(4px);
+        }
+        .palette-card:hover .hex { opacity: 1; }
+
+        .palette-info {
+            padding: 12px 16px; display: flex;
+            align-items: center; justify-content: space-between;
+            border-top: 1px solid var(--border);
+        }
+        .palette-name { font-weight: 700; font-size: 0.95em; }
+        .palette-meta {
+            font-size: 0.75em; color: var(--text-secondary);
+            display: flex; gap: 8px; align-items: center;
+        }
+        .meta-tag {
+            background: var(--accent-light); color: var(--accent);
+            padding: 2px 8px; border-radius: 10px; font-weight: 600;
+        }
+
+        .save-btn {
+            background: none; border: 1.5px solid var(--accent);
+            color: var(--accent); padding: 4px 12px; border-radius: 15px;
+            cursor: pointer; font-size: 0.8em; font-weight: 600;
+            transition: all 0.2s;
+        }
+        .save-btn:hover { background: var(--accent); color: #fff; }
+        .save-btn.saved { background: var(--accent); color: #fff; }
+
+        /* Generate button */
+        .gen-row {
+            display: flex; gap: 10px; margin-bottom: 16px;
+            justify-content: center; flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 12px 28px; border-radius: 25px; border: none;
+            font-size: 1em; font-weight: 700; cursor: pointer;
+            transition: all 0.3s ease; font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: #fff; box-shadow: 0 4px 16px rgba(244,114,182,0.35);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(244,114,182,0.45); }
+        .btn-outline {
+            background: #fff; color: var(--accent);
+            border: 2px solid var(--accent);
+        }
+        .btn-outline:hover { background: var(--accent-light); }
+        .btn-sm { padding: 8px 16px; font-size: 0.85em; border-radius: 20px; }
+
+        /* Popup / detail */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; animation: fadeIn 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .popup {
+            background: #fff; border-radius: var(--radius);
+            padding: 28px; max-width: 420px; width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { opacity:0; transform:scale(0.9) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        .popup h3 { color: var(--accent); margin-bottom: 12px; }
+        .popup .swatch-row { display: flex; gap: 4px; margin: 12px 0; border-radius: 12px; overflow: hidden; }
+        .popup .swatch { flex: 1; height: 48px; }
+        .popup .copy-all {
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: #fff; border: none; padding: 10px 20px; border-radius: 25px;
+            cursor: pointer; font-weight: 600; font-size: 0.9em; width: 100%;
+            transition: all 0.2s;
+        }
+        .popup .copy-all:hover { transform: scale(1.02); }
+
+        .empty-state {
+            text-align: center; padding: 40px 20px; color: var(--text-secondary);
+        }
+        .empty-state .emoji { font-size: 56px; display: block; margin-bottom: 12px; }
+
+        /* Toast */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: #fff; padding: 12px 24px; border-radius: 30px;
+            font-weight: 600; z-index: 200;
+            box-shadow: 0 8px 30px rgba(244,114,182,0.4);
+            animation: toastIn 0.4s ease, toastOut 0.4s ease 1.8s forwards;
+            white-space: nowrap; font-size: 0.9em;
+        }
+        @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(-20px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+        @keyframes toastOut { from { opacity:1; } to { opacity:0; transform: translateX(-50%) translateY(-20px); } }
+
+        .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+        .tab {
+            flex: 1; padding: 8px; text-align: center; border-radius: 25px;
+            cursor: pointer; font-size: 0.85em; font-weight: 600;
+            border: 1.5px solid transparent; color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        .tab:hover { background: rgba(244,114,182,0.06); }
+        .tab.active { background: rgba(244,114,182,0.1); border-color: var(--accent); color: var(--accent); }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>👗 穿搭色卡工坊</h1>
+    <p class="subtitle">一键生成穿搭配色灵感，今天穿什么颜色好呢？✨</p>
+
+    <!-- Category chips -->
+    <div class="cat-row">
+        <div class="cat-chip active" data-cat="all" onclick="setCategory('all', this)">🎨 全部</div>
+        <div class="cat-chip" data-cat="spring" onclick="setCategory('spring', this)">🌸 春日</div>
+        <div class="cat-chip" data-cat="summer" onclick="setCategory('summer', this)">☀️ 夏日</div>
+        <div class="cat-chip" data-cat="autumn" onclick="setCategory('autumn', this)">🍂 秋日</div>
+        <div class="cat-chip" data-cat="winter" onclick="setCategory('winter', this)">❄️ 冬日</div>
+        <div class="cat-chip" data-cat="sweet" onclick="setCategory('sweet', this)">🍬 甜系</div>
+        <div class="cat-chip" data-cat="cool" onclick="setCategory('cool', this)">🆒 酷系</div>
+    </div>
+
+    <div class="gen-row">
+        <button class="btn btn-primary" onclick="generatePalettes()">🎲 随机生成色卡</button>
+        <button class="btn btn-outline btn-sm" onclick="showSaved()">💾 我的收藏</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" id="mainTabs">
+        <div class="tab active" onclick="switchTab('generate', this)">🎨 灵感色卡</div>
+        <div class="tab" onclick="switchTab('saved', this)">💾 我的收藏</div>
+    </div>
+
+    <!-- Generated palettes -->
+    <div id="generateSection"></div>
+
+    <!-- Saved palettes -->
+    <div id="savedSection" class="hidden"></div>
+</div>
+
+<!-- Detail popup -->
+<div class="overlay hidden" id="detailOverlay" onclick="closeDetail(event)">
+    <div class="popup" onclick="event.stopPropagation()">
+        <h3 id="detailName">配色详情</h3>
+        <div class="swatch-row" id="detailSwatches"></div>
+        <div id="detailHexes" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;font-family:monospace;font-size:0.85em;"></div>
+        <p style="font-size:0.85em;color:var(--text-secondary);margin:8px 0;" id="detailTags"></p>
+        <button class="copy-all" onclick="copyDetail()">📋 一键复制色值</button>
+        <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;" onclick="closeDetail()">关闭</button>
+    </div>
+</div>
+
+<script>
+(function(){
+    const STORAGE_KEY = 'outfit-palettes-saved';
+    let currentCategory = 'all';
+    let currentTab = 'generate';
+    let detailData = null;
+    let palettes = [];
+
+    const CATEGORY_DEFS = {
+        spring: { hues: [30,50,330,340,160,200], label:'🌸 春日', emoji:'🌸' },
+        summer: { hues: [190,200,210,30,80,300], label:'☀️ 夏日', emoji:'☀️' },
+        autumn: { hues: [15,25,35,340,45,200], label:'🍂 秋日', emoji:'🍂' },
+        winter: { hues: [200,210,220,240,340,0], label:'❄️ 冬日', emoji:'❄️' },
+        sweet: { hues: [330,340,350,0,10,300], label:'🍬 甜系', emoji:'🍬' },
+        cool: { hues: [200,210,220,180,240,190], label:'🆒 酷系', emoji:'🆒' },
+        all: { hues: [0,30,60,120,180,240,300,330,15,45,200,340,25,270,150], label:'🎨 全部', emoji:'🎨' }
+    };
+
+    const NAME_POOLS = ['日系', '韩系', '法式', '复古', '街头', '学院', '通勤', '约会', '出游', '面试', '聚餐', '运动', '居家', '派对', '文艺', '清新', '甜美', '帅气', '优雅', '慵懒'];
+
+    function hslToHex(h, s, l) {
+        s /= 100; l /= 100;
+        const a = s * Math.min(l, 1 - l);
+        const f = n => {
+            const k = (n + h / 30) % 12;
+            const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+            return Math.round(255 * color).toString(16).padStart(2, '0');
+        };
+        return `#${f(0)}${f(8)}${f(4)}`;
+    }
+
+    function generateOnePalette(category) {
+        const def = CATEGORY_DEFS[category] || CATEGORY_DEFS.all;
+        const hueSource = def.hues;
+        const colors = [];
+        // Generate 4-color palette
+        const baseHue = hueSource[Math.floor(Math.random() * hueSource.length)];
+        const nameIndex = Math.floor(Math.random() * NAME_POOLS.length);
+
+        const schemes = [
+            // Analogous
+            () => {
+                const h1 = (baseHue + 360) % 360;
+                const h2 = (baseHue + 30) % 360;
+                const h3 = (baseHue + 60) % 360;
+                const h4 = (baseHue + 15) % 360;
+                return [
+                    { h: h1, s: 55 + Math.random() * 20, l: 60 + Math.random() * 20 },
+                    { h: h2, s: 50 + Math.random() * 25, l: 55 + Math.random() * 25 },
+                    { h: h3, s: 50 + Math.random() * 30, l: 50 + Math.random() * 30 },
+                    { h: h4, s: 60 + Math.random() * 20, l: 65 + Math.random() * 15 }
+                ];
+            },
+            // Complementary
+            () => {
+                const h1 = baseHue;
+                const h2 = (baseHue + 180) % 360;
+                return [
+                    { h: h1, s: 50 + Math.random() * 30, l: 50 + Math.random() * 30 },
+                    { h: (h1 + 15) % 360, s: 40 + Math.random() * 40, l: 65 + Math.random() * 20 },
+                    { h: h2, s: 45 + Math.random() * 30, l: 55 + Math.random() * 25 },
+                    { h: (h2 + 15) % 360, s: 40 + Math.random() * 35, l: 60 + Math.random() * 20 }
+                ];
+            },
+            // Monochromatic
+            () => {
+                return [
+                    { h: baseHue, s: 40 + Math.random() * 20, l: 35 + Math.random() * 15 },
+                    { h: baseHue, s: 45 + Math.random() * 20, l: 55 + Math.random() * 10 },
+                    { h: baseHue, s: 50 + Math.random() * 20, l: 70 + Math.random() * 10 },
+                    { h: baseHue, s: 55 + Math.random() * 20, l: 85 + Math.random() * 10 }
+                ];
+            },
+            // Triadic
+            () => {
+                return [
+                    { h: baseHue, s: 50 + Math.random() * 30, l: 55 + Math.random() * 25 },
+                    { h: (baseHue + 120) % 360, s: 45 + Math.random() * 25, l: 60 + Math.random() * 20 },
+                    { h: (baseHue + 240) % 360, s: 40 + Math.random() * 30, l: 55 + Math.random() * 25 },
+                    { h: (baseHue + 60) % 360, s: 50 + Math.random() * 25, l: 70 + Math.random() * 15 }
+                ];
+            }
+        ];
+
+        const scheme = schemes[Math.floor(Math.random() * schemes.length)]();
+        const hexColors = scheme.map(c => hslToHex(c.h, c.s, c.l));
+
+        return {
+            id: Date.now() + Math.random(),
+            colors: hexColors,
+            name: NAME_POOLS[nameIndex] + '风穿搭',
+            category: category,
+            tags: [def.emoji + ' ' + def.label, NAME_POOLS[nameIndex]]
+        };
+    }
+
+    function getPalettesForCategory(cat) {
+        if (cat === 'all') {
+            // Generate mix of all categories
+            const cats = ['spring','summer','autumn','winter','sweet','cool'];
+            const result = [];
+            for (let i = 0; i < 6; i++) {
+                result.push(generateOnePalette(cats[i % cats.length]));
+            }
+            return result;
+        }
+        const result = [];
+        for (let i = 0; i < 6; i++) {
+            result.push(generateOnePalette(cat));
+        }
+        return result;
+    }
+
+    function renderPalettes() {
+        const section = document.getElementById('generateSection');
+        section.innerHTML = palettes.map(p => `
+            <div class="palette-card" onclick="showDetail('${p.id}')">
+                <div class="palette-colors">
+                    ${p.colors.map(c => `<div class="palette-color" style="background:${c};"><span class="hex">${c}</span></div>`).join('')}
+                </div>
+                <div class="palette-info">
+                    <span class="palette-name">${p.name}</span>
+                    <div class="palette-meta">
+                        ${p.tags.map(t => `<span class="meta-tag">${t}</span>`).join('')}
+                        <button class="save-btn ${isSaved(p.id)?'saved':''}" onclick="event.stopPropagation();toggleSave('${p.id}')">
+                            ${isSaved(p.id) ? '💾 已收藏' : '💾 收藏'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function getSaved() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+        catch(e) { return []; }
+    }
+
+    function isSaved(id) {
+        return getSaved().some(s => s.id === parseFloat(id));
+    }
+
+    function toggleSave(id) {
+        const saved = getSaved();
+        const palette = palettes.find(p => p.id === parseFloat(id));
+        if (!palette) return;
+
+        const idx = saved.findIndex(s => s.id === parseFloat(id));
+        if (idx >= 0) {
+            saved.splice(idx, 1);
+            showToast('已取消收藏');
+        } else {
+            saved.push(palette);
+            showToast('💾 已加入收藏！');
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+        renderPalettes();
+        if (currentTab === 'saved') renderSaved();
+    }
+
+    function renderSaved() {
+        const section = document.getElementById('savedSection');
+        const saved = getSaved();
+        if (saved.length === 0) {
+            section.innerHTML = `<div class="empty-state">
+                <span class="emoji">💝</span>
+                <p>还没有收藏的色卡哦~<br>去"灵感色卡"页面逛逛吧！</p>
+            </div>`;
+            return;
+        }
+
+        section.innerHTML = saved.map(p => `
+            <div class="palette-card" onclick="showDetailSaved('${p.id}')">
+                <div class="palette-colors">
+                    ${p.colors.map(c => `<div class="palette-color" style="background:${c};"><span class="hex">${c}</span></div>`).join('')}
+                </div>
+                <div class="palette-info">
+                    <span class="palette-name">${p.name}</span>
+                    <div class="palette-meta">
+                        ${(p.tags || []).map(t => `<span class="meta-tag">${t}</span>`).join('')}
+                        <button class="save-btn saved" onclick="event.stopPropagation();removeSaved('${p.id}')">🗑️ 删除</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function removeSaved(id) {
+        let saved = getSaved();
+        saved = saved.filter(s => s.id !== parseFloat(id));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+        showToast('已删除收藏');
+        renderSaved();
+    }
+
+    function showDetail(id) {
+        detailData = palettes.find(p => p.id === parseFloat(id));
+        if (!detailData) return;
+        renderDetail();
+    }
+
+    function showDetailSaved(id) {
+        detailData = getSaved().find(p => p.id === parseFloat(id));
+        if (!detailData) return;
+        renderDetail();
+    }
+
+    function renderDetail() {
+        if (!detailData) return;
+        document.getElementById('detailName').textContent = detailData.name;
+        document.getElementById('detailSwatches').innerHTML =
+            detailData.colors.map(c => `<div class="swatch" style="background:${c};" title="${c}"></div>`).join('');
+        document.getElementById('detailHexes').innerHTML =
+            detailData.colors.map(c => `<span style="background:#f5f5f5;padding:2px 8px;border-radius:8px;font-size:0.85em;">${c}</span>`).join('');
+        document.getElementById('detailTags').textContent = (detailData.tags || []).join(' · ');
+        document.getElementById('detailOverlay').classList.remove('hidden');
+    }
+
+    function closeDetail(e) {
+        if (e && e.target !== document.getElementById('detailOverlay')) return;
+        document.getElementById('detailOverlay').classList.add('hidden');
+    }
+
+    function copyDetail() {
+        if (!detailData) return;
+        const text = detailData.colors.join(', ');
+        navigator.clipboard.writeText(text).then(() => showToast('📋 色值已复制！'));
+    }
+
+    // Tab switching
+    window.switchTab = function(tab, el) {
+        currentTab = tab;
+        document.querySelectorAll('#mainTabs .tab').forEach(t => t.classList.remove('active'));
+        if (el) el.classList.add('active');
+
+        document.getElementById('generateSection').classList.toggle('hidden', tab !== 'generate');
+        document.getElementById('savedSection').classList.toggle('hidden', tab !== 'saved');
+
+        if (tab === 'saved') renderSaved();
+        else renderPalettes();
+    };
+
+    window.setCategory = function(cat, el) {
+        currentCategory = cat;
+        document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+        if (el) el.classList.add('active');
+        generatePalettes();
+    };
+
+    window.generatePalettes = function() {
+        palettes = getPalettesForCategory(currentCategory);
+        if (currentTab === 'generate') renderPalettes();
+    };
+
+    window.showSaved = function() {
+        const savedTab = document.querySelectorAll('#mainTabs .tab')[1];
+        switchTab('saved', savedTab);
+    };
+
+    function showToast(msg) {
+        const old = document.querySelector('.toast');
+        if (old) old.remove();
+        const t = document.createElement('div');
+        t.className = 'toast'; t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2200);
+    }
+
+    // Init
+    generatePalettes();
+})();
+</script>
+</body>
+</html>

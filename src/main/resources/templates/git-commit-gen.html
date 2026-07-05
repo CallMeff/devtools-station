@@ -1,0 +1,333 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">Git 提交信息生成器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent-color,#6366f1);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+        .topbar button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s}
+        .topbar button:hover{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+
+        .page-content{flex:1;max-width:960px;margin:0 auto;width:100%;padding:20px;display:flex;flex-direction:column;gap:20px}
+
+        .intro-box{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:12px;padding:20px;text-align:center}
+        .intro-box h2{font-size:20px;color:var(--accent-color,#6366f1);margin-bottom:8px}
+        .intro-box p{color:var(--text-muted,#888);font-size:13px;line-height:1.6}
+        .intro-box .spec-link{display:inline-block;margin-top:8px;padding:4px 12px;border:1px solid var(--border-color,#444);border-radius:20px;font-size:11px;color:var(--text-muted,#888);text-decoration:none;transition:all .15s}
+        .intro-box .spec-link:hover{color:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1)}
+
+        .builder-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+        @media(max-width:768px){.builder-grid{grid-template-columns:1fr}}
+
+        .card{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:12px;padding:20px}
+        .card h3{font-size:13px;font-weight:600;color:var(--text-muted,#888);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+
+        .type-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+        .type-btn{padding:8px 4px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:11px;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:3px}
+        .type-btn .emoji{font-size:18px}
+        .type-btn:hover{border-color:var(--accent-color,#6366f1)}
+        .type-btn.active{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff;transform:scale(1.05)}
+
+        .form-group{margin-bottom:12px}
+        .form-group label{display:block;font-size:12px;color:var(--text-muted,#888);margin-bottom:6px;font-weight:500}
+        .form-group input,.form-group textarea,.form-group select{width:100%;padding:8px 12px;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:8px;color:var(--text-primary,#ddd);font-size:13px;font-family:inherit;resize:vertical;outline:none;transition:border-color .15s}
+        .form-group input:focus,.form-group textarea:focus{border-color:var(--accent-color,#6366f1)}
+        .form-group textarea{min-height:60px}
+        .form-group .hint{font-size:11px;color:var(--text-muted,#666);margin-top:4px}
+
+        .toggle-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:8px;margin-bottom:12px}
+        .toggle-row label{font-size:13px;color:var(--text-primary,#ddd);cursor:pointer;flex:1}
+        .toggle-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent-color,#6366f1);cursor:pointer}
+        .toggle-row .hint{font-size:11px;color:var(--text-muted,#666)}
+
+        .preview-box{background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:10px;overflow:hidden}
+        .preview-header-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--card-bg,#141416);border-bottom:1px solid var(--border-color,#333)}
+        .preview-header-bar span{font-size:11px;color:var(--text-muted,#888)}
+        .preview-body{padding:14px;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:13px;line-height:1.8;color:var(--text-primary,#ddd);white-space:pre-wrap;word-break:break-all;min-height:80px}
+
+        .commit-full{color:var(--text-primary,#ddd)}
+        .commit-full .c-type{color:#4ecb71;font-weight:600}
+        .commit-full .c-scope{color:var(--accent-light,#a5b4fc)}
+        .commit-full .c-desc{color:var(--text-primary,#ddd)}
+        .commit-full .c-body{color:var(--text-muted,#888);display:block;margin-top:8px}
+        .commit-full .c-footer{color:#fbbf24;display:block;margin-top:4px}
+        .commit-full .c-breaking{color:#e53e3e;display:block;margin-top:8px;padding:4px 0;border-top:1px dashed var(--border-color,#444)}
+
+        .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+        .btn{padding:8px 18px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s;display:flex;align-items:center;gap:6px}
+        .btn:hover{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+        .btn.primary{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+        .btn.warn{background:#e53e3e;border-color:#e53e3e;color:#fff}
+
+        .history-list{display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto}
+        .history-item{padding:6px 10px;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#333);border-radius:6px;font-size:11px;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;cursor:pointer;transition:all .15s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .history-item:hover{background:var(--accent-color,#6366f1);color:#fff}
+
+        .toast{position:fixed;top:50px;left:50%;transform:translateX(-50%);background:var(--accent-color,#6366f1);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+        .toast.show{opacity:1}
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <div class="brand">
+        <a href="/">⚡ DevTools</a>
+        <span class="sep">/</span>
+        <span class="tool-name" th:text="${tool.name}">Git 提交信息生成器</span>
+    </div>
+</div>
+
+<div class="page-content">
+    <div class="intro-box">
+        <h2>📝 Conventional Commits 生成器</h2>
+        <p>选择提交类型、填写描述，自动生成符合 <strong>Conventional Commits</strong> 规范的 Git 提交信息。<br>支持 emoji、scope、正文、脚注和破坏性变更标记。</p>
+        <a href="https://www.conventionalcommits.org/zh-hans/v1.0.0/" target="_blank" rel="noopener" class="spec-link">📖 Conventional Commits 规范</a>
+    </div>
+
+    <div class="builder-grid">
+        <div class="card">
+            <h3>⚙️ 提交配置</h3>
+
+            <div class="form-group">
+                <label>提交类型</label>
+                <div class="type-grid" id="typeGrid"></div>
+            </div>
+
+            <div class="form-group">
+                <label>作用域 Scope（可选）</label>
+                <input type="text" id="scopeInput" placeholder="例如: auth, api, ui, core..." oninput="updatePreview()">
+                <div class="hint">修改影响的范围，如模块名、组件名</div>
+            </div>
+
+            <div class="form-group">
+                <label>简短描述 *</label>
+                <input type="text" id="descInput" placeholder="用一句话描述这次提交做了什么..." oninput="updatePreview()" maxlength="72">
+                <div class="hint">建议不超过 72 个字符</div>
+            </div>
+
+            <div class="form-group">
+                <label>正文 Body（可选）</label>
+                <textarea id="bodyInput" placeholder="详细说明提交的动机、实现方式等..." oninput="updatePreview()"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>脚注 Footer（可选）</label>
+                <textarea id="footerInput" placeholder="例如: Closes #123, Reviewed-by: @someone, Refs: #456" oninput="updatePreview()"></textarea>
+            </div>
+
+            <div class="toggle-row">
+                <label>⚠️ 破坏性变更（BREAKING CHANGE）</label>
+                <input type="checkbox" id="breakingInput" onchange="updatePreview()">
+            </div>
+
+            <div class="btn-row">
+                <button class="btn primary" onclick="copyCommit()">📋 复制提交信息</button>
+                <button class="btn" onclick="copyCommand()">💻 复制完整命令</button>
+                <button class="btn" onclick="clearForm()">🔄 清空</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>👁️ 实时预览</h3>
+            <div class="preview-box">
+                <div class="preview-header-bar">
+                    <span id="charCount">0 / 72 字符</span>
+                    <span id="fullCount">总计: 0 字符</span>
+                </div>
+                <div class="preview-body" id="previewBody">
+                    <span style="color:var(--text-muted,#666)">选择一个类型并填写描述...</span>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:16px">
+                <h3>📜 历史记录 <button class="btn small" onclick="clearHistory()" style="float:right;font-size:11px;padding:3px 8px">清空</button></h3>
+                <div class="history-list" id="historyList">
+                    <span style="color:var(--text-muted,#666);font-size:12px;padding:8px">暂无历史记录</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const commitTypes = [
+    {type:'feat',emoji:'✨',label:'新功能',desc:'新增一个功能'},
+    {type:'fix',emoji:'🐛',label:'修复',desc:'修复一个 Bug'},
+    {type:'docs',emoji:'📝',label:'文档',desc:'文档变更'},
+    {type:'style',emoji:'💄',label:'样式',desc:'代码格式（不影响功能）'},
+    {type:'refactor',emoji:'♻️',label:'重构',desc:'代码重构'},
+    {type:'perf',emoji:'⚡',label:'性能',desc:'性能优化'},
+    {type:'test',emoji:'✅',label:'测试',desc:'添加或修改测试'},
+    {type:'chore',emoji:'🔧',label:'杂务',desc:'构建/工具/依赖变更'},
+    {type:'ci',emoji:'👷',label:'CI',desc:'CI 配置变更'},
+    {type:'build',emoji:'📦',label:'构建',desc:'构建系统或外部依赖'},
+];
+
+let selectedType='feat';
+let history=JSON.parse(localStorage.getItem('git-commit-history')||'[]');
+
+function renderTypes(){
+    document.getElementById('typeGrid').innerHTML=commitTypes.map(t=>`
+        <div class="type-btn ${t.type===selectedType?'active':''}" onclick="selectType('${t.type}')" title="${t.desc}">
+            <span class="emoji">${t.emoji}</span>
+            <span>${t.label}</span>
+        </div>
+    `).join('');
+}
+
+function selectType(type){
+    selectedType=type;
+    renderTypes();
+    updatePreview();
+}
+
+function getCommitMsg(){
+    const scope=document.getElementById('scopeInput').value.trim();
+    const desc=document.getElementById('descInput').value.trim();
+    const body=document.getElementById('bodyInput').value.trim();
+    const footer=document.getElementById('footerInput').value.trim();
+    const breaking=document.getElementById('breakingInput').checked;
+    const typeInfo=commitTypes.find(t=>t.type===selectedType);
+    const emoji=typeInfo?typeInfo.emoji:'';
+    const scopeStr=scope?`(${scope})`:'';
+    let header=`${selectedType}${scopeStr}: ${emoji} ${desc||'(描述)'}`;
+    if(!desc) header=`${selectedType}${scopeStr}: ${emoji} <span style="color:var(--text-muted,#666)">(填写描述...)</span>`;
+    if(breaking) header=`${selectedType}${scopeStr}!${desc?': '+emoji+' '+desc:''}`;
+    let msg=header;
+    if(body) msg+='\n\n'+body;
+    if(breaking) msg+='\n\nBREAKING CHANGE: '+(footer||'此变更不向后兼容');
+    else if(footer) msg+='\n\n'+footer;
+    return {header,body,footer,msg,emoji,desc};
+}
+
+function getPlainText(){
+    const scope=document.getElementById('scopeInput').value.trim();
+    const desc=document.getElementById('descInput').value.trim();
+    const body=document.getElementById('bodyInput').value.trim();
+    const footer=document.getElementById('footerInput').value.trim();
+    const breaking=document.getElementById('breakingInput').checked;
+    const typeInfo=commitTypes.find(t=>t.type===selectedType);
+    const emoji=typeInfo?typeInfo.emoji:'';
+    const scopeStr=scope?`(${scope})`:'';
+    const bang=breaking?'!':'';
+    let header=`${selectedType}${scopeStr}${bang}: ${emoji} ${desc||'(描述)'}`;
+    let msg=header;
+    if(body) msg+='\n\n'+body;
+    if(breaking) msg+='\n\nBREAKING CHANGE: '+(footer||'此变更不向后兼容');
+    else if(footer) msg+='\n\n'+footer;
+    return msg;
+}
+
+function updatePreview(){
+    const body=document.getElementById('previewBody');
+    const desc=document.getElementById('descInput').value.trim();
+    const raw=getCommitMsg();
+    if(!desc){body.innerHTML='<span style="color:var(--text-muted,#666)">选择一个类型并填写描述...</span>';updateCounts('');return;}
+    let html=raw.msg
+        .replace(/^(feat|fix|docs|style|refactor|perf|test|chore|ci|build)(\([^)]*\))?!?:/,m=>`<span class="c-type">${m}</span>`)
+        .replace(/BREAKING CHANGE:/g,'<span class="c-breaking">⚠️ BREAKING CHANGE:</span>');
+    body.innerHTML=html.replace(/\n/g,'<br>');
+    updateCounts(raw.msg.replace(/<[^>]*>/g,''));
+}
+
+function updateCounts(text){
+    const plain=getPlainText();
+    const firstLine=plain.split('\n')[0]||'';
+    document.getElementById('charCount').textContent=firstLine.length+' / 72 字符'+(firstLine.length>72?' ⚠️':'');
+    document.getElementById('fullCount').textContent='总计: '+plain.length+' 字符';
+}
+
+function copyCommit(){
+    const msg=getPlainText();
+    saveHistory(msg);
+    navigator.clipboard.writeText(msg).then(()=>showToast('✅ 提交信息已复制'));
+}
+
+function copyCommand(){
+    const msg=getPlainText();
+    const escaped=msg.replace(/"/g,'\\"');
+    navigator.clipboard.writeText(`git commit -m "${escaped.split('\n')[0]}"`).then(()=>showToast('✅ git commit 命令已复制'));
+}
+
+function clearForm(){
+    document.getElementById('scopeInput').value='';
+    document.getElementById('descInput').value='';
+    document.getElementById('bodyInput').value='';
+    document.getElementById('footerInput').value='';
+    document.getElementById('breakingInput').checked=false;
+    selectedType='feat';
+    renderTypes();
+    updatePreview();
+}
+
+function saveHistory(msg){
+    history.unshift(msg);
+    if(history.length>20) history=history.slice(0,20);
+    localStorage.setItem('git-commit-history',JSON.stringify(history));
+    renderHistory();
+}
+
+function clearHistory(){
+    history=[];
+    localStorage.removeItem('git-commit-history');
+    renderHistory();
+}
+
+function renderHistory(){
+    const list=document.getElementById('historyList');
+    if(!history.length){list.innerHTML='<span style="color:var(--text-muted,#666);font-size:12px;padding:8px">暂无历史记录</span>';return;}
+    list.innerHTML=history.map((h,i)=>`
+        <div class="history-item" onclick="useHistory(${i})" title="点击使用">${h.split('\n')[0].replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+    `).join('');
+}
+
+function useHistory(i){
+    const msg=history[i];
+    const lines=msg.split('\n');
+    const first=lines[0];
+    const typeMatch=first.match(/^(\w+)(\(([^)]*)\))?(!)?:/);
+    if(typeMatch){
+        const foundType=commitTypes.find(t=>t.type===typeMatch[1]);
+        if(foundType) selectType(typeMatch[1]);
+        document.getElementById('scopeInput').value=typeMatch[3]||'';
+        document.getElementById('descInput').value=first.replace(/^\w+(\([^)]*\))?!?: [^\s]+ /,'').trim();
+    }
+    const bodyIdx=lines.findIndex((l,i)=>i>0&&l!==''&&!l.startsWith('BREAKING CHANGE:'));
+    const footerIdx=lines.findIndex(l=>l.startsWith('BREAKING CHANGE:'));
+    if(bodyIdx>0){
+        const bodyEnd=footerIdx>0?footerIdx:lines.length;
+        document.getElementById('bodyInput').value=lines.slice(bodyIdx,bodyEnd).join('\n').trim();
+    }
+    if(footerIdx>0){
+        document.getElementById('breakingInput').checked=true;
+        document.getElementById('footerInput').value=lines[footerIdx].replace('BREAKING CHANGE: ','').trim();
+    }
+    updatePreview();
+}
+
+function showToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+    renderTypes();
+    renderHistory();
+    updatePreview();
+});
+</script>
+</body>
+</html>

@@ -41,10 +41,12 @@ public class FavoriteController {
 
         List<Tool> tools = favoriteService.getUserFavorites(user.getId());
         Set<Long> ids = favoriteService.getUserFavoriteIds(user.getId());
+        Map<String, Map<String, Double>> positions = favoriteService.getUserFavoritePositions(user.getId());
 
         Map<String, Object> data = new HashMap<>();
         data.put("tools", tools);
         data.put("toolIds", ids);
+        data.put("positions", positions);   // toolId → {xp, yp}
         return Result.success(data);
     }
 
@@ -111,5 +113,26 @@ public class FavoriteController {
 
         favoriteService.reorderFavorites(user.getId(), toolIds);
         return Result.success("排序已更新", null);
+    }
+
+    /**
+     * 保存工具桌面位置
+     */
+    @PostMapping("/positions")
+    public Result<Void> savePositions(@RequestHeader(value = "X-Auth-Token", required = false) String token,
+                                       @RequestBody Map<String, Object> body) {
+        User user = getLoginUser(token);
+        if (user == null) {
+            return Result.error(401, "请先登录");
+        }
+
+        @SuppressWarnings("unchecked")
+        Map<String, Map<String, Double>> positions = (Map<String, Map<String, Double>>) body.get("positions");
+        if (positions == null || positions.isEmpty()) {
+            return Result.error(400, "positions 不能为空");
+        }
+
+        favoriteService.savePositions(user.getId(), positions);
+        return Result.success("位置已保存", null);
     }
 }

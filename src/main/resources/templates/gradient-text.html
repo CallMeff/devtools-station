@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">彩虹渐变文字生成器 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #fff5fb;
+            --card-bg: #ffffff;
+            --text: #5d3a5c;
+            --text-secondary: #9a7e9b;
+            --accent: #f472b6;
+            --accent-light: #fce7f3;
+            --accent-dark: #db2777;
+            --border: #f5d4e8;
+            --shadow: 0 6px 30px rgba(244, 114, 182, 0.13);
+            --shadow-lg: 0 12px 40px rgba(244, 114, 182, 0.18);
+            --radius: 18px;
+            --radius-sm: 12px;
+            --gradient-1: #f9a8d4;
+            --gradient-2: #c084fc;
+            --gradient-3: #93c5fd;
+            --gradient-4: #86efac;
+            --gradient-5: #fde68a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #fff5fb 0%, #fdf2f8 20%, #faf5ff 40%, #f0f9ff 60%, #f0fdf4 80%, #fff5fb 100%);
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .floating-decorations {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .float-item {
+            position: absolute; opacity: 0.1; font-size: 2.5rem;
+            animation: floatEmoji 20s infinite ease-in-out;
+        }
+        .float-item:nth-child(1) { top: 8%; left: 8%; animation-delay: 0s; }
+        .float-item:nth-child(2) { top: 22%; right: 10%; animation-delay: -4s; font-size: 2rem; }
+        .float-item:nth-child(3) { top: 45%; left: 5%; animation-delay: -8s; font-size: 3rem; }
+        .float-item:nth-child(4) { top: 65%; right: 7%; animation-delay: -12s; font-size: 2.3rem; }
+        .float-item:nth-child(5) { top: 80%; left: 20%; animation-delay: -2s; font-size: 2.7rem; }
+        .float-item:nth-child(6) { top: 12%; left: 50%; animation-delay: -16s; font-size: 1.8rem; }
+        .float-item:nth-child(7) { top: 55%; left: 55%; animation-delay: -10s; font-size: 2.4rem; }
+        .float-item:nth-child(8) { top: 35%; left: 75%; animation-delay: -6s; font-size: 2.1rem; }
+
+        @keyframes floatEmoji {
+            0% { transform: translateY(0) rotate(0deg) scale(1); }
+            25% { transform: translateY(-35px) rotate(10deg) scale(1.15); }
+            50% { transform: translateY(-15px) rotate(-5deg) scale(0.9); }
+            75% { transform: translateY(-40px) rotate(8deg) scale(1.08); }
+            100% { transform: translateY(0) rotate(0deg) scale(1); }
+        }
+
+        .container {
+            max-width: 800px; margin: 0 auto; padding: 30px 20px 60px;
+            position: relative; z-index: 1;
+        }
+
+        .header {
+            text-align: center; padding: 30px 0 20px;
+        }
+        .header .icon { font-size: 3.5rem; margin-bottom: 10px; animation: bounce 2s infinite; }
+        .header h1 {
+            font-size: 2rem; font-weight: 800;
+            background: linear-gradient(135deg, #f472b6, #c084fc, #60a5fa, #34d399);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header .subtitle { color: var(--text-secondary); font-size: 0.95rem; margin-top: 4px; }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .card {
+            background: var(--card-bg); border-radius: var(--radius);
+            padding: 28px; margin-bottom: 24px;
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.1rem; font-weight: 700; color: var(--accent-dark);
+            margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+        }
+
+        textarea {
+            width: 100%; padding: 14px 16px;
+            border: 2px solid var(--border); border-radius: var(--radius-sm);
+            font-size: 1rem; font-family: inherit; color: var(--text);
+            background: var(--bg); resize: vertical;
+            transition: border-color 0.2s;
+            outline: none; min-height: 80px;
+        }
+        textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+
+        .preset-row {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;
+        }
+        .preset-btn {
+            padding: 6px 14px; border-radius: 20px;
+            border: 1.5px solid var(--border); background: #fff;
+            font-size: 0.85rem; color: var(--text); cursor: pointer;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .preset-btn:hover { border-color: var(--accent); background: var(--accent-light); color: var(--accent-dark); }
+        .preset-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        .style-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px; margin-top: 12px;
+        }
+        .style-card {
+            height: 60px; border-radius: var(--radius-sm); cursor: pointer;
+            border: 3px solid transparent; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; color: #fff; font-weight: 700;
+        }
+        .style-card:hover { transform: scale(1.05); box-shadow: var(--shadow-lg); }
+        .style-card.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+
+        .preview-area {
+            padding: 40px 20px; border-radius: var(--radius);
+            text-align: center; min-height: 120px;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--bg); margin-top: 16px;
+            border: 2px dashed var(--border); overflow: hidden;
+        }
+
+        #previewText {
+            font-size: 2.5rem; font-weight: 900;
+            letter-spacing: 2px; word-break: break-all;
+            transition: all 0.3s ease;
+        }
+
+        .controls {
+            display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px;
+            align-items: center;
+        }
+        .control-group { display: flex; align-items: center; gap: 6px; }
+        .control-group label { font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap; }
+        .control-group input[type="range"] {
+            width: 100px; accent-color: var(--accent);
+        }
+        .control-group input[type="color"] {
+            width: 32px; height: 32px; border: 2px solid var(--border);
+            border-radius: 8px; cursor: pointer; padding: 2px;
+            background: #fff;
+        }
+        .control-group select {
+            padding: 4px 10px; border-radius: 8px;
+            border: 1.5px solid var(--border); font-size: 0.85rem;
+            color: var(--text); background: #fff; cursor: pointer;
+        }
+
+        .output-group {
+            display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;
+        }
+        .output-box {
+            flex: 1; min-width: 200px;
+        }
+        .output-box label {
+            font-size: 0.8rem; color: var(--text-secondary);
+            display: block; margin-bottom: 4px; font-weight: 600;
+        }
+        .code-area {
+            width: 100%; padding: 12px; border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border); font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.8rem; background: #faf5ff; color: #7c3aed;
+            resize: vertical; min-height: 70px; outline: none;
+        }
+
+        .btn {
+            padding: 10px 22px; border-radius: 25px;
+            font-size: 0.9rem; font-weight: 700; cursor: pointer;
+            transition: all 0.2s; border: none; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary { background: linear-gradient(135deg, #f472b6, #c084fc); color: #fff; box-shadow: 0 4px 15px rgba(244,114,182,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(244,114,182,0.4); }
+        .btn-secondary { background: #fff; color: var(--accent); border: 2px solid var(--accent); }
+        .btn-secondary:hover { background: var(--accent-light); }
+        .btn-xs { padding: 4px 10px; font-size: 0.75rem; border-radius: 14px; }
+
+        .copy-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #f472b6, #8b5cf6); color: #fff;
+            padding: 10px 24px; border-radius: 25px; font-size: 0.9rem;
+            font-weight: 700; z-index: 999; opacity: 0;
+            transition: opacity 0.3s; pointer-events: none;
+            box-shadow: 0 8px 25px rgba(244,114,182,0.4);
+        }
+        .copy-toast.show { opacity: 1; }
+
+        @media (max-width: 600px) {
+            .container { padding: 20px 12px; }
+            .header h1 { font-size: 1.5rem; }
+            #previewText { font-size: 1.8rem; }
+            .style-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-decorations">
+        <span class="float-item">🌈</span><span class="float-item">✨</span>
+        <span class="float-item">💖</span><span class="float-item">🎨</span>
+        <span class="float-item">🌸</span><span class="float-item">🦄</span>
+        <span class="float-item">💫</span><span class="float-item">🎀</span>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="icon">🌈</div>
+            <h1 th:text="${tool.name}">彩虹渐变文字生成器</h1>
+            <p class="subtitle">输入文字 → 选配色 → 复制渐变代码，小红书/朋友圈/头像神器 ✨</p>
+        </div>
+
+        <!-- 输入区 -->
+        <div class="card">
+            <div class="card-title">✏️ 输入文字</div>
+            <textarea id="inputText" placeholder="在这里输入你的文字...&#10;比如：今天也是元气满满的一天！" oninput="updatePreview()">你好世界</textarea>
+            <div class="preset-row">
+                <span style="font-size:0.8rem;color:var(--text-secondary);line-height:28px;">快捷输入：</span>
+                <button class="preset-btn" onclick="setPreset('今天也是元气满满的一天！')">🌞 元气满满</button>
+                <button class="preset-btn" onclick="setPreset('你是我的小可爱 💕')">💕 甜甜告白</button>
+                <button class="preset-btn" onclick="setPreset('加油加油你最棒！')">🎯 励志打气</button>
+                <button class="preset-btn" onclick="setPreset('Hello World')">🌍 Hello World</button>
+                <button class="preset-btn" onclick="setPreset('生日快乐 🎂')">🎂 生日祝福</button>
+            </div>
+        </div>
+
+        <!-- 配色选择 -->
+        <div class="card">
+            <div class="card-title">🎨 选择配色风格</div>
+            <div class="style-grid" id="styleGrid">
+            </div>
+            <div class="controls">
+                <div class="control-group">
+                    <label>字号</label>
+                    <input type="range" id="fontSize" min="20" max="100" value="48" oninput="updatePreview()">
+                    <span id="fontSizeVal" style="font-size:0.8rem;color:var(--text-secondary);">48px</span>
+                </div>
+                <div class="control-group">
+                    <label>渐变角度</label>
+                    <input type="range" id="gradientAngle" min="0" max="360" value="90" oninput="updatePreview()">
+                    <span id="angleVal" style="font-size:0.8rem;color:var(--text-secondary);">90°</span>
+                </div>
+                <div class="control-group">
+                    <label>字间距</label>
+                    <input type="range" id="letterSpacing" min="0" max="20" value="2" oninput="updatePreview()">
+                    <span id="spacingVal" style="font-size:0.8rem;color:var(--text-secondary);">2px</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 预览区 -->
+        <div class="card">
+            <div class="card-title">👀 实时预览</div>
+            <div class="preview-area" id="previewArea">
+                <span id="previewText">你好世界</span>
+            </div>
+        </div>
+
+        <!-- 代码输出 -->
+        <div class="card">
+            <div class="card-title">📋 复制代码</div>
+            <div class="output-group">
+                <div class="output-box">
+                    <label>CSS 样式</label>
+                    <textarea class="code-area" id="cssOutput" readonly rows="3"></textarea>
+                    <button class="btn btn-secondary btn-xs" onclick="copyCode('css')" style="margin-top:6px;">📋 复制 CSS</button>
+                </div>
+                <div class="output-box">
+                    <label>HTML 代码</label>
+                    <textarea class="code-area" id="htmlOutput" readonly rows="3"></textarea>
+                    <button class="btn btn-secondary btn-xs" onclick="copyCode('html')" style="margin-top:6px;">📋 复制 HTML</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="copy-toast" id="copyToast"></div>
+
+    <script>
+        const presets = [
+            { name: '🌈 彩虹', colors: ['#ff6b6b','#feca57','#48dbfb','#ff9ff3','#54a0ff'], id: 'rainbow' },
+            { name: '💕 蜜桃甜心', colors: ['#f472b6','#fb923c','#fbbf24','#f472b6'], id: 'peach' },
+            { name: '🦄 独角兽', colors: ['#c084fc','#f472b6','#60a5fa','#a78bfa'], id: 'unicorn' },
+            { name: '🌊 海洋之心', colors: ['#38bdf8','#818cf8','#c084fc','#38bdf8'], id: 'ocean' },
+            { name: '🌿 薄荷森林', colors: ['#34d399','#60a5fa','#818cf8','#34d399'], id: 'mint' },
+            { name: '🌅 橘子汽水', colors: ['#fb923c','#fbbf24','#f472b6','#fb923c'], id: 'orange' },
+            { name: '🍇 葡萄汽水', colors: ['#a78bfa','#f472b6','#c084fc','#a78bfa'], id: 'grape' },
+            { name: '🍬 马卡龙', colors: ['#f9a8d4','#93c5fd','#a7f3d0','#fde68a','#f9a8d4'], id: 'macaron' },
+            { name: '🔥 火焰', colors: ['#ef4444','#f97316','#fbbf24','#ef4444'], id: 'fire' },
+            { name: '❄️ 冰雪', colors: ['#93c5fd','#a5f3fc','#c7d2fe','#93c5fd'], id: 'ice' },
+            { name: '💜 薰衣草', colors: ['#c084fc','#f9a8d4','#e9d5ff','#c084fc'], id: 'lavender' },
+            { name: '🍵 抹茶', colors: ['#86efac','#a3e635','#34d399','#86efac'], id: 'matcha' },
+        ];
+
+        let currentStyle = presets[0];
+        const styleGrid = document.getElementById('styleGrid');
+
+        // Render style cards
+        presets.forEach((p, i) => {
+            const card = document.createElement('div');
+            card.className = 'style-card' + (i === 0 ? ' active' : '');
+            card.style.background = `linear-gradient(135deg, ${p.colors.join(', ')})`;
+            card.textContent = p.name;
+            card.onclick = () => selectStyle(i);
+            styleGrid.appendChild(card);
+        });
+
+        function selectStyle(idx) {
+            currentStyle = presets[idx];
+            document.querySelectorAll('.style-card').forEach((c, i) => c.classList.toggle('active', i === idx));
+            updatePreview();
+        }
+
+        function setPreset(text) {
+            document.getElementById('inputText').value = text;
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const text = document.getElementById('inputText').value || '请输入文字';
+            const fontSize = document.getElementById('fontSize').value;
+            const angle = document.getElementById('gradientAngle').value;
+            const spacing = document.getElementById('letterSpacing').value;
+            const colors = currentStyle.colors;
+
+            document.getElementById('fontSizeVal').textContent = fontSize + 'px';
+            document.getElementById('angleVal').textContent = angle + '°';
+            document.getElementById('spacingVal').textContent = spacing + 'px';
+
+            const preview = document.getElementById('previewText');
+            preview.textContent = text;
+            preview.style.fontSize = fontSize + 'px';
+            preview.style.letterSpacing = spacing + 'px';
+            preview.style.background = `linear-gradient(${angle}deg, ${colors.join(', ')})`;
+            preview.style.webkitBackgroundClip = 'text';
+            preview.style.webkitTextFillColor = 'transparent';
+            preview.style.backgroundClip = 'text';
+
+            // Generate CSS
+            const css = `.rainbow-text {\n  font-size: ${fontSize}px;\n  font-weight: 900;\n  letter-spacing: ${spacing}px;\n  background: linear-gradient(${angle}deg, ${colors.join(', ')});\n  -webkit-background-clip: text;\n  -webkit-text-fill-color: transparent;\n  background-clip: text;\n}`;
+            document.getElementById('cssOutput').value = css;
+
+            const html = `<span style="font-size:${fontSize}px;font-weight:900;letter-spacing:${spacing}px;background:linear-gradient(${angle}deg,${colors.join(',')});-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${text}</span>`;
+            document.getElementById('htmlOutput').value = html;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('copyToast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function copyCode(type) {
+            const el = type === 'css' ? document.getElementById('cssOutput') : document.getElementById('htmlOutput');
+            el.select();
+            document.execCommand('copy');
+            showToast('✅ ' + (type === 'css' ? 'CSS' : 'HTML') + ' 代码已复制到剪贴板！');
+        }
+
+        // Init
+        updatePreview();
+    </script>
+</body>
+</html>

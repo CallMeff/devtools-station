@@ -1,0 +1,248 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">CSS 渐变生成器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent-color,#6366f1);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+        .topbar button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s}
+        .topbar button:hover{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+
+        .page-content{flex:1;max-width:1200px;margin:0 auto;width:100%;padding:20px;display:flex;gap:20px}
+        .control-panel{width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:16px}
+        .preview-panel{flex:1;display:flex;flex-direction:column;gap:16px;min-width:0}
+
+        .card{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:12px;padding:18px}
+        .card h3{font-size:13px;font-weight:600;color:var(--text-muted,#888);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+
+        .type-tabs{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border-color,#444)}
+        .type-tab{flex:1;padding:8px 0;text-align:center;font-size:12px;font-weight:600;cursor:pointer;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#888);border:none;transition:all .15s}
+        .type-tab.active{background:var(--accent-color,#6366f1);color:#fff}
+        .type-tab:hover:not(.active){color:var(--text-primary,#ddd)}
+
+        .gradient-preview{width:100%;height:200px;border-radius:12px;border:2px solid var(--border-color,#333);transition:background .3s;position:relative;overflow:hidden}
+        .gradient-preview::after{content:'';position:absolute;inset:0;background:repeating-conic-gradient(rgba(255,255,255,.03) 0% 25%,transparent 0% 50%) 50%/20px 20px;pointer-events:none}
+
+        .stop-list{display:flex;flex-direction:column;gap:8px;max-height:240px;overflow-y:auto}
+        .stop-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:8px;transition:all .15s}
+        .stop-item:hover{border-color:var(--accent-color,#6366f1)}
+        .stop-item input[type=color]{width:32px;height:32px;border:none;border-radius:6px;cursor:pointer;padding:0;background:none}
+        .stop-item input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+        .stop-item input[type=color]::-webkit-color-swatch{border-radius:6px;border:1px solid var(--border-color,#555)}
+        .stop-item input[type=range]{flex:1;height:4px;-webkit-appearance:none;background:var(--border-color,#444);border-radius:2px;outline:none}
+        .stop-item input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent-color,#6366f1);cursor:pointer}
+        .stop-item .stop-pos{font-size:11px;color:var(--text-muted,#888);min-width:32px;text-align:right}
+        .stop-item .stop-del{padding:2px 6px;border:none;background:none;color:var(--text-muted,#888);cursor:pointer;font-size:16px;line-height:1}
+        .stop-item .stop-del:hover{color:#e53e3e}
+
+        .btn-row{display:flex;gap:6px;flex-wrap:wrap}
+        .btn{padding:6px 14px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:12px;transition:all .15s;display:flex;align-items:center;gap:4px}
+        .btn:hover{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+        .btn.primary{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+        .btn.small{padding:4px 10px;font-size:11px}
+
+        .angle-control{display:flex;align-items:center;gap:10px}
+        .angle-control label{font-size:13px;color:var(--text-secondary,#aaa)}
+        .angle-control input[type=range]{flex:1}
+        .angle-control .angle-val{font-size:13px;color:var(--accent-color,#6366f1);font-weight:600;min-width:40px;text-align:right}
+
+        .css-output{position:relative}
+        .css-output code{display:block;padding:14px;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:8px;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:13px;line-height:1.7;color:var(--accent-light,#a5b4fc);word-break:break-all;user-select:all;white-space:pre-wrap}
+
+        .preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+        .preset-chip{padding:6px 8px;border-radius:100px;border:1px solid transparent;cursor:pointer;font-size:11px;font-weight:600;text-align:center;color:#fff;transition:all .15s;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+        .preset-chip:hover{transform:scale(1.05);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+
+        .toast{position:fixed;top:50px;left:50%;transform:translateX(-50%);background:var(--accent-color,#6366f1);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+        .toast.show{opacity:1}
+
+        @media(max-width:768px){.page-content{flex-direction:column}.control-panel{width:100%}}
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <div class="brand">
+        <a href="/">⚡ DevTools</a>
+        <span class="sep">/</span>
+        <span class="tool-name" th:text="${tool.name}">CSS 渐变生成器</span>
+    </div>
+    <button onclick="window.close()" style="display:none">✕</button>
+</div>
+
+<div class="page-content">
+    <div class="control-panel">
+        <div class="card">
+            <h3>渐变类型</h3>
+            <div class="type-tabs">
+                <button class="type-tab active" data-type="linear">线性</button>
+                <button class="type-tab" data-type="radial">径向</button>
+                <button class="type-tab" data-type="conic">锥形</button>
+            </div>
+        </div>
+
+        <div class="card" id="angleCard">
+            <h3>角度</h3>
+            <div class="angle-control">
+                <input type="range" id="angleRange" min="0" max="360" value="135" oninput="updateGradient()">
+                <span class="angle-val" id="angleVal">135°</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>颜色色标 <button class="btn small" onclick="addStop()" style="float:right">+ 添加</button></h3>
+            <div class="stop-list" id="stopList"></div>
+        </div>
+
+        <div class="card">
+            <h3>预设渐变</h3>
+            <div class="preset-grid" id="presetGrid"></div>
+        </div>
+    </div>
+
+    <div class="preview-panel">
+        <div class="card">
+            <h3>实时预览</h3>
+            <div class="gradient-preview" id="gradientPreview"></div>
+        </div>
+
+        <div class="card">
+            <h3 style="display:flex;justify-content:space-between;align-items:center">
+                CSS 代码
+                <button class="btn primary" onclick="copyCSS()">📋 复制 CSS</button>
+            </h3>
+            <div class="css-output">
+                <code id="cssCode"></code>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>兼容性写法（含 -webkit- 前缀）</h3>
+            <div class="css-output">
+                <code id="cssCompat"></code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let gradientType = 'linear';
+let stops = [
+    {color:'#667eea',pos:0},{color:'#764ba2',pos:100}
+];
+
+const presets = [
+    {name:'日落',stops:[{color:'#f12711',pos:0},{color:'#f5af19',pos:100}],type:'linear',angle:90},
+    {name:'海洋',stops:[{color:'#2193b0',pos:0},{color:'#6dd5ed',pos:100}],type:'linear',angle:135},
+    {name:'紫晶',stops:[{color:'#8E2DE2',pos:0},{color:'#4A00E0',pos:100}],type:'linear',angle:45},
+    {name:'蜜桃',stops:[{color:'#ff9a9e',pos:0},{color:'#fecfef',pos:100}],type:'linear',angle:90},
+    {name:'极光',stops:[{color:'#00b4db',pos:0},{color:'#0083b0',pos:100}],type:'linear',angle:135},
+    {name:'森林',stops:[{color:'#11998e',pos:0},{color:'#38ef7d',pos:100}],type:'linear',angle:90},
+    {name:'午夜',stops:[{color:'#0F2027',pos:0},{color:'#203A43',pos:50},{color:'#2C5364',pos:100}],type:'linear',angle:180},
+    {name:'樱桃',stops:[{color:'#EB3349',pos:0},{color:'#F45C43',pos:100}],type:'linear',angle:90},
+    {name:'薰衣草',stops:[{color:'#a18cd1',pos:0},{color:'#fbc2eb',pos:100}],type:'linear',angle:135},
+];
+
+function getCSSValue(){
+    const sorted=[...stops].sort((a,b)=>a.pos-b.pos);
+    const parts=sorted.map(s=>s.color+' '+s.pos+'%').join(', ');
+    const angle=parseInt(document.getElementById('angleRange').value);
+    if(gradientType==='linear') return `linear-gradient(${angle}deg, ${parts})`;
+    if(gradientType==='radial') return `radial-gradient(circle, ${parts})`;
+    return `conic-gradient(from ${angle}deg, ${parts})`;
+}
+
+function updateGradient(){
+    const css=getCSSValue();
+    document.getElementById('gradientPreview').style.background=css;
+    document.getElementById('cssCode').textContent='background: '+css+';';
+    document.getElementById('cssCompat').textContent='background: -webkit-'+css+';\nbackground: '+css+';';
+    document.getElementById('angleVal').textContent=document.getElementById('angleRange').value+'°';
+}
+
+function renderStops(){
+    const list=document.getElementById('stopList');
+    list.innerHTML=stops.map((s,i)=>`
+        <div class="stop-item">
+            <input type="color" value="${s.color}" onchange="stopChange(${i},'color',this.value)">
+            <input type="range" min="0" max="100" value="${s.pos}" oninput="stopChange(${i},'pos',parseInt(this.value))">
+            <span class="stop-pos">${s.pos}%</span>
+            <button class="stop-del" onclick="removeStop(${i})" ${stops.length<=2?'disabled':''} title="删除">×</button>
+        </div>
+    `).join('');
+    updateGradient();
+}
+
+function stopChange(i,key,val){
+    stops[i][key]=val;
+    renderStops();
+}
+
+function addStop(){
+    stops.push({color:'#6366f1',pos:50});
+    renderStops();
+}
+
+function removeStop(i){
+    if(stops.length<=2) return;
+    stops.splice(i,1);
+    renderStops();
+}
+
+function switchType(type){
+    gradientType=type;
+    document.querySelectorAll('.type-tab').forEach(t=>t.classList.toggle('active',t.dataset.type===type));
+    document.getElementById('angleCard').style.display=type==='radial'?'none':'';
+    updateGradient();
+}
+
+function copyCSS(){
+    const css='background: '+getCSSValue()+';';
+    navigator.clipboard.writeText(css).then(()=>showToast('✅ CSS 已复制到剪贴板'));
+}
+
+function showToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+function applyPreset(p){
+    gradientType=p.type||'linear';
+    stops=p.stops.map(s=>({...s}));
+    document.getElementById('angleRange').value=p.angle||90;
+    document.querySelectorAll('.type-tab').forEach(t=>t.classList.toggle('active',t.dataset.type===gradientType));
+    document.getElementById('angleCard').style.display=gradientType==='radial'?'none':'';
+    renderStops();
+}
+
+function renderPresets(){
+    document.getElementById('presetGrid').innerHTML=presets.map(p=>`
+        <div class="preset-chip" style="background:linear-gradient(135deg,${p.stops.map(s=>s.color+' '+s.pos+'%').join(',')})" 
+             onclick="applyPreset(${JSON.stringify(p).replace(/"/g,'&quot;')})" title="${p.name}">
+            ${p.name}
+        </div>
+    `).join('');
+}
+
+document.querySelectorAll('.type-tab').forEach(tab=>{
+    tab.addEventListener('click',()=>switchType(tab.dataset.type));
+});
+
+renderPresets();
+renderStops();
+</script>
+</body>
+</html>

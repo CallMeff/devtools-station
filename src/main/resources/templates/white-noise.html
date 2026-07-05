@@ -1,0 +1,444 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">白噪音播放器 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #f5f3ff; --card-bg: rgba(255,255,255,0.92); --text: #4a3f6b;
+            --text-secondary: #8b7daf; --accent: #8b5cf6; --accent-light: #ede9fe;
+            --accent-dark: #6d28d9; --border: #ddd6fe; --shadow: 0 6px 28px rgba(139,92,246,0.12);
+            --radius: 22px; --radius-sm: 14px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 20%, #fce7f3 60%, #f5f3ff 100%);
+            min-height: 100vh; color: var(--text); line-height: 1.6; transition: background 2s ease;
+        }
+        body.rain { background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 40%, #e0e7ff 100%); }
+        body.ocean { background: linear-gradient(135deg, #cffafe 0%, #e0f2fe 40%, #ccfbf1 100%); }
+        body.fire { background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 40%, #fde68a 100%); }
+        body.forest { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 40%, #ccfbf1 100%); }
+
+        .floating-decorations { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .float-item { position: absolute; opacity: 0.08; font-size: 2.4rem; animation: floatSlow 22s infinite ease-in-out; }
+        .float-item:nth-child(1) { top: 5%; left: 8%; animation-delay: 0s; }
+        .float-item:nth-child(2) { top: 18%; right: 10%; animation-delay: -6s; font-size: 2rem; }
+        .float-item:nth-child(3) { top: 45%; left: 6%; animation-delay: -12s; font-size: 3rem; }
+        .float-item:nth-child(4) { top: 65%; right: 8%; animation-delay: -18s; font-size: 2.2rem; }
+        .float-item:nth-child(5) { top: 78%; left: 30%; animation-delay: -4s; font-size: 2.6rem; }
+        .float-item:nth-child(6) { top: 28%; left: 55%; animation-delay: -14s; font-size: 1.8rem; }
+        @keyframes floatSlow {
+            0% { transform: translateY(0) rotate(0deg) scale(1); }
+            25% { transform: translateY(-28px) rotate(6deg) scale(1.1); }
+            50% { transform: translateY(-8px) rotate(-3deg) scale(0.93); }
+            75% { transform: translateY(-36px) rotate(5deg) scale(1.04); }
+            100% { transform: translateY(0) rotate(0deg) scale(1); }
+        }
+
+        .container { max-width: 600px; margin: 0 auto; padding: 20px 20px 60px; position: relative; z-index: 1; }
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 24px; margin-bottom: 10px;
+            background: rgba(255,255,255,0.85); backdrop-filter: blur(12px);
+            border-radius: var(--radius-sm); box-shadow: var(--shadow);
+        }
+        .topbar .brand { font-size: 0.95rem; font-weight: 600; color: var(--accent-dark); }
+        .topbar .page-title { font-size: 0.9rem; color: var(--text-secondary); }
+
+        .header { text-align: center; padding: 35px 20px 20px; }
+        .header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #7c3aed, #db2777, #8b5cf6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 8px; letter-spacing: -0.3px;
+        }
+        .header .subtitle { color: var(--text-secondary); font-size: 1rem; }
+
+        /* Visualizer */
+        .viz-wrap {
+            background: var(--card-bg); border-radius: var(--radius); padding: 20px;
+            box-shadow: var(--shadow); margin-bottom: 20px; position: relative; overflow: hidden;
+            text-align: center; min-height: 180px; display: flex; align-items: center; justify-content: center;
+        }
+        .viz-scene { font-size: 5rem; transition: transform 0.5s; }
+        .viz-scene.pulse { animation: scenePulse 2s infinite ease-in-out; }
+        @keyframes scenePulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+        .rain-drops { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; }
+        .rain-drops .drop {
+            position: absolute; width: 2px; background: rgba(99,102,241,0.3);
+            animation: dropFall linear infinite;
+        }
+        @keyframes dropFall {
+            0% { transform: translateY(-100px); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(220px); opacity: 0; }
+        }
+
+        /* Timer */
+        .timer-row { display: flex; gap: 12px; margin-bottom: 16px; }
+        .timer-btn {
+            padding: 8px 18px; border-radius: 20px; border: 2px solid var(--border);
+            background: #fff; cursor: pointer; font-size: 0.9rem; color: var(--text);
+            transition: all 0.25s;
+        }
+        .timer-btn:hover, .timer-btn.active { border-color: var(--accent); background: var(--accent-light); }
+        .timer-display { font-size: 1rem; font-weight: 600; color: var(--accent-dark); text-align: center; margin-bottom: 16px; }
+
+        /* Sound cards */
+        .sounds-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        @media (max-width: 480px) { .sounds-grid { grid-template-columns: 1fr; } }
+
+        .sound-card {
+            background: var(--card-bg); border-radius: var(--radius-sm); padding: 20px 18px;
+            box-shadow: var(--shadow); border: 2px solid transparent; cursor: pointer;
+            transition: all 0.35s; text-align: center; position: relative;
+        }
+        .sound-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(139,92,246,0.15); }
+        .sound-card.active {
+            border-color: var(--accent); 
+            box-shadow: 0 8px 28px rgba(139,92,246,0.2);
+        }
+        .sound-card .icon { font-size: 2.8rem; margin-bottom: 8px; transition: transform 0.3s; }
+        .sound-card.active .icon { animation: iconBounce 0.6s infinite ease-in-out; }
+        @keyframes iconBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .sound-card .name { font-size: 1rem; font-weight: 600; color: var(--text); }
+        .sound-card .desc { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+
+        .sound-card .volume-slider {
+            width: 100%; margin-top: 12px; -webkit-appearance: none; appearance: none;
+            height: 6px; border-radius: 10px; background: #e8e0f0; outline: none;
+            cursor: pointer;
+        }
+        .sound-card .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #f472b6); cursor: pointer;
+            box-shadow: 0 2px 8px rgba(139,92,246,0.3);
+        }
+
+        .master-row {
+            display: flex; align-items: center; gap: 12px;
+            background: var(--card-bg); border-radius: var(--radius-sm); padding: 14px 20px;
+            box-shadow: var(--shadow); margin-bottom: 14px;
+        }
+        .master-btn {
+            width: 48px; height: 48px; border-radius: 50%; border: none;
+            background: linear-gradient(135deg, #8b5cf6, #db2777);
+            color: #fff; font-size: 1.4rem; cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 16px rgba(139,92,246,0.3); flex-shrink: 0;
+        }
+        .master-btn:hover { transform: scale(1.08); }
+        .master-info { flex: 1; }
+        .master-info .label { font-size: 0.85rem; color: var(--text-secondary); }
+        .master-info .status { font-size: 1rem; font-weight: 600; color: var(--accent-dark); }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(139,92,246,0.92); color: #fff; padding: 12px 28px;
+            border-radius: 25px; font-size: 0.95rem; z-index: 999;
+            animation: toastIn 0.4s ease, toastOut 0.4s 1.8s ease forwards;
+            box-shadow: 0 8px 30px rgba(139,92,246,0.3);
+        }
+        @keyframes toastIn { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+        @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
+    </style>
+</head>
+<body class="">
+<div class="floating-decorations">
+    <span class="float-item">🎵</span><span class="float-item">🎧</span><span class="float-item">☁️</span>
+    <span class="float-item">💜</span><span class="float-item">🌿</span><span class="float-item">✨</span>
+</div>
+
+<div class="container">
+    <div class="topbar">
+        <span class="brand">🌸 DevTools Station</span>
+        <span class="page-title" th:text="${tool.name}">白噪音播放器</span>
+    </div>
+
+    <div class="header">
+        <h1>🎧 白噪音播放器</h1>
+        <p class="subtitle">用温柔的声音陪你学习、工作、放空 🌿</p>
+    </div>
+
+    <!-- Master -->
+    <div class="master-row">
+        <button class="master-btn" id="masterBtn" onclick="toggleMaster()">▶</button>
+        <div class="master-info">
+            <div class="label">主控开关</div>
+            <div class="status" id="masterStatus">已暂停</div>
+        </div>
+    </div>
+
+    <!-- Timer -->
+    <div class="timer-row" style="justify-content:center;">
+        <button class="timer-btn" onclick="setTimer(0)">不限时</button>
+        <button class="timer-btn" onclick="setTimer(15)">15 分钟</button>
+        <button class="timer-btn" onclick="setTimer(30)">30 分钟</button>
+        <button class="timer-btn" onclick="setTimer(60)">60 分钟</button>
+    </div>
+    <div class="timer-display" id="timerDisplay" style="display:none;"></div>
+
+    <!-- Sound Cards -->
+    <div class="sounds-grid">
+        <div class="sound-card" id="card-rain" onclick="toggleSound('rain')">
+            <div class="icon">🌧️</div>
+            <div class="name">雨声</div>
+            <div class="desc">淅淅沥沥的治愈雨声</div>
+            <input type="range" class="volume-slider" min="0" max="100" value="60" oninput="setVolume('rain', this.value)" onclick="event.stopPropagation()">
+        </div>
+        <div class="sound-card" id="card-ocean" onclick="toggleSound('ocean')">
+            <div class="icon">🌊</div>
+            <div class="name">海浪</div>
+            <div class="desc">潮起潮落的安宁节拍</div>
+            <input type="range" class="volume-slider" min="0" max="100" value="60" oninput="setVolume('ocean', this.value)" onclick="event.stopPropagation()">
+        </div>
+        <div class="sound-card" id="card-fire" onclick="toggleSound('fire')">
+            <div class="icon">🔥</div>
+            <div class="name">篝火</div>
+            <div class="desc">噼啪作响的温暖火焰</div>
+            <input type="range" class="volume-slider" min="0" max="100" value="60" oninput="setVolume('fire', this.value)" onclick="event.stopPropagation()">
+        </div>
+        <div class="sound-card" id="card-forest" onclick="toggleSound('forest')">
+            <div class="icon">🍃</div>
+            <div class="name">森林</div>
+            <div class="desc">鸟鸣叶响的自然交响</div>
+            <input type="range" class="volume-slider" min="0" max="100" value="60" oninput="setVolume('forest', this.value)" onclick="event.stopPropagation()">
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    var ctx = null;
+    var activeSounds = {};
+    var volumes = { rain: 60, ocean: 60, fire: 60, forest: 60 };
+    var isPlaying = false;
+    var timerId = null;
+    var timerEnd = null;
+    var isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+    // White/Pink noise generator
+    function createNoiseNode(color) {
+        var bufferSize = 2 * ctx.sampleRate;
+        var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        var data = buffer.getChannelData(0);
+        var b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+        for (var i = 0; i < bufferSize; i++) {
+            var white = Math.random() * 2 - 1;
+            if (color === 'pink') {
+                b0=0.99886*b0+white*0.0555179;b1=0.99332*b1+white*0.0750759;
+                b2=0.96900*b2+white*0.1538520;b3=0.86650*b3+white*0.3104856;
+                b4=0.55000*b4+white*0.5329522;b5=-0.7616*b5-white*0.0168980;
+                data[i]=b0+b1+b2+b3+b4+b5+b6+white*0.5362;b6=white*0.115926;
+                data[i] *= 0.11;
+            } else {
+                data[i] = white * 0.9;
+            }
+        }
+        var source = ctx.createBufferSource(); source.buffer = buffer; source.loop = true;
+        return source;
+    }
+
+    // Filter for rain
+    function createRain() {
+        var noise = createNoiseNode('pink');
+        var filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass'; filter.frequency.value = isMobile ? 1500 : 2000; filter.Q.value = 0.5;
+        var gain = ctx.createGain(); gain.gain.value = 0;
+        noise.connect(filter); filter.connect(gain);
+        return { source: noise, gain: gain, output: gain };
+    }
+
+    // Ocean waves
+    function createOcean() {
+        var noise = createNoiseNode('pink');
+        var filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass'; filter.frequency.value = isMobile ? 400 : 500; filter.Q.value = 1;
+        var lfo = ctx.createOscillator();
+        lfo.type = 'sine'; lfo.frequency.value = isMobile ? 0.08 : 0.1;
+        var lfoGain = ctx.createGain(); lfoGain.gain.value = isMobile ? 250 : 300;
+        lfo.connect(lfoGain); lfoGain.connect(filter.frequency);
+        var gain = ctx.createGain(); gain.gain.value = 0;
+        noise.connect(filter); filter.connect(gain);
+        return { source: noise, lfo: lfo, gain: gain, output: gain };
+    }
+
+    // Fire crackle
+    function createFire() {
+        var noise = createNoiseNode('white');
+        var bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass'; bp.frequency.value = isMobile ? 800 : 1200; bp.Q.value = isMobile ? 0.8 : 1.5;
+        var lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass'; lp.frequency.value = isMobile ? 2000 : 3000;
+        // Second noise layer
+        var n2 = createNoiseNode('pink');
+        var lp2 = ctx.createBiquadFilter(); lp2.type = 'lowpass'; lp2.frequency.value = 200;
+        var gain = ctx.createGain(); gain.gain.value = 0;
+        noise.connect(bp); bp.connect(lp); lp.connect(gain);
+        n2.connect(lp2); lp2.connect(gain);
+        return { source: noise, source2: n2, gain: gain, output: gain };
+    }
+
+    // Forest birds chirp approximation
+    function createForest() {
+        var noiz = createNoiseNode('pink');
+        var lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass'; lp.frequency.value = isMobile ? 600 : 800;
+        // Birds chirp using oscillator
+        var osc = ctx.createOscillator();
+        osc.type = 'sine'; osc.frequency.value = isMobile ? 1800 : 2400;
+        var chirpGain = ctx.createGain();
+        chirpGain.gain.setValueAtTime(0, ctx.currentTime);
+        scheduleChirps(chirpGain);
+        var gain = ctx.createGain(); gain.gain.value = 0;
+        noiz.connect(lp); lp.connect(gain);
+        osc.connect(chirpGain); chirpGain.connect(gain);
+        return { source: noiz, osc: osc, gain: gain, output: gain };
+    }
+
+    function scheduleChirps(chirpGain) {
+        var now = ctx.currentTime;
+        for (var i = 0; i < 20; i++) {
+            var t = now + Math.random() * 8;
+            var dur = 0.05 + Math.random() * 0.1;
+            chirpGain.gain.setValueAtTime(0, t);
+            chirpGain.gain.linearRampToValueAtTime(0.03, t + dur * 0.3);
+            chirpGain.gain.linearRampToValueAtTime(0, t + dur);
+        }
+        setTimeout(function() { if (activeSounds.forest) scheduleChirps(chirpGain); }, 7000);
+    }
+
+    function initCtx() {
+        if (!ctx) ctx = new AudioCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+    }
+
+    var soundCreators = { rain: createRain, ocean: createOcean, fire: createFire, forest: createForest };
+    var bgClasses = { rain: 'rain', ocean: 'ocean', fire: 'fire', forest: 'forest' };
+
+    window.toggleSound = function(name) {
+        initCtx();
+        if (activeSounds[name]) {
+            stopSound(name);
+        } else {
+            startSound(name);
+        }
+        updateMaster();
+    };
+
+    function startSound(name) {
+        var nodes = soundCreators[name]();
+        nodes.source.start();
+        if (nodes.lfo) nodes.lfo.start();
+        if (nodes.osc) nodes.osc.start();
+        if (nodes.source2) nodes.source2.start();
+        nodes.gain.gain.linearRampToValueAtTime(volumes[name] / 100 * 0.5, ctx.currentTime + 0.3);
+        nodes.output.connect(ctx.destination);
+        activeSounds[name] = nodes;
+        document.getElementById('card-' + name).classList.add('active');
+        updateBodyBg();
+    }
+
+    function stopSound(name) {
+        var nodes = activeSounds[name];
+        if (!nodes) return;
+        try { nodes.source.stop(); } catch(e){}
+        if (nodes.source2) try { nodes.source2.stop(); } catch(e){}
+        if (nodes.lfo) try { nodes.lfo.stop(); } catch(e){}
+        if (nodes.osc) try { nodes.osc.stop(); } catch(e){}
+        try { nodes.gain.disconnect(); } catch(e){}
+        activeSounds[name] = null;
+        document.getElementById('card-' + name).classList.remove('active');
+        updateBodyBg();
+    }
+
+    window.setVolume = function(name, val) {
+        volumes[name] = parseInt(val);
+        if (activeSounds[name]) {
+            activeSounds[name].gain.gain.linearRampToValueAtTime(val / 100 * 0.5, ctx.currentTime + 0.2);
+        }
+    };
+
+    function updateMaster() {
+        var hasActive = Object.values(activeSounds).some(Boolean);
+        isPlaying = hasActive;
+        var btn = document.getElementById('masterBtn');
+        var status = document.getElementById('masterStatus');
+        if (hasActive) {
+            btn.textContent = '⏸'; status.textContent = '正在播放';
+        } else {
+            btn.textContent = '▶'; status.textContent = '已暂停';
+            document.body.className = '';
+            if (timerId) { clearInterval(timerId); timerId = null; }
+            document.getElementById('timerDisplay').style.display = 'none';
+        }
+    }
+
+    function updateBodyBg() {
+        var keys = Object.keys(activeSounds).filter(function(k) { return activeSounds[k]; });
+        document.body.className = keys.length === 1 ? bgClasses[keys[0]] || '' : '';
+    }
+
+    window.toggleMaster = function() {
+        initCtx();
+        if (Object.values(activeSounds).some(Boolean)) {
+            var keys = Object.keys(activeSounds);
+            keys.forEach(function(k) { stopSound(k); });
+        } else {
+            // Start all
+            ['rain','ocean','fire','forest'].forEach(function(name) { startSound(name); });
+        }
+        updateMaster();
+    };
+
+    // Timer
+    window.setTimer = function(min) {
+        document.querySelectorAll('.timer-btn').forEach(function(b) { b.classList.remove('active'); });
+        event.target.classList.add('active');
+        if (timerId) { clearInterval(timerId); timerId = null; }
+
+        var disp = document.getElementById('timerDisplay');
+        if (min === 0) { disp.style.display = 'none'; return; }
+
+        timerEnd = Date.now() + min * 60 * 1000;
+        disp.style.display = 'block';
+        updateTimerDisplay();
+        timerId = setInterval(function() {
+            var remain = timerEnd - Date.now();
+            if (remain <= 0) {
+                clearInterval(timerId); timerId = null;
+                var keys = Object.keys(activeSounds);
+                keys.forEach(function(k) { stopSound(k); });
+                updateMaster(); disp.style.display = 'none';
+                showToast('⏰ 时间到啦！白噪音已自动停止~');
+                return;
+            }
+            updateTimerDisplay();
+        }, 1000);
+    };
+
+    function updateTimerDisplay() {
+        var remain = Math.max(0, timerEnd - Date.now());
+        var m = Math.floor(remain / 60000);
+        var s = Math.floor((remain % 60000) / 1000);
+        document.getElementById('timerDisplay').textContent = '剩余时间: ' + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function showToast(msg) {
+        var t = document.querySelector('.toast');
+        if (t) t.remove();
+        t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(function() { t.remove(); }, 2400);
+    }
+})();
+</script>
+</body>
+</html>

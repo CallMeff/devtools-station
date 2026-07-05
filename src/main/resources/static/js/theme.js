@@ -7,9 +7,10 @@
 
     var THEME_KEY = 'devtools-theme';
     var themes = [
-        { id: 'dark',  name: function() { return (window.__I18N__ && window.__I18N__.t('theme.dark')) || '暗黑'; },   desc: function() { return (window.__I18N__ && window.__I18N__.t('theme.dark_desc')) || '护眼深邃 · 专业暗色'; },     icon: '🌙' },
-        { id: 'light', name: function() { return (window.__I18N__ && window.__I18N__.t('theme.light')) || '明亮'; },   desc: function() { return (window.__I18N__ && window.__I18N__.t('theme.light_desc')) || '清爽简洁 · 经典白昼'; },    icon: '☀️' },
-        { id: 'anime', name: function() { return (window.__I18N__ && window.__I18N__.t('theme.anime')) || '二次元'; },  desc: function() { return (window.__I18N__ && window.__I18N__.t('theme.anime_desc')) || '樱花甜心 · 动漫风格'; },    icon: '🌸' }
+        { id: 'dark',   name: function() { return (window.__I18N__ && window.__I18N__.t('theme.dark')) || '暗黑'; },     desc: function() { return (window.__I18N__ && window.__I18N__.t('theme.dark_desc')) || '护眼深邃 · 专业暗色'; },     icon: '🌙' },
+        { id: 'light',  name: function() { return (window.__I18N__ && window.__I18N__.t('theme.light')) || '明亮'; },     desc: function() { return (window.__I18N__ && window.__I18N__.t('theme.light_desc')) || '清爽简洁 · 经典白昼'; },    icon: '☀️' },
+        { id: 'anime',  name: function() { return (window.__I18N__ && window.__I18N__.t('theme.anime')) || '二次元'; },    desc: function() { return (window.__I18N__ && window.__I18N__.t('theme.anime_desc')) || '樱花甜心 · 动漫风格'; },    icon: '🌸' },
+        { id: 'pastel', name: function() { return (window.__I18N__ && window.__I18N__.t('theme.pastel')) || '马卡龙'; },   desc: function() { return (window.__I18N__ && window.__I18N__.t('theme.pastel_desc')) || '黑白编辑框 · 马卡龙色块'; }, icon: '🎨' }
     ];
 
     function getThemeName(t) {
@@ -74,6 +75,9 @@
                         '<div class="theme-option-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>' +
                     '</div>';
                 }).join('') +
+                '<a class="theme-more-link" href="/theme-store" data-i18n="theme.more">' +
+                    ((window.__I18N__ && window.__I18N__.t('theme.more')) || '查看更多') + ' →' +
+                '</a>' +
             '</div>' +
             '<div class="theme-dropdown-backdrop" id="themeBackdrop"></div>';
 
@@ -82,25 +86,32 @@
         var drop  = document.getElementById('themeDropdown');
         var back  = document.getElementById('themeBackdrop');
 
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var open = drop.classList.contains('active');
-            drop.classList.toggle('active', !open);
-            back.classList.toggle('active', !open);
-        });
+        var hideTimeout;
 
-        back.addEventListener('click', function() {
-            drop.classList.remove('active');
-            back.classList.remove('active');
-        });
+        function showDropdown() {
+            clearTimeout(hideTimeout);
+            drop.classList.add('active');
+        }
+
+        function hideDropdown() {
+            hideTimeout = setTimeout(function() {
+                drop.classList.remove('active');
+            }, 200);
+        }
+
+        btn.addEventListener('mouseenter', showDropdown);
+        btn.addEventListener('mouseleave', hideDropdown);
+
+        drop.addEventListener('mouseenter', showDropdown);
+        drop.addEventListener('mouseleave', hideDropdown);
 
         drop.addEventListener('click', function(e) {
             var opt = e.target.closest('.theme-option');
             if (!opt) return;
             var id = opt.getAttribute('data-theme');
             setTheme(id);
+            clearTimeout(hideTimeout);
             drop.classList.remove('active');
-            back.classList.remove('active');
         });
     }
 
@@ -147,8 +158,133 @@
         navActions.insertBefore(btn, navActions.firstChild);
     }
 
+    // ========== 主题预览（来自主题商店，2分钟自动恢复） ==========
+    var PREVIEW_KEY = 'devtools_theme_preview';
+
+    function checkThemePreview() {
+        try {
+            var raw = localStorage.getItem(PREVIEW_KEY);
+            if (!raw) return false;
+            var data = JSON.parse(raw);
+
+            // 检查是否过期
+            if (Date.now() >= data.expiresAt) {
+                restorePreviewTheme(data);
+                return false;
+            }
+
+            // 还在预览期内 → 应用预览主题（不存 localStorage，原主题保留）
+            [document.documentElement, document.body].forEach(function(el) {
+                el.className = el.className.replace(/theme-\w+/g, '').trim();
+                el.classList.add('theme-' + data.themeKey);
+            });
+
+            // 设置定时器，到期自动恢复
+            var remaining = data.expiresAt - Date.now();
+            setTimeout(function() {
+                restorePreviewTheme(data);
+            }, Math.max(remaining, 100));
+
+            // 显示预览横幅
+            showPreviewBanner(data);
+            return true; // 预览活跃
+        } catch(e) { return false; }
+    }
+
+    function restorePreviewTheme(data) {
+        // 恢复原主题
+        [document.documentElement, document.body].forEach(function(el) {
+            el.className = el.className.replace(/theme-\w+/g, '').trim();
+            el.classList.add('theme-' + data.originalTheme);
+        });
+        // 确保 localStorage 保持原主题
+        localStorage.setItem(THEME_KEY, data.originalTheme);
+        // 同步到后端
+        if (window.DevAuth && window.DevAuth.isLoggedIn()) {
+            window.DevAuth.saveSettings({ theme: data.originalTheme });
+        }
+        // 清除预览数据
+        localStorage.removeItem(PREVIEW_KEY);
+        // 隐藏预览横幅
+        hidePreviewBanner();
+        // 更新主题切换器图标
+        updateActive(data.originalTheme);
+    }
+
+    function showPreviewBanner(data) {
+        // 防止重复创建
+        if (document.getElementById('themePreviewBanner')) return;
+
+        var banner = document.createElement('div');
+        banner.id = 'themePreviewBanner';
+        banner.className = 'theme-preview-banner';
+        var remain = Math.max(0, Math.ceil((data.expiresAt - Date.now()) / 1000));
+        var min = Math.floor(remain / 60);
+        var sec = remain % 60;
+        banner.innerHTML =
+            '<span class="preview-banner-icon">' + (data.themeIcon || '🎨') + '</span>' +
+            '<span class="preview-banner-text">正在预览 <strong>' + data.themeName + '</strong> · ' + min + '分' + sec + '秒后自动恢复</span>' +
+            '<button class="preview-banner-btn" onclick="window.__exitThemePreview()">返回原主题</button>' +
+            '<button class="preview-banner-close" onclick="window.__exitThemePreview()">&times;</button>';
+
+        document.body.appendChild(banner);
+
+        // 导航栏下移，避免遮挡
+        var navbar = document.querySelector('.navbar');
+        if (navbar) navbar.classList.add('preview-active');
+
+        // 暴露退出函数
+        window.__exitThemePreview = function() {
+            try {
+                var raw = localStorage.getItem(PREVIEW_KEY);
+                if (raw) restorePreviewTheme(JSON.parse(raw));
+            } catch(e) {}
+        };
+
+        // 每秒更新倒计时
+        banner._countdown = setInterval(function() {
+            try {
+                var r = localStorage.getItem(PREVIEW_KEY);
+                if (!r) { clearInterval(banner._countdown); return; }
+                var d = JSON.parse(r);
+                var remain = Math.max(0, Math.ceil((d.expiresAt - Date.now()) / 1000));
+                var m = Math.floor(remain / 60);
+                var s = remain % 60;
+                var text = banner.querySelector('.preview-banner-text');
+                if (text) text.innerHTML = '正在预览 <strong>' + d.themeName + '</strong> · ' + m + '分' + s + '秒后自动恢复';
+                if (remain <= 0) { clearInterval(banner._countdown); restorePreviewTheme(d); }
+            } catch(e) {}
+        }, 1000);
+    }
+
+    function hidePreviewBanner() {
+        var banner = document.getElementById('themePreviewBanner');
+        if (banner) {
+            if (banner._countdown) clearInterval(banner._countdown);
+            banner.remove();
+        }
+        var navbar = document.querySelector('.navbar');
+        if (navbar) navbar.classList.remove('preview-active');
+        delete window.__exitThemePreview;
+    }
+
     // 初始化
     function init() {
+        // 先检查主题预览状态（优先于 localStorage 主题）
+        var isPreview = checkThemePreview();
+
+        // 如果活跃预览，跳过 init 的主题覆盖逻辑
+        if (isPreview) {
+            // 只需更新主题切换器 UI（不改变 DOM 主题类）
+            var match = document.documentElement.className.match(/theme-(\w+)/);
+            updateActive(match ? match[1] : 'dark');
+            // 继续构建切换器
+            var containers = document.querySelectorAll('.theme-switcher');
+            containers.forEach(buildSwitcher);
+            buildCacheClearBtn();
+            return;
+        }
+
         var current = getTheme();
         // 确保 body 有主题 class（兼容旧的 class="dark"）
         if (!document.body.className.match(/theme-\w+/)) {

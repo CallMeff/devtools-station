@@ -51,65 +51,65 @@ public class DatabaseMigration {
             jdbcTemplate.execute("CREATE INDEX idx_favorite_user_tool ON dt_favorite(user_id, tool_id)");
         } catch (Exception e) { /* 索引已存在忽略 */ }
 
-        // 给 dt_user 添加 points 列
-        addColumnIfNotExists("dt_user", "points", "INT DEFAULT 0");
+        // ========== 主题商店迁移 ==========
 
-        // 创建 dt_theme_store 表
-        createTableIfNotExists("dt_theme_store",
-            "CREATE TABLE dt_theme_store (" +
-            "id BIGINT AUTO_INCREMENT PRIMARY KEY, " +
-            "theme_key VARCHAR(64) NOT NULL, " +
-            "name VARCHAR(64) NOT NULL, " +
-            "description VARCHAR(256) DEFAULT '', " +
-            "icon VARCHAR(16) DEFAULT '', " +
-            "price INT DEFAULT 0, " +
-            "category VARCHAR(16) DEFAULT 'free', " +
-            "accent_color VARCHAR(16) DEFAULT '', " +
-            "bg_primary VARCHAR(16) DEFAULT '', " +
-            "preview_colors VARCHAR(512) DEFAULT '', " +
-            "sort_order INT DEFAULT 0, " +
-            "enabled TINYINT DEFAULT 1, " +
-            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
-            ")"
-        );
-
-        // 创建 dt_user_theme 表
-        createTableIfNotExists("dt_user_theme",
-            "CREATE TABLE dt_user_theme (" +
-            "id BIGINT AUTO_INCREMENT PRIMARY KEY, " +
-            "user_id BIGINT NOT NULL, " +
-            "theme_id BIGINT NOT NULL, " +
-            "purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
-            "FOREIGN KEY (user_id) REFERENCES dt_user(id), " +
-            "FOREIGN KEY (theme_id) REFERENCES dt_theme_store(id)" +
-            ")"
-        );
-    }
-
-    private void addColumnIfNotExists(String tableName, String columnName, String columnDef) {
+        // 1. dt_user 添加 points 列
         try {
-            Integer count = jdbcTemplate.queryForObject(
+            Integer pointsCount = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM information_schema.COLUMNS " +
-                "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?",
-                Integer.class, tableName, columnName
+                "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'dt_user' AND COLUMN_NAME = 'points'",
+                Integer.class
             );
-            if (count != null && count == 0) {
-                jdbcTemplate.execute("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnDef);
-                log.info("数据库迁移: {}.{} 添加成功", tableName, columnName);
-            } else {
-                log.info("数据库迁移: {}.{} 已存在，跳过", tableName, columnName);
+            if (pointsCount != null && pointsCount == 0) {
+                jdbcTemplate.execute("ALTER TABLE dt_user ADD COLUMN points INT DEFAULT 6 COMMENT '用户积分'");
+                // 现有用户默认给6积分
+                jdbcTemplate.execute("UPDATE dt_user SET points = 6 WHERE points IS NULL");
+                log.info("数据库迁移: dt_user 添加 points 列成功，已为现有用户分配默认积分");
             }
         } catch (Exception e) {
-            log.warn("数据库迁移: 添加 {}.{} 异常: {}", tableName, columnName, e.getMessage());
+            log.warn("数据库迁移: 添加 points 列异常: {}", e.getMessage());
         }
-    }
 
-    private void createTableIfNotExists(String tableName, String createSql) {
+        // 2. 创建 dt_theme_store 表
         try {
-            jdbcTemplate.execute(createSql);
-            log.info("数据库迁移: {} 表创建成功", tableName);
+            jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS dt_theme_store (" +
+                "id BIGINT AUTO_INCREMENT PRIMARY KEY," +
+                "theme_key VARCHAR(64) NOT NULL UNIQUE COMMENT '主题key'," +
+                "name VARCHAR(128) NOT NULL COMMENT '主题名称'," +
+                "description VARCHAR(256) COMMENT '主题描述'," +
+                "icon VARCHAR(16) DEFAULT '🎨' COMMENT 'emoji图标'," +
+                "price INT DEFAULT 6 COMMENT '积分价格'," +
+                "category VARCHAR(16) DEFAULT 'premium' COMMENT '分类: free/premium'," +
+                "accent_color VARCHAR(16) COMMENT '强调色'," +
+                "bg_primary VARCHAR(16) COMMENT '背景主色'," +
+                "preview_colors VARCHAR(256) COMMENT '预览色块'," +
+                "sort_order INT DEFAULT 0 COMMENT '排序'," +
+                "enabled TINYINT DEFAULT 1 COMMENT '是否启用'," +
+                "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+                ")"
+            );
+            log.info("数据库迁移: dt_theme_store 表创建/确认成功");
         } catch (Exception e) {
-            log.warn("数据库迁移: {} 表创建异常（可能已存在）: {}", tableName, e.getMessage());
+            log.warn("数据库迁移: 创建 dt_theme_store 表异常: {}", e.getMessage());
+        }
+
+        // 3. 创建 dt_user_theme 表
+        try {
+            jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS dt_user_theme (" +
+                "id BIGINT AUTO_INCREMENT PRIMARY KEY," +
+                "user_id BIGINT NOT NULL COMMENT '用户ID'," +
+                "theme_id BIGINT NOT NULL COMMENT '主题ID'," +
+                "purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '购买时间'," +
+                "FOREIGN KEY (user_id) REFERENCES dt_user(id)," +
+                "FOREIGN KEY (theme_id) REFERENCES dt_theme_store(id)," +
+                "UNIQUE KEY uk_user_theme (user_id, theme_id)" +
+                ")"
+            );
+            log.info("数据库迁移: dt_user_theme 表创建/确认成功");
+        } catch (Exception e) {
+            log.warn("数据库迁移: 创建 dt_user_theme 表异常: {}", e.getMessage());
         }
     }
 }

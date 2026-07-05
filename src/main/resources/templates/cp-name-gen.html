@@ -1,0 +1,617 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">CP 昵称生成器 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #fff5fb;
+            --card-bg: #ffffff;
+            --text: #5d3a5c;
+            --text-secondary: #9a7e9b;
+            --accent: #f472b6;
+            --accent-light: #fce7f3;
+            --accent-dark: #db2777;
+            --border: #f5d4e8;
+            --shadow: 0 6px 30px rgba(244, 114, 182, 0.13);
+            --tag-bg: #fce7f3;
+            --tag-text: #be185d;
+            --gradient-1: #f9a8d4;
+            --gradient-2: #c084fc;
+            --radius: 18px;
+            --radius-sm: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #fff5fb 0%, #fdf2f8 20%, #fce7f3 50%, #f3e8ff 80%, #fff5fb 100%);
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* 浮动装饰 */
+        .floating-decorations {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .float-item {
+            position: absolute;
+            opacity: 0.12;
+            font-size: 2.5rem;
+            animation: floatHeart 18s infinite ease-in-out;
+        }
+        .float-item:nth-child(1) { top: 8%; left: 8%; animation-delay: 0s; }
+        .float-item:nth-child(2) { top: 22%; right: 10%; animation-delay: -4s; font-size: 2rem; }
+        .float-item:nth-child(3) { top: 45%; left: 5%; animation-delay: -8s; font-size: 3rem; }
+        .float-item:nth-child(4) { top: 65%; right: 7%; animation-delay: -12s; font-size: 2.3rem; }
+        .float-item:nth-child(5) { top: 80%; left: 20%; animation-delay: -2s; font-size: 2.7rem; }
+        .float-item:nth-child(6) { top: 12%; left: 50%; animation-delay: -16s; font-size: 1.8rem; }
+        .float-item:nth-child(7) { top: 55%; left: 55%; animation-delay: -10s; font-size: 2.4rem; }
+        .float-item:nth-child(8) { top: 35%; left: 75%; animation-delay: -6s; font-size: 2.1rem; }
+
+        @keyframes floatHeart {
+            0% { transform: translateY(0) rotate(0deg) scale(1); }
+            25% { transform: translateY(-35px) rotate(10deg) scale(1.15); }
+            50% { transform: translateY(-15px) rotate(-5deg) scale(0.9); }
+            75% { transform: translateY(-45px) rotate(8deg) scale(1.08); }
+            100% { transform: translateY(0) rotate(0deg) scale(1); }
+        }
+
+        .container {
+            max-width: 900px; margin: 0 auto; padding: 20px 24px 80px;
+            position: relative; z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center; padding: 45px 20px 30px;
+        }
+        .header h1 {
+            font-size: 2.4rem;
+            background: linear-gradient(135deg, #ec4899, #a855f7, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+        .header .subtitle {
+            color: var(--text-secondary); font-size: 1.05rem;
+        }
+        .header .subtitle span {
+            display: inline-block;
+            animation: bounceEmoji 1.5s infinite ease-in-out;
+        }
+        .header .subtitle span:nth-child(2) { animation-delay: 0.2s; }
+        .header .subtitle span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounceEmoji {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        /* 输入卡片 */
+        .input-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 32px 28px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+        .input-row {
+            display: flex; gap: 20px; align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .input-group {
+            flex: 1; min-width: 180px;
+        }
+        .input-group label {
+            display: block; font-weight: 600; font-size: 0.95rem;
+            margin-bottom: 6px; color: var(--text);
+        }
+        .input-group label .icon { margin-right: 4px; }
+        .input-group input, .input-group select {
+            width: 100%; padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 1rem; color: var(--text);
+            background: #fef5fb;
+            transition: all 0.25s;
+            outline: none;
+            font-family: inherit;
+        }
+        .input-group input:focus, .input-group select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(244, 114, 182, 0.12);
+            background: #fff;
+        }
+        .input-group input::placeholder { color: #d4a8c5; }
+
+        .heart-divider {
+            font-size: 2.2rem; color: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 4px;
+            animation: heartPulse 1s infinite ease-in-out;
+            margin-bottom: 8px;
+        }
+        @keyframes heartPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.25); }
+        }
+
+        .btn-generate {
+            display: block; width: 100%; margin-top: 20px;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #f472b6, #c084fc);
+            color: #fff; border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1.15rem; font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(244, 114, 182, 0.35);
+            font-family: inherit;
+        }
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(244, 114, 182, 0.45);
+        }
+        .btn-generate:active { transform: translateY(0); }
+
+        /* 结果卡片 */
+        .result-section { display: none; }
+        .result-section.visible { display: block; }
+
+        .result-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 36px 28px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 120px; height: 120px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        .score-circle svg { transform: rotate(-90deg); }
+        .score-circle .bg-ring {
+            fill: none; stroke: #fce7f3; stroke-width: 10;
+        }
+        .score-circle .progress-ring {
+            fill: none; stroke: url(#heartGrad);
+            stroke-width: 10; stroke-linecap: round;
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .score-text {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .score-text .number {
+            font-size: 2rem; font-weight: 800;
+            background: linear-gradient(135deg, #ec4899, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .score-text .label {
+            font-size: 0.8rem; color: var(--text-secondary);
+        }
+
+        .cp-names {
+            display: flex; justify-content: center; align-items: center;
+            gap: 16px; flex-wrap: wrap; margin: 24px 0 12px;
+        }
+        .cp-name-tag {
+            background: linear-gradient(135deg, #fce7f3, #f3e8ff);
+            padding: 10px 22px; border-radius: 50px;
+            font-weight: 700; font-size: 1.15rem;
+            border: 2px solid var(--border);
+            color: var(--accent-dark);
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
+        }
+        .cp-name-tag:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 15px rgba(244, 114, 182, 0.25);
+        }
+        .cp-name-tag.copied::after {
+            content: '✓ 已复制';
+            position: absolute;
+            top: -28px; left: 50%; transform: translateX(-50%);
+            background: #10b981; color: #fff;
+            padding: 2px 12px; border-radius: 20px;
+            font-size: 0.75rem; white-space: nowrap;
+            animation: fadeUp 1.5s forwards;
+        }
+        @keyframes fadeUp {
+            0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+        }
+
+        .cp-sparkle {
+            font-size: 1.6rem;
+            animation: sparkle 0.8s infinite ease-in-out;
+        }
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* 预设快捷 */
+        .presets {
+            display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;
+        }
+        .preset-btn {
+            padding: 6px 14px; border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: #fff5fb; color: var(--text);
+            cursor: pointer; font-size: 0.85rem;
+            transition: all 0.2s; font-family: inherit;
+            white-space: nowrap;
+        }
+        .preset-btn:hover {
+            background: #fce7f3; border-color: var(--accent); color: var(--accent-dark);
+        }
+
+        .compatibility-msg {
+            font-size: 1.05rem; color: var(--text-secondary);
+            margin: 8px 0 16px; line-height: 1.8;
+        }
+
+        .compatibility-msg strong {
+            background: linear-gradient(135deg, #ec4899, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+            background: #ec4899; color: #fff;
+            padding: 12px 28px; border-radius: 50px;
+            font-weight: 600; font-size: 0.95rem;
+            box-shadow: 0 6px 25px rgba(236, 72, 153, 0.4);
+            z-index: 1000; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast:not(.show) { transform: translateX(-50%) translateY(-20px); }
+
+        /* 响应式 */
+        @media (max-width: 640px) {
+            .header h1 { font-size: 1.8rem; }
+            .input-row { flex-direction: column; }
+            .heart-divider { transform: rotate(0); margin: 0; }
+            .score-circle { width: 100px; height: 100px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="floating-decorations">
+    <span class="float-item">💕</span>
+    <span class="float-item">💗</span>
+    <span class="float-item">💖</span>
+    <span class="float-item">💝</span>
+    <span class="float-item">💘</span>
+    <span class="float-item">🩷</span>
+    <span class="float-item">💓</span>
+    <span class="float-item">💞</span>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1 th:text="${tool.name}">💕 CP 昵称生成器</h1>
+        <p class="subtitle">
+            <span>✨</span>
+            <span>输入两个人的名字，一键生成超甜 CP 名</span>
+            <span>✨</span>
+        </p>
+    </div>
+
+    <div class="input-card" id="inputCard">
+        <div class="input-row">
+            <div class="input-group">
+                <label><span class="icon">🌸</span> TA 的名字</label>
+                <input type="text" id="name1" placeholder="比如：小明" maxlength="10">
+            </div>
+            <div class="heart-divider">💕</div>
+            <div class="input-group">
+                <label><span class="icon">🦋</span> TA 的名字</label>
+                <input type="text" id="name2" placeholder="比如：小红" maxlength="10">
+            </div>
+            <div class="input-group" style="min-width: 140px;">
+                <label><span class="icon">💫</span> 关系</label>
+                <select id="relation">
+                    <option value="couple">💑 情侣</option>
+                    <option value="friend">👯 闺蜜/兄弟</option>
+                    <option value="crush">💗 暗恋</option>
+                    <option value="family">👨‍👩‍👧 家人</option>
+                    <option value="fun">🎭 随便玩玩</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="presets">
+            <span style="font-size:0.85rem;color:var(--text-secondary);margin-right:4px;">随机试试：</span>
+            <button class="preset-btn" onclick="randomPreset()">🎲 随机一对</button>
+            <button class="preset-btn" onclick="setPreset('鹿晗','关晓彤','couple')">🦌鹿晗+关晓彤</button>
+            <button class="preset-btn" onclick="setPreset('王一博','肖战','friend')">🎭博君一肖</button>
+        </div>
+
+        <button class="btn-generate" onclick="generateCP()">
+            💖 生成 CP 名
+        </button>
+    </div>
+
+    <div class="result-section" id="resultSection">
+        <div class="result-card" id="resultCard">
+            <div class="score-circle" id="scoreCircle"></div>
+            <div class="cp-names" id="cpNames"></div>
+            <p class="compatibility-msg" id="compatibilityMsg"></p>
+            <button class="btn-generate" style="margin-top:12px;padding:10px 24px;font-size:0.95rem;" onclick="generateCP()">
+                🔄 换一批
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // ========== CP 昵称词库 ==========
+    const prefixPool = ['小', '阿', '甜', '软', '奶', '糯', '暖', '酷', '萌', '仙', '甜心', '宝贝', '元气', '棉花', '蜜桃', '草莓', '布丁', '芝士', '奶糖', '糖', '棉花糖', '泡芙', '奶油', '薄荷', '橘子', '柠檬', '可可', '奶茶', '芋泥', '豆乳', '酸奶', '果冻'];
+    
+    const suffixPool = ['宝贝', '公主', '殿下', '酱', '酱酱', '宝宝', '乖乖', '甜心', '天使', '宝贝儿', '兔兔', '熊熊', '崽崽', '团子', '丸子', '奶盖', '雪糕', '饼干', '年糕', '果酱', '花卷', '汤圆'];
+
+    const coupleTemplates = [
+        '{p1}{s1} + {p2}{s2}',
+        '{p1}{name1}{s1} & {p2}{name2}{s2}',
+        '{name1}{name2}CP',
+        '{char1}{char2}永远滴神',
+        '{p1}{char1}{p2}{char2}',
+        '{name1}の{name2}',
+        '{mash}{mash2}组合',
+        '{p1}{adjective}{name1} ❤️ {p2}{adjective}{name2}',
+        '{name1}♥{name2}',
+        '{char1}不{char2}弃',
+        '{name1}の{name2}ちゃん',
+        '{name1}·{name2}',
+        '{cute1}与{cute2}',
+    ];
+
+    const friendTemplates = [
+        '{name1} + {name2} = 天下第一好',
+        '{char1}{char2}姐妹花',
+        '{name1}&{name2} 永不散场',
+        '{p1}{name1}{s1} & {p2}{name2}{s2}',
+        '地表最强{name1}·{name2}',
+        '{name1}✧{name2}双子星',
+        '{mash}搭档',
+        '{p1}{name1} + {p2}{name2} = 天下无双',
+    ];
+
+    const crushTemplates = [
+        '{p1}{name1}偷偷看{name2}',
+        '{name1}的小{name2}',
+        '{p1}{name1}的{name2}观察日记',
+        '今天{name1}表白{name2}了吗',
+        '{name1}💗{name2}',
+        '{char1}{char2}心动信号',
+    ];
+
+    const funTemplates = [
+        '{name1}的{name2}能量',
+        '{char1}{char2}传奇',
+        '{name1}星球·{name2}宇宙',
+        '{p1}{char1}和{p2}{char2}的奇幻冒险',
+        '{name1}的{name2}修炼手册',
+        '{char1}次元{char2}',
+    ];
+
+    const adjectives = ['软萌', '高冷', '元气', '慵懒', '可爱', '帅气', '温柔', '霸道', '傲娇', '呆萌', '治愈', '热血'];
+
+    const messages = {
+        high: [
+            '哇！{score}% 的默契度，简直是{adj1}的{adj2}组合！💘',
+            '神仙 CP！{score}% 的匹配度，在一起在一起~ 🎉',
+            '天作之合！{score}% 超高默契，令人羡慕呢 💖',
+        ],
+        medium: [
+            '{score}% 默契指数，{adj1}中带着{adj2}，不错哦 ✨',
+            '{score}% 的契合度，{adj1}相遇就是缘分呀 🌸',
+            '甜甜的 {score}%！继续培养感情吧 💕',
+        ],
+        low: [
+            '{score}% 的默契，{adj1}的两个人，慢慢来呀 🥺',
+            '{score}% 契合度，{adj1}也是一种特别的缘分呢 🌱',
+            '虽然只有 {score}%，但是{adj1}更值得珍惜呀 💝',
+        ],
+    };
+
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function pickWeighted(arr, weights) {
+        const total = weights.reduce((a,b)=>a+b,0);
+        let r = Math.random() * total;
+        for (let i=0; i<arr.length; i++) { r-=weights[i]; if(r<=0) return arr[i]; }
+        return arr[arr.length-1];
+    }
+    function mash(name1, name2) {
+        const a = name1.slice(0, Math.ceil(name1.length/2));
+        const b = name2.slice(Math.ceil(name2.length/2));
+        return a + b;
+    }
+
+    function generateCPNames(name1, name2, relation) {
+        const char1 = name1.charAt(0);
+        const char2 = name2.charAt(0);
+        const p1 = pick(prefixPool);
+        const p2 = pick(prefixPool);
+        const s1 = pick(suffixPool);
+        const s2 = pick(suffixPool);
+        const mash1 = mash(name1, name2);
+        const mash2 = mash(name2, name1);
+        const cute1 = pick(['小可爱', '小仙女', '小公举', '小甜心', '小太阳']);
+        const cute2 = pick(['小天使', '小星星', '小月亮', '小彩虹', '小珍珠']);
+        const adj = pick(adjectives);
+
+        let templates;
+        switch (relation) {
+            case 'friend': templates = friendTemplates; break;
+            case 'crush': templates = crushTemplates; break;
+            case 'family': templates = coupleTemplates; break;
+            case 'fun': templates = funTemplates; break;
+            default: templates = coupleTemplates;
+        }
+
+        const vars = { name1, name2, char1, char2, p1, p2, s1, s2, mash: mash1, mash2, cute1, cute2, adjective: adj, adj1: adj, adj2: pick(adjectives) };
+        
+        const used = new Set();
+        const results = [];
+        let attempts = 0;
+        while (results.length < 5 && attempts < 30) {
+            const tmpl = pick(templates);
+            let name = tmpl.replace(/\{(\w+)\}/g, (_, k) => vars[k] || '');
+            if (!used.has(name) && name.length >= 2 && name.length <= 18) {
+                used.add(name);
+                results.push(name);
+            }
+            attempts++;
+        }
+        return results;
+    }
+
+    function getScore(name1, name2, relation) {
+        let base = 0;
+        const combined = name1 + name2;
+        for (let i=0; i<combined.length; i++) base += combined.charCodeAt(i);
+        base = (base % 51) + 50; // 50-100
+        if (relation === 'crush') base = Math.max(55, base - 8);
+        if (relation === 'fun') base = Math.abs(((base * 7 + 13) % 71) + 29);
+        return base;
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(t._timeout);
+        t._timeout = setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function copyCP(elem) {
+        const text = elem.textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            elem.classList.add('copied');
+            setTimeout(() => elem.classList.remove('copied'), 1600);
+            showToast('📋 已复制到剪贴板~');
+        });
+    }
+
+    function renderScore(score) {
+        const r = 45, circ = 2 * Math.PI * r;
+        return `
+        <svg width="120" height="120" viewBox="0 0 120 120">
+            <defs>
+                <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#f472b6"/>
+                    <stop offset="100%" style="stop-color:#a855f7"/>
+                </linearGradient>
+            </defs>
+            <circle class="bg-ring" cx="60" cy="60" r="${r}"/>
+            <circle class="progress-ring" cx="60" cy="60" r="${r}" 
+                stroke-dasharray="${circ}" 
+                stroke-dashoffset="${circ * (1 - score/100)}"
+                style="transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1)"/>
+        </svg>
+        <div class="score-text">
+            <span class="number">${score}%</span>
+            <span class="label">默契指数</span>
+        </div>`;
+    }
+
+    function generateCP() {
+        const name1 = document.getElementById('name1').value.trim();
+        const name2 = document.getElementById('name2').value.trim();
+        const relation = document.getElementById('relation').value;
+
+        if (!name1 || !name2) {
+            showToast('💕 请输入两个人的名字哦~');
+            if (!name1) document.getElementById('name1').focus();
+            else document.getElementById('name2').focus();
+            return;
+        }
+
+        const names = generateCPNames(name1, name2, relation);
+        const score = getScore(name1, name2, relation);
+
+        document.getElementById('scoreCircle').innerHTML = renderScore(score);
+
+        let namesHTML = '';
+        names.forEach(n => {
+            namesHTML += `<span class="cp-name-tag" onclick="copyCP(this)">${n}</span>`;
+        });
+        document.getElementById('cpNames').innerHTML = namesHTML;
+
+        const adj1 = pick(adjectives), adj2 = pick(adjectives);
+        let msgPool;
+        if (score >= 85) msgPool = messages.high;
+        else if (score >= 65) msgPool = messages.medium;
+        else msgPool = messages.low;
+        const msg = pick(msgPool).replace(/\{score\}/g, score)
+            .replace(/\{adj1\}/g, adj1).replace(/\{adj2\}/g, adj2);
+        document.getElementById('compatibilityMsg').innerHTML = msg;
+
+        const section = document.getElementById('resultSection');
+        section.classList.add('visible');
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // 快捷键
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+            generateCP();
+        }
+    });
+
+    function randomPreset() {
+        const pairs = [
+            ['小白', '小灰', 'couple'],
+            ['奶茶', '珍珠', 'friend'],
+            ['星星', '月亮', 'crush'],
+            ['汤圆', '年糕', 'couple'],
+            ['芋泥', '波波', 'fun'],
+            ['抹茶', '红豆', 'friend'],
+        ];
+        const p = pick(pairs);
+        setPreset(p[0], p[1], p[2]);
+    }
+
+    function setPreset(n1, n2, rel) {
+        document.getElementById('name1').value = n1;
+        document.getElementById('name2').value = n2;
+        document.getElementById('relation').value = rel;
+        setTimeout(generateCP, 100);
+    }
+
+    // 页面加载时随机一个
+    window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('name1').value = '奶茶';
+        document.getElementById('name2').value = '珍珠';
+        generateCP();
+    });
+</script>
+</body>
+</html>

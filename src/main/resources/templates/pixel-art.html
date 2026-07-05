@@ -1,0 +1,371 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">像素画板 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/themes.css">
+    <style>
+        :root {
+            --bg: #fff5f9; --card-bg: #ffffff; --text: #4a3a5c; --text-secondary: #8a789c;
+            --accent: #f472b6; --accent-dark: #db2777; --border: #f0c4e0;
+            --radius: 16px; --radius-sm: 10px; --shadow: 0 4px 20px rgba(244, 114, 182, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #fff5f9 0%, #fdf2f8 25%, #fce7f3 50%, #fdf2f8 75%, #fff5f9 100%);
+            min-height: 100vh; color: var(--text); line-height: 1.6;
+        }
+        .topbar {
+            display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+            background: rgba(255,255,255,0.85); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
+        }
+        .topbar a { color: var(--text-secondary); text-decoration: none; font-size: 13px; transition: color .2s; }
+        .topbar a:hover { color: var(--accent); }
+        .topbar h1 { font-size: 16px; font-weight: 600; flex: 1; color: var(--accent-dark); }
+
+        .main-layout { display: flex; gap: 16px; padding: 20px; max-width: 1100px; margin: 0 auto; flex-wrap: wrap; justify-content: center; }
+        .canvas-panel { flex-shrink: 0; }
+        .tools-panel {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 16px; width: 220px; box-shadow: var(--shadow);
+        }
+        .tools-panel h3 { font-size: 14px; margin-bottom: 12px; color: var(--accent-dark); }
+
+        /* Canvas */
+        .pixel-canvas {
+            display: grid; border: 2px solid var(--accent); border-radius: 8px;
+            overflow: hidden; box-shadow: var(--shadow); background: #fff;
+            image-rendering: pixelated; cursor: crosshair; user-select: none;
+        }
+        .pixel-cell {
+            aspect-ratio: 1; cursor: crosshair; transition: background .05s;
+        }
+        .pixel-cell:hover { outline: 1px solid rgba(0,0,0,0.15); outline-offset: -1px; }
+
+        /* Color Palette */
+        .color-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-bottom: 12px; }
+        .color-swatch {
+            width: 100%; aspect-ratio: 1; border-radius: 6px; cursor: pointer;
+            border: 2px solid transparent; transition: all .2s;
+        }
+        .color-swatch:hover { transform: scale(1.15); }
+        .color-swatch.active { border-color: var(--accent-dark); transform: scale(1.1); box-shadow: 0 0 8px rgba(244,114,182,0.4); }
+        .current-color {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+            background: rgba(244,114,182,0.06); border-radius: var(--radius-sm); padding: 8px 12px;
+        }
+        .current-color .preview { width: 28px; height: 28px; border-radius: 6px; border: 2px solid var(--border); }
+        .current-color .hex { font-size: 13px; font-weight: 600; font-family: monospace; }
+
+        /* Tools */
+        .tool-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+        .tool-btn {
+            flex: 1; min-width: 44px; padding: 8px 6px; border: 1px solid var(--border);
+            background: var(--bg); border-radius: 8px; cursor: pointer; font-size: 12px;
+            transition: all .2s; color: var(--text-secondary);
+        }
+        .tool-btn:hover { border-color: var(--accent); color: var(--accent-dark); }
+        .tool-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        .action-btn {
+            display: block; width: 100%; margin-top: 6px; padding: 10px;
+            border: none; border-radius: 50px; cursor: pointer; font-size: 13px; font-weight: 600;
+            transition: all .2s;
+        }
+        .btn-primary { background: linear-gradient(135deg, #f472b6, #db2777); color: #fff; }
+        .btn-primary:hover { box-shadow: 0 4px 12px rgba(244,114,182,0.4); transform: translateY(-1px); }
+        .btn-secondary { background: rgba(244,114,182,0.1); color: var(--accent-dark); margin-top: 6px; }
+        .btn-secondary:hover { background: rgba(244,114,182,0.2); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); margin-top: 6px; }
+
+        /* Grid size */
+        .size-control { margin-bottom: 12px; }
+        .size-control label { font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px; }
+        .size-control input { width: 100%; accent-color: var(--accent); }
+
+        /* Templates */
+        .template-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+        .template-btn {
+            aspect-ratio: 1; border: 1px solid var(--border); border-radius: 6px;
+            cursor: pointer; font-size: 18px; background: var(--bg); transition: all .2s;
+        }
+        .template-btn:hover { border-color: var(--accent); transform: scale(1.05); }
+
+        @media (max-width: 768px) {
+            .main-layout { flex-direction: column; align-items: center; }
+            .tools-panel { width: 100%; max-width: 400px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="/">← 首页</a>
+        <h1>🎨 <span th:text="${tool.name}">像素画板</span></h1>
+        <span style="font-size:12px;color:var(--text-secondary)">画像素小可爱~</span>
+    </div>
+
+    <div class="main-layout">
+        <!-- Canvas -->
+        <div class="canvas-panel">
+            <div class="pixel-canvas" id="pixelCanvas"></div>
+            <div style="margin-top:8px;text-align:center;font-size:12px;color:var(--text-secondary)">
+                🖱️ 点击/拖拽画画 | 🗑️ 右键擦除
+            </div>
+        </div>
+
+        <!-- Tools -->
+        <div class="tools-panel">
+            <h3>🎨 画笔颜色</h3>
+            <div class="current-color">
+                <div class="preview" id="currentColorPreview" style="background:#333"></div>
+                <span class="hex" id="currentColorHex">#333333</span>
+            </div>
+            <div class="color-grid" id="colorGrid"></div>
+
+            <h3>🛠️ 工具</h3>
+            <div class="tool-btns">
+                <button class="tool-btn active" onclick="setTool('pen')" id="btnPen">✏️ 画笔</button>
+                <button class="tool-btn" onclick="setTool('eraser')" id="btnEraser">🧹 橡皮</button>
+                <button class="tool-btn" onclick="setTool('fill')" id="btnFill">🪣 填充</button>
+            </div>
+
+            <h3>📐 画布大小</h3>
+            <div class="size-control">
+                <label><span id="sizeLabel">16×16</span></label>
+                <input type="range" min="8" max="32" value="16" id="gridSize" oninput="changeSize(this.value)">
+            </div>
+
+            <h3>🎀 快速模板</h3>
+            <div class="template-grid" id="templateGrid"></div>
+
+            <div style="margin-top:12px">
+                <button class="action-btn btn-primary" onclick="exportPNG()">📥 导出 PNG</button>
+                <button class="action-btn btn-secondary" onclick="clearCanvas()">🔄 清空画布</button>
+                <button class="action-btn btn-outline" onclick="undoLast()">↩️ 撤销</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const colorPalette = [
+            '#000000','#FFFFFF','#FF0000','#FFA500','#FFFF00','#00FF00','#00FFFF','#0000FF','#800080',
+            '#FFC0CB','#FF69B4','#FF1493','#DB7093','#C71585','#FFB6C1','#FFE4E1',
+            '#F8BBD0','#F48FB1','#F06292','#EC407A','#E91E63','#D81B60','#C2185B','#AD1457',
+            '#E1BEE7','#CE93D8','#BA68C8','#AB47BC','#9C27B0','#8E24AA','#7B1FA2','#6A1B9A',
+            '#BBDEFB','#90CAF9','#64B5F6','#42A5F5','#2196F3','#1E88E5','#1565C0',
+            '#C8E6C9','#A5D6A7','#81C784','#66BB6A','#4CAF50','#43A047','#388E3C',
+            '#FFF9C4','#FFF176','#FFEE58','#FFD54F','#FFC107','#FFB300','#FFA000',
+            '#FFCCBC','#FFAB91','#FF8A65','#FF7043','#F4511E','#E64A19','#BF360C',
+            '#D7CCC8','#BCAAA4','#A1887F','#8D6E63','#795548','#5D4037','#3E2723',
+            '#CFD8DC','#B0BEC5','#90A4AE','#78909C','#607D8B','#455A64'
+        ];
+
+        const templates = [
+            { emoji:'😊', name:'笑脸', data:'0000000003300330000000000303003300000300330' },
+            { emoji:'💖', name:'爱心', data:'0000000022422442424422420000420000000000' },
+            { emoji:'⭐', name:'星星', data:'000020000202000222220020200002020000000' },
+            { emoji:'🌸', name:'小花', data:'000200000252000020200222220002000000000' },
+            { emoji:'🐱', name:'猫咪', data:'1100110110010111101111111011111010010110010110' },
+            { emoji:'🍄', name:'蘑菇', data:'0003300032223003333300033000000000000000000' },
+            { emoji:'🌈', name:'彩虹', data:'000000000033445500003344550000334455000000000' },
+            { emoji:'🏠', name:'房子', data:'0002000002420002222200244200002000000000000' }
+        ];
+
+        let gridSize = 16;
+        let cellSize = 24;
+        let grid = [];
+        let currentColor = '#333333';
+        let currentTool = 'pen';
+        let isDrawing = false;
+        let isErasing = false;
+        let history = [];
+
+        function initGrid(size) {
+            gridSize = size;
+            grid = Array(size).fill(null).map(() => Array(size).fill('#FFFFFF'));
+            document.getElementById('sizeLabel').textContent = `${size}×${size}`;
+            renderCanvas();
+            saveState();
+        }
+
+        function renderCanvas() {
+            const canvas = document.getElementById('pixelCanvas');
+            canvas.style.gridTemplateColumns = `repeat(${gridSize}, ${cellSize}px)`;
+            canvas.style.gridTemplateRows = `repeat(${gridSize}, ${cellSize}px)`;
+            let html = '';
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    html += `<div class="pixel-cell" style="background:${grid[r][c]};width:${cellSize}px;height:${cellSize}px"
+                        data-r="${r}" data-c="${c}"
+                        onmousedown="startDraw(event,${r},${c})"
+                        onmousemove="draw(event,${r},${c})"
+                        onmouseup="stopDraw()"
+                        oncontextmenu="return false"></div>`;
+                }
+            }
+            canvas.innerHTML = html;
+            document.addEventListener('mouseup', stopDraw);
+        }
+
+        function setColor(color, el) {
+            currentColor = color;
+            document.getElementById('currentColorPreview').style.background = color;
+            document.getElementById('currentColorHex').textContent = color.toUpperCase();
+            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+            if (el) el.classList.add('active');
+        }
+
+        function setTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn' + tool.charAt(0).toUpperCase() + tool.slice(1)).classList.add('active');
+        }
+
+        function paintCell(r, c) {
+            if (currentTool === 'pen') {
+                grid[r][c] = currentColor;
+            } else if (currentTool === 'eraser') {
+                grid[r][c] = '#FFFFFF';
+            }
+            const cell = document.querySelector(`.pixel-cell[data-r="${r}"][data-c="${c}"]`);
+            if (cell) cell.style.background = grid[r][c];
+        }
+
+        function floodFill(r, c) {
+            const targetColor = grid[r][c];
+            if (targetColor === currentColor) return;
+            const stack = [[r, c]];
+            while (stack.length > 0) {
+                const [cr, cc] = stack.pop();
+                if (cr < 0 || cr >= gridSize || cc < 0 || cc >= gridSize) continue;
+                if (grid[cr][cc] !== targetColor) continue;
+                grid[cr][cc] = currentColor;
+                stack.push([cr-1, cc], [cr+1, cc], [cr, cc-1], [cr, cc+1]);
+            }
+            renderCanvas();
+        }
+
+        function startDraw(e, r, c) {
+            e.preventDefault();
+            saveState();
+            if (currentTool === 'fill') {
+                floodFill(r, c);
+                return;
+            }
+            isDrawing = true;
+            paintCell(r, c);
+        }
+
+        function draw(e, r, c) {
+            if (!isDrawing) return;
+            paintCell(r, c);
+        }
+
+        function stopDraw() { isDrawing = false; }
+
+        function saveState() {
+            history.push(grid.map(row => [...row]));
+            if (history.length > 30) history.shift();
+        }
+
+        function undoLast() {
+            if (history.length <= 1) return;
+            history.pop();
+            grid = history[history.length - 1].map(row => [...row]);
+            renderCanvas();
+        }
+
+        function clearCanvas() {
+            if (!confirm('确定要清空画布吗？')) return;
+            saveState();
+            grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill('#FFFFFF'));
+            renderCanvas();
+        }
+
+        function changeSize(size) {
+            const s = parseInt(size);
+            const old = grid;
+            if (s > gridSize) {
+                grid = Array(s).fill(null).map((_, r) =>
+                    Array(s).fill(null).map((_, c) => (r < gridSize && c < gridSize) ? old[r][c] : '#FFFFFF')
+                );
+            } else {
+                grid = Array(s).fill(null).map((_, r) =>
+                    Array(s).fill(null).map((_, c) => old[r][c])
+                );
+            }
+            gridSize = s;
+            cellSize = s > 24 ? 18 : s > 16 ? 22 : 26;
+            document.getElementById('sizeLabel').textContent = `${s}×${s}`;
+            history = [grid.map(row => [...row])];
+            renderCanvas();
+        }
+
+        function loadTemplate(data) {
+            saveState();
+            const size = Math.sqrt(data.length);
+            if (size !== Math.floor(size)) return;
+            const colors = { '0':'#FFFFFF','1':'#333333','2':'#F472B6','3':'#C084FC','4':'#60A5FA','5':'#FBBF24' };
+            grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill('#FFFFFF'));
+            const offset = Math.floor((gridSize - size) / 2);
+            for (let i = 0; i < data.length; i++) {
+                const r = offset + Math.floor(i / size);
+                const c = offset + (i % size);
+                if (r >= 0 && r < gridSize && c >= 0 && c < gridSize && data[i] !== '0') {
+                    grid[r][c] = colors[data[i]] || '#333333';
+                }
+            }
+            renderCanvas();
+        }
+
+        function exportPNG() {
+            const scale = 4;
+            const c = document.createElement('canvas');
+            c.width = gridSize * scale;
+            c.height = gridSize * scale;
+            const ctx = c.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            for (let r = 0; r < gridSize; r++) {
+                for (let col = 0; col < gridSize; col++) {
+                    ctx.fillStyle = grid[r][col];
+                    ctx.fillRect(col * scale, r * scale, scale, scale);
+                }
+            }
+            // Grid lines
+            ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= gridSize; i++) {
+                ctx.beginPath(); ctx.moveTo(i*scale, 0); ctx.lineTo(i*scale, gridSize*scale); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i*scale); ctx.lineTo(gridSize*scale, i*scale); ctx.stroke();
+            }
+            const a = document.createElement('a');
+            a.download = `pixel-art-${Date.now()}.png`;
+            a.href = c.toDataURL('image/png');
+            a.click();
+        }
+
+        // Init UI
+        function initUI() {
+            // Color grid
+            const cg = document.getElementById('colorGrid');
+            cg.innerHTML = colorPalette.map(hex =>
+                `<div class="color-swatch${hex==='#333333'?' active':''}" style="background:${hex}"
+                    onclick="setColor('${hex}', this)" title="${hex}"></div>`
+            ).join('');
+
+            // Templates
+            document.getElementById('templateGrid').innerHTML = templates.map(t =>
+                `<button class="template-btn" onclick="loadTemplate('${t.data}')" title="${t.name}">${t.emoji}</button>`
+            ).join('');
+        }
+
+        initUI();
+        initGrid(16);
+    </script>
+</body>
+</html>

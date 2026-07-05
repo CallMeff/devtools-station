@@ -1,0 +1,522 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">番茄专注钟 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #fef5fb;
+            --card-bg: #ffffff;
+            --text: #5d3a5c;
+            --text-secondary: #9a7e9b;
+            --accent: #ef4444;
+            --accent-light: #fce7f3;
+            --accent-dark: #dc2626;
+            --border: #f5d4e8;
+            --shadow: 0 6px 30px rgba(239, 68, 68, 0.1);
+            --radius: 20px;
+            --radius-sm: 14px;
+            --success: #10b981;
+            --rest-color: #8b5cf6;
+            --work-color: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(160deg, #fef5fb 0%, #fdf2f8 20%, #fef2f2 50%, #fdf2f8 80%, #fef5fb 100%);
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.6;
+            transition: background 1.5s ease;
+        }
+        body.working {
+            background: linear-gradient(160deg, #fef2f2 0%, #fff5f5 20%, #fef5fb 50%, #fff5f5 80%, #fef2f2 100%);
+        }
+        body.resting {
+            background: linear-gradient(160deg, #f5f3ff 0%, #ede9fe 20%, #fdf2f8 50%, #ede9fe 80%, #f5f3ff 100%);
+        }
+
+        .container {
+            max-width: 600px; margin: 0 auto; padding: 20px 24px 80px;
+            position: relative; z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center; padding: 30px 20px 20px;
+        }
+        .header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #ef4444, #f472b6, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 6px;
+        }
+        .header p { color: var(--text-secondary); font-size: 0.95rem; }
+
+        /* Timer */
+        .timer-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 40px 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .tomato-container {
+            position: relative; width: 240px; height: 240px;
+            margin: 0 auto 20px;
+        }
+        .tomato-container svg { transform: rotate(-90deg); }
+        .tomato-container .bg-ring {
+            fill: none; stroke: #fce7f3; stroke-width: 12;
+        }
+        .tomato-container .progress-ring {
+            fill: none; stroke-width: 12; stroke-linecap: round;
+            transition: stroke-dashoffset 0.3s linear;
+        }
+        .tomato-container .progress-ring.working { stroke: var(--work-color); }
+        .tomato-container .progress-ring.resting { stroke: var(--rest-color); }
+
+        .timer-center {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .timer-display {
+            font-size: 3.2rem; font-weight: 800; font-variant-numeric: tabular-nums;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ef4444, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        body.resting .timer-display {
+            background: linear-gradient(135deg, #8b5cf6, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .timer-label {
+            font-size: 0.9rem; color: var(--text-secondary);
+            font-weight: 600; margin-top: 4px;
+        }
+        .session-count {
+            font-size: 0.82rem; color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        .tomato-dots {
+            display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+            margin-top: 18px;
+        }
+        .tomato-dot {
+            width: 16px; height: 16px; border-radius: 50%;
+            background: #fce7f3; border: 2px solid #fbcfe8;
+            transition: all 0.3s;
+        }
+        .tomato-dot.done { background: #ef4444; border-color: #dc2626; transform: scale(1.1); }
+        .tomato-dot.rest { background: #a855f7; border-color: #8b5cf6; transform: scale(1.1); }
+
+        .btn-row {
+            display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 16px;
+        }
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 12px 28px; border: none; border-radius: 50px;
+            font-weight: 700; font-size: 1rem; cursor: pointer;
+            transition: all 0.3s; font-family: inherit;
+        }
+        .btn-start {
+            background: linear-gradient(135deg, #ef4444, #f472b6);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
+        }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45); }
+        .btn-pause {
+            background: #fef3c7; color: #d97706; border: 1.5px solid #fde68a;
+        }
+        .btn-pause:hover { background: #fde68a; }
+        .btn-reset {
+            background: #fce7f3; color: var(--accent-dark); border: 1.5px solid var(--border);
+        }
+        .btn-reset:hover { background: #fbcfe8; }
+
+        /* Settings */
+        .settings-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+        .settings-title {
+            font-weight: 700; font-size: 1rem; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .settings-row {
+            display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;
+        }
+        .settings-row label {
+            font-size: 0.9rem; color: var(--text-secondary); min-width: 80px;
+        }
+        .settings-row input[type="number"] {
+            width: 70px; padding: 8px 12px;
+            border: 2px solid var(--border); border-radius: 10px;
+            font-size: 0.95rem; text-align: center;
+            color: var(--text); background: #fef5fb;
+            outline: none; transition: all 0.2s;
+            font-family: inherit;
+        }
+        .settings-row input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        /* Stats */
+        .stats-row {
+            display: flex; gap: 12px; margin-top: 16px;
+        }
+        .stat-item {
+            flex: 1; background: #fef5fb;
+            border-radius: var(--radius-sm); padding: 14px;
+            text-align: center; border: 1px solid var(--border);
+        }
+        .stat-item .stat-num {
+            font-size: 1.5rem; font-weight: 800;
+            background: linear-gradient(135deg, #ef4444, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-item .stat-label {
+            font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+            background: #ef4444; color: #fff;
+            padding: 12px 28px; border-radius: 50px;
+            font-weight: 600; font-size: 0.95rem;
+            box-shadow: 0 6px 25px rgba(239, 68, 68, 0.4);
+            z-index: 1000; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast:not(.show) { transform: translateX(-50%) translateY(-20px); }
+
+        @media (max-width: 480px) {
+            .tomato-container { width: 200px; height: 200px; }
+            .timer-display { font-size: 2.6rem; }
+            .header h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1 th:text="${tool.name}">🍅 番茄专注钟</h1>
+        <p>25 分钟专注 + 5 分钟休息，让效率飞起来 ✨</p>
+    </div>
+
+    <!-- 计时器 -->
+    <div class="timer-card" id="timerCard">
+        <div class="tomato-container" id="tomatoContainer">
+            <svg width="240" height="240" viewBox="0 0 240 240">
+                <defs>
+                    <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+                <circle class="bg-ring" cx="120" cy="120" r="100"/>
+                <circle class="progress-ring working" id="progressRing" cx="120" cy="120" r="100" 
+                    stroke-dasharray="628.32" stroke-dashoffset="0" filter="url(#glow)"/>
+            </svg>
+            <div class="timer-center">
+                <div class="timer-display" id="timerDisplay">25:00</div>
+                <div class="timer-label" id="timerLabel">🍅 准备开始</div>
+            </div>
+        </div>
+
+        <div class="session-count">
+            已完成 <span id="doneCount">0</span> 个番茄 · 目标 <span id="goalCount">4</span> 个
+        </div>
+
+        <div class="tomato-dots" id="tomatoDots">
+            <span class="tomato-dot"></span>
+            <span class="tomato-dot"></span>
+            <span class="tomato-dot"></span>
+            <span class="tomato-dot"></span>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-start" id="btnStart" onclick="toggleTimer()">▶ 开始专注</button>
+            <button class="btn btn-reset" onclick="resetTimer()">🔄 重置</button>
+        </div>
+    </div>
+
+    <!-- 设置 -->
+    <div class="settings-card">
+        <div class="settings-title">⚙️ 时间设置（分钟）</div>
+        <div class="settings-row">
+            <label>🍅 专注</label>
+            <input type="number" id="workMinutes" value="25" min="1" max="120" onchange="updateSettings()">
+            <label style="min-width:60px;margin-left:8px;">☕ 休息</label>
+            <input type="number" id="restMinutes" value="5" min="1" max="30" onchange="updateSettings()">
+            <label style="min-width:60px;margin-left:8px;">🎯 目标</label>
+            <input type="number" id="targetSessions" value="4" min="1" max="12" onchange="updateSettings()">
+        </div>
+        <div class="settings-row" style="margin-top:8px;">
+            <label>🔔 长休息</label>
+            <input type="number" id="longRestMinutes" value="15" min="5" max="60" onchange="updateSettings()">
+            <span style="font-size:0.8rem;color:var(--text-secondary);margin-left:4px;">(每4个番茄后)</span>
+        </div>
+    </div>
+
+    <!-- 统计 -->
+    <div class="settings-card">
+        <div class="settings-title">📊 本次统计</div>
+        <div class="stats-row" id="statsRow">
+            <div class="stat-item">
+                <div class="stat-num" id="statSessions">0</div>
+                <div class="stat-label">🍅 番茄数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num" id="statWorkTime">0min</div>
+                <div class="stat-label">⏱ 专注时间</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num" id="statRestTime">0min</div>
+                <div class="stat-label">☕ 休息时间</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 完成音效模拟 -->
+<audio id="completeSound" preload="auto" style="display:none;"></audio>
+
+<script>
+    let workMinutes = 25, restMinutes = 5, longRestMinutes = 15, targetSessions = 4;
+    let currentMinutes = 25, currentSeconds = 0;
+    let isWorking = true;
+    let isRunning = false;
+    let intervalId = null;
+    let completedSessions = 0;
+    let totalWorkSeconds = 0, totalRestSeconds = 0;
+    let sessionTimeline = [];
+    let isLongRest = false;
+
+    function loadSettings() {
+        try {
+            const saved = JSON.parse(localStorage.getItem('pomodoro_settings'));
+            if (saved) {
+                workMinutes = saved.work || 25;
+                restMinutes = saved.rest || 5;
+                longRestMinutes = saved.longRest || 15;
+                targetSessions = saved.target || 4;
+            }
+        } catch(e) {}
+        document.getElementById('workMinutes').value = workMinutes;
+        document.getElementById('restMinutes').value = restMinutes;
+        document.getElementById('longRestMinutes').value = longRestMinutes;
+        document.getElementById('targetSessions').value = targetSessions;
+        document.getElementById('goalCount').textContent = targetSessions;
+        renderDots();
+    }
+
+    function saveSettings() {
+        localStorage.setItem('pomodoro_settings', JSON.stringify({
+            work: workMinutes, rest: restMinutes, longRest: longRestMinutes, target: targetSessions
+        }));
+    }
+
+    function updateSettings() {
+        workMinutes = parseInt(document.getElementById('workMinutes').value) || 25;
+        restMinutes = parseInt(document.getElementById('restMinutes').value) || 5;
+        longRestMinutes = parseInt(document.getElementById('longRestMinutes').value) || 15;
+        targetSessions = parseInt(document.getElementById('targetSessions').value) || 4;
+        document.getElementById('goalCount').textContent = targetSessions;
+        saveSettings();
+        if (!isRunning) { resetTimer(); }
+        renderDots();
+    }
+
+    function renderDots() {
+        const container = document.getElementById('tomatoDots');
+        let html = '';
+        for (let i = 0; i < targetSessions; i++) {
+            let cls = 'tomato-dot';
+            if (i < completedSessions) cls += ' done';
+            else if (!isWorking && !isRunning && i === completedSessions && completedSessions > 0) cls += ' rest';
+            html += `<span class="${cls}"></span>`;
+        }
+        container.innerHTML = html;
+    }
+
+    function formatTime(m, s) {
+        return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    function updateDisplay() {
+        document.getElementById('timerDisplay').textContent = formatTime(currentMinutes, currentSeconds);
+        document.getElementById('timerLabel').textContent = isWorking ? '🍅 专注中...' : (isLongRest ? '🧘 长休息中...' : '☕ 休息中...');
+        document.getElementById('doneCount').textContent = completedSessions;
+
+        const totalSecs = isWorking ? workMinutes * 60 : (isLongRest ? longRestMinutes : restMinutes) * 60;
+        const elapsed = currentMinutes * 60 + currentSeconds;
+        const progress = elapsed / totalSecs;
+        const circ = 628.32;
+        const offset = circ * progress;
+
+        const ring = document.getElementById('progressRing');
+        ring.style.strokeDashoffset = offset;
+        ring.className = 'progress-ring ' + (isWorking ? 'working' : 'resting');
+
+        document.body.className = isWorking ? 'working' : 'resting';
+    }
+
+    function toggleTimer() {
+        if (isRunning) { pauseTimer(); return; }
+        startTimer();
+    }
+
+    function startTimer() {
+        if (isRunning) return;
+        if (currentMinutes === 0 && currentSeconds === 0) {
+            currentMinutes = workMinutes;
+            currentSeconds = 0;
+            isWorking = true;
+        }
+        isRunning = true;
+        const btn = document.getElementById('btnStart');
+        btn.textContent = '⏸ 暂停';
+        btn.className = 'btn btn-pause';
+        updateDisplay();
+        intervalId = setInterval(tick, 1000);
+    }
+
+    function pauseTimer() {
+        isRunning = false;
+        clearInterval(intervalId);
+        intervalId = null;
+        const btn = document.getElementById('btnStart');
+        btn.textContent = '▶ 继续';
+        btn.className = 'btn btn-start';
+    }
+
+    function resetTimer() {
+        pauseTimer();
+        isWorking = true;
+        currentMinutes = workMinutes;
+        currentSeconds = 0;
+        isLongRest = false;
+        const btn = document.getElementById('btnStart');
+        btn.textContent = '▶ 开始专注';
+        btn.className = 'btn btn-start';
+        document.body.className = '';
+        updateDisplay();
+    }
+
+    function tick() {
+        if (currentSeconds > 0) {
+            currentSeconds--;
+        } else if (currentMinutes > 0) {
+            currentMinutes--;
+            currentSeconds = 59;
+        } else {
+            // Time's up!
+            clearInterval(intervalId);
+            intervalId = null;
+            isRunning = false;
+            sessionComplete();
+            return;
+        }
+        updateDisplay();
+
+        // 累计时间
+        if (isWorking) totalWorkSeconds++;
+        else totalRestSeconds++;
+        updateStats();
+    }
+
+    function sessionComplete() {
+        if (isWorking) {
+            // 完成一个番茄
+            completedSessions++;
+            showToast('🎉 太棒了！完成一个番茄！休息一下吧~ ☕');
+            
+            // 决定休息类型
+            if (completedSessions % 4 === 0 && completedSessions > 0) {
+                isLongRest = true;
+                currentMinutes = longRestMinutes;
+            } else {
+                isLongRest = false;
+                currentMinutes = restMinutes;
+            }
+            currentSeconds = 0;
+            isWorking = false;
+        } else {
+            // 休息结束
+            if (isLongRest) {
+                showToast('🧘 长休息结束！元气满满，继续加油！✨');
+            } else {
+                showToast('☕ 休息结束！开始下一个番茄吧~ 🍅');
+            }
+            isWorking = true;
+            currentMinutes = workMinutes;
+            currentSeconds = 0;
+            isLongRest = false;
+        }
+
+        const btn = document.getElementById('btnStart');
+        btn.textContent = '▶ 开始' + (isWorking ? '专注' : '休息');
+        btn.className = 'btn btn-start';
+        renderDots();
+        updateDisplay();
+
+        // 自动开始下一个
+        setTimeout(() => { if (!isRunning) startTimer(); }, 2000);
+    }
+
+    function updateStats() {
+        document.getElementById('statSessions').textContent = completedSessions;
+        document.getElementById('statWorkTime').textContent = Math.round(totalWorkSeconds / 60) + 'min';
+        document.getElementById('statRestTime').textContent = Math.round(totalRestSeconds / 60) + 'min';
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.classList.add('show');
+        clearTimeout(t._timeout);
+        t._timeout = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // 空格键快捷暂停/开始
+    document.addEventListener('keydown', function(e) {
+        if (e.key === ' ' && e.target.tagName === 'BODY') {
+            e.preventDefault();
+            toggleTimer();
+        }
+    });
+
+    // 初始化
+    loadSettings();
+    resetTimer();
+</script>
+</body>
+</html>

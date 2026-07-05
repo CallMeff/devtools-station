@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">闺蜜默契测试 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/themes.css">
+    <style>
+        :root {
+            --bg-primary:#0a0a0b;--bg-secondary:#111114;--bg-tertiary:#1a1a1e;
+            --text-primary:#fafafa;--text-secondary:#a1a1aa;--text-muted:#71717a;
+            --border-color:rgba(255,255,255,0.06);
+        }
+        html.theme-sunrise { --bg-primary:#fffdf7;--bg-secondary:#fef9ef;--bg-tertiary:#fef3d7;
+            --text-primary:#2d1f0c;--text-secondary:#6b5a3e;--text-muted:#9e8a6b;
+            --border-color:rgba(180,140,80,0.12); }
+        html.theme-ocean { --bg-primary:#0a1628;--bg-secondary:#0f1f3a;--bg-tertiary:#162a4a;
+            --text-primary:#e0f0ff;--text-secondary:#a0c8e8;--text-muted:#5a8aaa;
+            --border-color:rgba(100,180,255,0.08); }
+        html.theme-forest { --bg-primary:#0a1508;--bg-secondary:#0f1f0c;--bg-tertiary:#1a2e14;
+            --text-primary:#e8f5e0;--text-secondary:#a0c898;--text-muted:#5a8850;
+            --border-color:rgba(80,180,60,0.08); }
+        html.theme-cyberpunk { --bg-primary:#0a0a0a;--bg-secondary:#0f0a1a;--bg-tertiary:#1a0a2e;
+            --text-primary:#f0e0ff;--text-secondary:#c0a0e0;--text-muted:#8060a0;
+            --border-color:rgba(180,100,255,0.12); }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fce4ec 0%, #f3e5f5 30%, #e8eaf6 60%, #fce4ec 100%);
+            background-size: 400% 400%;
+            animation: bgShift 12s ease infinite;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px; color: #4a1a5e; overflow-x: hidden;
+        }
+        @keyframes bgShift {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        html[class*="theme-"] body { background: var(--bg-primary); color: var(--text-primary); }
+        .container { max-width: 520px; width: 100%; position: relative; z-index: 1; }
+        h1 {
+            text-align: center; font-size: 1.7em; margin-bottom: 4px;
+            background: linear-gradient(135deg, #e91e63, #9c27b0, #7c4dff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle { text-align: center; color: #7b1fa2; font-size: 0.9em; margin-bottom: 20px; opacity: 0.8; }
+        html[class*="theme-"] .subtitle { color: var(--text-secondary); }
+
+        /* 步骤栏 */
+        .step-bar {
+            display: flex; justify-content: center; gap: 40px; margin-bottom: 20px;
+            position: relative;
+        }
+        .step { text-align: center; position: relative; }
+        .step-circle {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255,255,255,0.6); border: 3px solid #e1bee7;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1em; transition: all 0.4s ease;
+            color: #9c27b0;
+        }
+        .step.active .step-circle {
+            background: linear-gradient(135deg, #e91e63, #9c27b0); color: #fff; border-color: transparent;
+            box-shadow: 0 4px 15px rgba(233,30,99,0.4); transform: scale(1.1);
+        }
+        .step.done .step-circle { background: #ce93d8; color: #fff; border-color: #ce93d8; }
+        .step-label { font-size: 0.78em; margin-top: 4px; color: #7b1fa2; }
+        html[class*="theme-"] .step-label { color: var(--text-secondary); }
+        .step-line {
+            position: absolute; top: 20px; left: calc(50% + 30px);
+            width: 30px; height: 2px; background: #e1bee7;
+        }
+
+        /* 卡片 */
+        .card {
+            background: rgba(255,255,255,0.8); border-radius: 24px;
+            padding: 24px; margin-bottom: 16px;
+            border: 2px solid rgba(206,147,216,0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+        }
+        html[class*="theme-"] .card { background: var(--bg-tertiary); border-color: var(--border-color); }
+
+        /* 输入区 */
+        .input-group { margin-bottom: 14px; }
+        .input-group label { display: block; font-weight: 600; margin-bottom: 6px; color: #6a1b9a; }
+        html[class*="theme-"] .input-group label { color: var(--text-primary); }
+        .input-group input {
+            width: 100%; padding: 12px 16px; border: 2px solid #e1bee7;
+            border-radius: 14px; font-size: 1em; background: rgba(255,255,255,0.7);
+            color: #4a1a5e; font-family: inherit; outline: none;
+            transition: border-color 0.3s;
+        }
+        .input-group input:focus { border-color: #9c27b0; box-shadow: 0 0 0 3px rgba(156,39,176,0.1); }
+        .input-row { display: flex; gap: 10px; }
+
+        /* 按钮 */
+        .btn {
+            padding: 12px 28px; border-radius: 25px; border: none;
+            font-size: 1em; font-weight: 700; cursor: pointer;
+            transition: all 0.3s ease; font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #e91e63, #9c27b0);
+            color: #fff; box-shadow: 0 4px 15px rgba(233,30,99,0.3);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(233,30,99,0.5); }
+        .btn-outline {
+            background: rgba(255,255,255,0.7); color: #7b1fa2;
+            border: 2px solid #ce93d8;
+        }
+        html[class*="theme-"] .btn-outline { background: var(--bg-tertiary); color: var(--text-primary); }
+        .btn-outline:hover { background: #f3e5f5; }
+        .btn-full { width: 100%; padding: 14px; font-size: 1.1em; margin-top: 8px; }
+        .btn-small { padding: 6px 14px; font-size: 0.85em; border-radius: 16px; }
+
+        /* 问题 */
+        .quiz-question {
+            background: rgba(255,255,255,0.7); border-radius: 18px;
+            padding: 18px; margin-bottom: 12px;
+            border: 2px solid rgba(206,147,216,0.2);
+        }
+        .quiz-q-num {
+            display: inline-block; background: linear-gradient(135deg, #e91e63, #9c27b0);
+            color: #fff; border-radius: 50%; width: 28px; height: 28px;
+            line-height: 28px; text-align: center; font-size: 0.85em; font-weight: 700;
+            margin-right: 8px; vertical-align: middle;
+        }
+        .quiz-q-text { font-weight: 600; display: inline; vertical-align: middle; }
+        .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .quiz-option {
+            padding: 10px 14px; border-radius: 14px; border: 2px solid #e1bee7;
+            background: rgba(255,255,255,0.7); cursor: pointer;
+            text-align: center; transition: all 0.2s ease; font-size: 0.9em;
+            user-select: none;
+        }
+        .quiz-option:hover { border-color: #9c27b0; background: #f3e5f5; }
+        .quiz-option.selected {
+            border-color: #9c27b0; background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+            font-weight: 700; color: #6a1b9a;
+        }
+
+        /* 结果页 */
+        .result-section { text-align: center; }
+        .result-score-ring {
+            position: relative; width: 160px; height: 160px; margin: 0 auto 16px;
+        }
+        .result-percent {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .result-number { font-size: 2.4em; font-weight: 800; line-height: 1;
+            background: linear-gradient(135deg, #e91e63, #9c27b0);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .result-label { font-size: 0.85em; color: #7b1fa2; }
+        .result-level {
+            font-size: 1.3em; font-weight: 700; margin-bottom: 8px;
+            color: #6a1b9a;
+        }
+        .result-msg {
+            font-size: 0.95em; color: #7b1fa2; line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        html[class*="theme-"] .result-msg, html[class*="theme-"] .result-label, html[class*="theme-"] .result-level { color: var(--text-secondary); }
+        .result-tag {
+            display: inline-block; padding: 6px 16px; border-radius: 20px;
+            background: linear-gradient(135deg, #fce4ec, #f3e5f5);
+            color: #9c27b0; font-weight: 600; font-size: 0.9em;
+            border: 2px solid #e1bee7; margin: 4px;
+        }
+
+        /* 动画 */
+        .fade-in { animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+
+        /* toast */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #9c27b0, #7c4dff);
+            color: #fff; padding: 12px 28px; border-radius: 25px;
+            font-weight: 600; font-size: 1em; z-index: 200;
+            box-shadow: 0 8px 30px rgba(156,39,176,0.4);
+            animation: toastIn 0.4s ease, toastOut 0.4s ease 2s forwards;
+            white-space: nowrap;
+        }
+        @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(-20px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+        @keyframes toastOut { from { opacity:1; } to { opacity:0; transform: translateX(-50%) translateY(-20px); } }
+
+        .hidden { display: none !important; }
+
+        /* 装饰粒子 */
+        .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        .particle {
+            position: absolute; font-size: 1.3em; opacity: 0;
+            animation: particleFloat 8s ease-in-out infinite;
+        }
+        @keyframes particleFloat {
+            0% { opacity: 0; transform: translateY(100vh) rotate(0deg); }
+            20% { opacity: 0.6; }
+            80% { opacity: 0.6; }
+            100% { opacity: 0; transform: translateY(-20vh) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="container">
+    <h1>👯 闺蜜默契测试</h1>
+    <p class="subtitle">测测你们有多了解彼此～</p>
+
+    <!-- 步骤栏 -->
+    <div class="step-bar" id="stepBar">
+        <div class="step active" id="step1"> <div class="step-circle">1</div> <div class="step-label">输入名字</div> </div>
+        <div class="step" id="step2"> <div class="step-circle">2</div> <div class="step-label" style="margin-left:12px">你回答</div> </div>
+        <div class="step" id="step3"> <div class="step-circle">3</div> <div class="step-label">好友验证</div> </div>
+    </div>
+
+    <!-- 阶段1: 输入 -->
+    <div class="card fade-in" id="stage1">
+        <div class="input-row">
+            <div class="input-group" style="flex:1">
+                <label>👩‍🦰 你的名字</label>
+                <input type="text" id="name1" placeholder="输入你的名字" maxlength="10">
+            </div>
+            <div class="input-group" style="flex:1">
+                <label>👩 闺蜜/好友的名字</label>
+                <input type="text" id="name2" placeholder="输入TA的名字" maxlength="10">
+            </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="startQuiz()">💕 开始测试</button>
+    </div>
+
+    <!-- 阶段2: 你回答 -->
+    <div class="card fade-in hidden" id="stage2">
+        <div id="stage2Questions"></div>
+        <button class="btn btn-primary btn-full" id="btnSubmit" onclick="submitAnswers()">✅ 提交答案，让 TA 来验证</button>
+    </div>
+
+    <!-- 阶段3: 好友验证 -->
+    <div class="card fade-in hidden" id="stage3">
+        <p style="text-align:center;color:#7b1fa2;margin-bottom:12px">
+            请把手机/电脑交给 <strong id="friendNameDisplay"></strong>，让TA来答～
+        </p>
+        <div id="stage3Questions"></div>
+        <button class="btn btn-primary btn-full" onclick="showResult()">🎯 看结果！</button>
+    </div>
+
+    <!-- 结果页 -->
+    <div class="card fade-in hidden" id="stageResult">
+        <div class="result-section" id="resultContent"></div>
+        <button class="btn btn-outline btn-full" onclick="resetAll()">🔄 再测一次</button>
+    </div>
+</div>
+
+<script>
+(function(){
+    'use strict';
+
+    const QUESTIONS = [
+        { q: '我最喜欢吃什么？', options: ['火锅', '奶茶+甜品', '烧烤', '日料'], id: 'food' },
+        { q: '我的生日是什么时候？', options: ['春天', '夏天', '秋天', '冬天'], id: 'birthday' },
+        { q: '我最喜欢的颜色是？', options: ['粉色', '紫色', '蓝色', '黑色'], id: 'color' },
+        { q: '我周末最喜欢做什么？', options: ['宅在家追剧', '逛街买买买', '去探店打卡', '补觉一整天'], id: 'weekend' },
+        { q: '我最想去的旅行目的地？', options: ['日本看樱花', '巴黎铁塔', '海边度假', '西藏/新疆'], id: 'travel' },
+        { q: '遇到不开心的事我会？', options: ['大吃一顿', '和你吐槽', '偷偷哭', '疯狂购物'], id: 'sad' },
+        { q: '我最常说的话是？', options: ['啊啊啊啊！', '好饿啊', '困死了', '笑死我了'], id: 'phrase' },
+        { q: '我的理想型是？', options: ['温柔体贴型', '高冷霸道型', '阳光运动型', '幽默搞笑型'], id: 'type' }
+    ];
+
+    let myAnswers = null;
+    let currentStage = 1;
+
+    function updateStepBar(n){
+        currentStage = n;
+        ['stage1','stage2','stage3','stageResult'].forEach(function(s,i){
+            document.getElementById(s).classList.toggle('hidden', i+1 !== n);
+            if(i+1 === n) document.getElementById(s).classList.add('fade-in');
+        });
+        for(let i = 1; i <= 3; i++){
+            const el = document.getElementById('step'+i);
+            el.classList.remove('active','done');
+            if(i < n) el.classList.add('done');
+            else if(i === n) el.classList.add('active');
+        }
+    }
+
+    window.startQuiz = function(){
+        const n1 = document.getElementById('name1').value.trim();
+        const n2 = document.getElementById('name2').value.trim();
+        if(!n1 || !n2) { showToast('请先输入两个人的名字哦～'); return; }
+        document.getElementById('friendNameDisplay').textContent = n2;
+        renderMyQuestions();
+        updateStepBar(2);
+    };
+
+    function renderMyQuestions(){
+        const container = document.getElementById('stage2Questions');
+        container.innerHTML = '';
+        QUESTIONS.forEach(function(item, idx){
+            const div = document.createElement('div');
+            div.className = 'quiz-question';
+            div.innerHTML = '<span class="quiz-q-num">'+(idx+1)+'</span><span class="quiz-q-text">'+item.q+'</span>';
+            const optDiv = document.createElement('div');
+            optDiv.className = 'quiz-options';
+            item.options.forEach(function(opt, oi){
+                const btn = document.createElement('div');
+                btn.className = 'quiz-option';
+                btn.textContent = opt;
+                btn.setAttribute('data-q', idx);
+                btn.setAttribute('data-o', oi);
+                btn.onclick = function(){
+                    const parent = btn.parentElement;
+                    parent.querySelectorAll('.quiz-option').forEach(function(b){ b.classList.remove('selected'); });
+                    btn.classList.add('selected');
+                };
+                optDiv.appendChild(btn);
+            });
+            div.appendChild(optDiv);
+            container.appendChild(div);
+        });
+    }
+
+    window.submitAnswers = function(){
+        const ans = [];
+        let allOk = true;
+        QUESTIONS.forEach(function(item, idx){
+            const selected = document.querySelector('#stage2Questions .quiz-question:nth-child('+(idx+1)+') .quiz-option.selected');
+            if(!selected) { allOk = false; return; }
+            ans.push(parseInt(selected.getAttribute('data-o')));
+        });
+        if(!allOk) { showToast('请回答所有问题哦～'); return; }
+        myAnswers = ans;
+        renderFriendQuestions();
+        updateStepBar(3);
+    };
+
+    function renderFriendQuestions(){
+        const container = document.getElementById('stage3Questions');
+        container.innerHTML = '';
+        QUESTIONS.forEach(function(item, idx){
+            const div = document.createElement('div');
+            div.className = 'quiz-question';
+            div.innerHTML = '<span class="quiz-q-num">'+(idx+1)+'</span><span class="quiz-q-text">'+item.q+'（猜猜TA会选什么）</span>';
+            const optDiv = document.createElement('div');
+            optDiv.className = 'quiz-options';
+            item.options.forEach(function(opt, oi){
+                const btn = document.createElement('div');
+                btn.className = 'quiz-option';
+                btn.textContent = opt;
+                btn.setAttribute('data-q', idx);
+                btn.setAttribute('data-o', oi);
+                btn.onclick = function(){
+                    const parent = btn.parentElement;
+                    parent.querySelectorAll('.quiz-option').forEach(function(b){ b.classList.remove('selected'); });
+                    btn.classList.add('selected');
+                };
+                optDiv.appendChild(btn);
+            });
+            div.appendChild(optDiv);
+            container.appendChild(div);
+        });
+    }
+
+    window.showResult = function(){
+        const friendAns = [];
+        let allOk = true;
+        QUESTIONS.forEach(function(item, idx){
+            const selected = document.querySelector('#stage3Questions .quiz-question:nth-child('+(idx+1)+') .quiz-option.selected');
+            if(!selected) { allOk = false; return; }
+            friendAns.push(parseInt(selected.getAttribute('data-o')));
+        });
+        if(!allOk) { showToast('请回答所有问题哦～'); return; }
+
+        let matchCount = 0;
+        for(let i = 0; i < myAnswers.length; i++){
+            if(myAnswers[i] === friendAns[i]) matchCount++;
+        }
+
+        const pct = Math.round(matchCount / QUESTIONS.length * 100);
+        const content = document.getElementById('resultContent');
+        let level, emoji, msg, color;
+
+        if(pct >= 90) {
+            level = '一生挚友 💎'; emoji = '💖💖💖'; color = '#e91e63';
+            msg = '你们简直是灵魂伴侣！心有灵犀一点通，什么都知道，太甜了！';
+        } else if(pct >= 70) {
+            level = '超默契闺蜜 🌸'; emoji = '💕💕'; color = '#9c27b0';
+            msg = '你们对彼此非常了解！90% 的事都能猜对，好闺蜜认证！';
+        } else if(pct >= 50) {
+            level = '普通好友 🍀'; emoji = '💜'; color = '#7c4dff';
+            msg = '还不错哦，基本了解对方～多约出来玩会更懂彼此！';
+        } else if(pct >= 30) {
+            level = '还需要了解 💫'; emoji = '🧡'; color = '#ff7043';
+            msg = '你们关系不错但还不够了解～多聊天、多分享，默契会越来越好的！';
+        } else {
+            level = '重新认识吧 😅'; emoji = '💛'; color = '#ffa726';
+            msg = '革命友谊还需要培养！一起去吃顿饭聊聊吧，越了解越默契～';
+        }
+
+        const n1 = document.getElementById('name1').value.trim();
+        const n2 = document.getElementById('name2').value.trim();
+
+        content.innerHTML = `
+            <div class="result-score-ring">
+                <svg width="160" height="160" viewBox="0 0 160 160">
+                    <circle cx="80" cy="80" r="70" fill="none" stroke="#e1bee7" stroke-width="10"/>
+                    <circle cx="80" cy="80" r="70" fill="none" stroke="url(#scoreGrad)"
+                        stroke-width="10" stroke-linecap="round"
+                        stroke-dasharray="${pct * 4.4} 440" transform="rotate(-90 80 80)"
+                        style="transition: stroke-dasharray 1.5s ease"/>
+                    <defs>
+                        <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="#e91e63"/>
+                            <stop offset="100%" stop-color="#9c27b0"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="result-percent">
+                    <div class="result-number">${pct}%</div>
+                    <div class="result-label">默契指数</div>
+                </div>
+            </div>
+            <div class="result-level" style="color:${color}">${emoji} ${level} ${emoji}</div>
+            <div class="result-msg">${msg}</div>
+            <div>
+                <span class="result-tag">答对 ${matchCount}/${QUESTIONS.length} 题</span>
+                <span class="result-tag">${n1} 💕 ${n2}</span>
+            </div>
+        `;
+
+        updateStepBar(4);
+    };
+
+    window.resetAll = function(){
+        myAnswers = null;
+        document.getElementById('name1').value = '';
+        document.getElementById('name2').value = '';
+        updateStepBar(1);
+    };
+
+    function showToast(msg){
+        const existing = document.querySelector('.toast');
+        if(existing) existing.remove();
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(function(){ el.remove(); }, 2400);
+    }
+
+    function createParticles(){
+        const container = document.getElementById('particles');
+        const emojis = ['💕','💖','👯','✨','🌸','💜'];
+        for(let i = 0; i < 10; i++){
+            const p = document.createElement('span');
+            p.className = 'particle';
+            p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDelay = Math.random() * 8 + 's';
+            p.style.animationDuration = (6 + Math.random() * 10) + 's';
+            p.style.fontSize = (0.8 + Math.random() * 1.5) + 'em';
+            container.appendChild(p);
+        }
+    }
+
+    createParticles();
+})();
+</script>
+</body>
+</html>

@@ -21,8 +21,8 @@ public class User {
     private String salt;
     private String nickname;
     private String avatar;
-    private Integer points;
     private Integer status;
+    private Integer points;
 
     private LocalDateTime lastLoginAt;
     private String lastLoginIp;

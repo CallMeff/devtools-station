@@ -1,0 +1,287 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">SRI 哈希生成器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        :root{--bg-primary:#1a1a2e;--bg-secondary:#1e1e2e;--bg-tertiary:#2a2a3a;--border-color:#333;--text-primary:#ddd;--text-secondary:#aaa;--text-muted:#888;--accent-color:#6366f1;--accent-light:#a5b4fc;--success-color:#22c55e}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary);border-bottom:1px solid var(--border-color);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent-color);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary);font-size:14px}
+
+        .page-content{flex:1;max-width:960px;margin:0 auto;width:100%;padding:20px}
+        .card{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:12px;padding:20px;margin-bottom:16px}
+        .card h3{font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+        .card .desc{font-size:13px;color:var(--text-secondary);margin-bottom:12px;line-height:1.6}
+
+        .tabs{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border-color);margin-bottom:16px}
+        .tab{flex:1;padding:10px 0;text-align:center;font-size:13px;font-weight:600;cursor:pointer;background:var(--bg-tertiary);color:var(--text-muted);border:none;transition:all .15s}
+        .tab.active{background:var(--accent-color);color:#fff}
+        .tab:hover:not(.active){color:var(--text-primary)}
+
+        .form-group{margin-bottom:14px}
+        .form-group label{display:block;font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+        .form-group label .hint{font-weight:400;color:var(--text-muted);font-size:11px;margin-left:6px}
+        input[type=text],input[type=url],textarea,select{width:100%;padding:10px 12px;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);font-size:14px;font-family:inherit;transition:border-color .15s;outline:none;resize:vertical}
+        input:focus,textarea:focus,select:focus{border-color:var(--accent-color)}
+        textarea{min-height:100px;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:13px;line-height:1.5}
+
+        .algo-group{display:flex;gap:6px;flex-wrap:wrap}
+        .algo-btn{padding:8px 16px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s}
+        .algo-btn.active{background:var(--accent-color);border-color:var(--accent-color);color:#fff}
+        .algo-btn:hover:not(.active){border-color:var(--text-muted)}
+
+        .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+        .btn{padding:10px 20px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:6px}
+        .btn:hover{background:var(--accent-color);border-color:var(--accent-color);color:#fff}
+        .btn.primary{background:var(--accent-color);border-color:var(--accent-color);color:#fff}
+        .btn.primary:hover{opacity:.9}
+        .btn.success{background:var(--success-color);border-color:var(--success-color);color:#fff}
+
+        .result-box{position:relative}
+        .result-box textarea{background:#1a1a2e;border:1px solid var(--accent-color);border-radius:8px;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:13px;line-height:1.6;padding:14px;width:100%;min-height:80px;resize:vertical;color:var(--accent-light)}
+        .result-box .tag-preview{padding:14px;background:#1a1a2e;border:1px solid var(--accent-color);border-radius:8px;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:13px;line-height:1.8;color:var(--accent-light);word-break:break-all;overflow-x:auto;white-space:pre-wrap}
+
+        .error-msg{padding:10px 14px;background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.3);border-radius:8px;color:#e53e3e;font-size:13px;display:none;margin-top:10px}
+
+        .copied-toast{position:fixed;top:50px;left:50%;transform:translateX(-50%);background:var(--success-color);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+        .copied-toast.show{opacity:1}
+
+        .info-row{display:flex;gap:20px;flex-wrap:wrap;margin-top:8px}
+        .info-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);padding:4px 12px;background:var(--bg-tertiary);border-radius:100px}
+        .info-chip .val{color:var(--accent-light);font-weight:600}
+        @media(max-width:640px){.page-content{padding:12px}.info-row{flex-direction:column;gap:8px}}
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <div class="brand">
+        <a href="/">⚡ DevTools</a>
+        <span class="sep">/</span>
+        <span class="tool-name" th:text="${tool.name}">SRI 哈希生成器</span>
+    </div>
+</div>
+
+<div class="page-content">
+    <div class="card">
+        <h3>📖 什么是 SRI？</h3>
+        <div class="desc">
+            <strong>Subresource Integrity (SRI)</strong> 是一种安全特性，允许浏览器验证从 CDN 加载的资源（JS/CSS）是否被篡改。
+            给 <code>&lt;script&gt;</code> 或 <code>&lt;link&gt;</code> 标签加上 <code>integrity</code> 属性后，如果文件内容与哈希不匹配，浏览器会拒绝执行。
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>📥 输入方式</h3>
+        <div class="tabs" id="inputTabs">
+            <button class="tab active" data-tab="url">🌐 URL 输入</button>
+            <button class="tab" data-tab="file">📁 文件拖放</button>
+            <button class="tab" data-tab="text">📝 文本输入</button>
+        </div>
+        <div id="tabUrl">
+            <div class="form-group">
+                <label>CDN 资源 URL <span class="hint">例如: https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js</span></label>
+                <input type="url" id="urlInput" placeholder="https://cdn.example.com/lib.js" onkeydown="if(event.key==='Enter')fetchAndHash()">
+            </div>
+            <button class="btn primary" onclick="fetchAndHash()">🔍 获取并计算哈希</button>
+            <div class="error-msg" id="fetchError"></div>
+        </div>
+        <div id="tabFile" style="display:none">
+            <div class="form-group">
+                <label>拖放或选择文件</label>
+                <div id="dropZone" style="border:2px dashed var(--border-color);border-radius:12px;padding:30px;text-align:center;color:var(--text-muted);cursor:pointer;transition:border-color .15s"
+                     onclick="document.getElementById('fileInput').click()"
+                     ondragover="this.style.borderColor='var(--accent-color)'"
+                     ondragleave="this.style.borderColor='var(--border-color)'"
+                     ondrop="handleDrop(event)">
+                    📂 点击选择文件或拖放至此
+                </div>
+                <input type="file" id="fileInput" onchange="handleFileSelect(event)" style="display:none">
+            </div>
+            <div class="info-row" id="fileInfo" style="display:none"></div>
+        </div>
+        <div id="tabText" style="display:none">
+            <div class="form-group">
+                <label>粘贴代码内容 <span class="hint">直接粘贴 JS/CSS 源代码</span></label>
+                <textarea id="textInput" placeholder="粘贴 JS 或 CSS 代码..." oninput="hashText()"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>🔐 哈希算法</h3>
+        <div class="algo-group" id="algoGroup">
+            <button class="algo-btn active" data-algo="SHA-256">SHA-256</button>
+            <button class="algo-btn" data-algo="SHA-384">SHA-384</button>
+            <button class="algo-btn" data-algo="SHA-512">SHA-512</button>
+        </div>
+    </div>
+
+    <div class="card" id="resultCard" style="display:none">
+        <h3>✅ 生成结果</h3>
+        <div class="form-group">
+            <label>Integrity 哈希值</label>
+            <div class="result-box">
+                <div class="tag-preview" id="hashValue" style="word-break:break-all"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>HTML 标签（可直接使用）</label>
+            <div class="result-box">
+                <div class="tag-preview" id="tagPreview"></div>
+            </div>
+        </div>
+        <div class="btn-row">
+            <button class="btn primary" onclick="copyHash()">📋 复制哈希值</button>
+            <button class="btn success" onclick="copyTag()">📋 复制完整标签</button>
+        </div>
+    </div>
+</div>
+
+<div class="copied-toast" id="toast"></div>
+
+<script>
+let currentHash = '';
+let currentTagType = 'script';
+let currentAlgo = 'SHA-256';
+let algoMap = {'SHA-256':'sha256','SHA-384':'sha384','SHA-512':'sha512'};
+
+// Tab switching
+document.getElementById('inputTabs').addEventListener('click',function(e){
+    if(!e.target.classList.contains('tab'))return;
+    document.querySelectorAll('#inputTabs .tab').forEach(t=>t.classList.remove('active'));
+    e.target.classList.add('active');
+    var tab=e.target.dataset.tab;
+    document.getElementById('tabUrl').style.display=tab==='url'?'':'none';
+    document.getElementById('tabFile').style.display=tab==='file'?'':'none';
+    document.getElementById('tabText').style.display=tab==='text'?'':'none';
+    document.getElementById('fetchError').style.display='none';
+});
+
+// Algorithm switching
+document.getElementById('algoGroup').addEventListener('click',function(e){
+    if(!e.target.classList.contains('algo-btn'))return;
+    document.querySelectorAll('.algo-btn').forEach(b=>b.classList.remove('active'));
+    e.target.classList.add('active');
+    currentAlgo=e.target.dataset.algo;
+    // Re-hash if we have content
+    if(document.getElementById('tabText').style.display!=='none' && document.getElementById('textInput').value.trim()){
+        hashText();
+    }
+});
+
+async function computeHash(content){
+    var encoder=new TextEncoder();
+    var data=encoder.encode(content);
+    var hashBuffer=await crypto.subtle.digest(currentAlgo,data);
+    var hashArray=Array.from(new Uint8Array(hashBuffer));
+    var hashBase64=btoa(String.fromCharCode.apply(null,hashArray));
+    return algoMap[currentAlgo]+'-'+hashBase64;
+}
+
+function detectTagType(url){
+    if(!url)return 'script';
+    var l=url.toLowerCase();
+    if(l.endsWith('.css'))return 'link';
+    return 'script';
+}
+
+function showResult(hash,url){
+    currentHash=hash;
+    currentTagType=detectTagType(url);
+    document.getElementById('resultCard').style.display='';
+    document.getElementById('hashValue').textContent=hash;
+
+    var type=detectTagType(url||'');
+    var tag;
+    if(type==='link'){
+        tag='<link rel="stylesheet" href="'+(url||'YOUR_URL')+'" integrity="'+hash+'" crossorigin="anonymous">';
+    }else{
+        tag='<script src="'+(url||'YOUR_URL')+'" integrity="'+hash+'" crossorigin="anonymous"></script>';
+    }
+    document.getElementById('tagPreview').textContent=tag;
+
+    // Scroll to result
+    document.getElementById('resultCard').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// URL fetch
+async function fetchAndHash(){
+    var url=document.getElementById('urlInput').value.trim();
+    if(!url){showError('请输入 URL');return}
+    if(!url.startsWith('http://')&&!url.startsWith('https://')){showError('请输入有效的 HTTP/HTTPS URL');return}
+
+    var errEl=document.getElementById('fetchError');
+    errEl.style.display='none';
+
+    try{
+        var resp=await fetch(url);
+        if(!resp.ok)throw new Error('HTTP '+resp.status+' '+resp.statusText);
+        var text=await resp.text();
+        var hash=await computeHash(text);
+        showResult(hash,url);
+    }catch(e){
+        showError('获取失败: '+e.message+' (跨域资源请使用文件拖放或文本输入)');
+    }
+}
+
+// File handling
+function handleDrop(e){
+    e.preventDefault();
+    e.target.style.borderColor='var(--border-color)';
+    var file=e.dataTransfer.files[0];
+    if(file)readFile(file);
+}
+function handleFileSelect(e){
+    var file=e.target.files[0];
+    if(file)readFile(file);
+}
+async function readFile(file){
+    var text=await file.text();
+    var hash=await computeHash(text);
+    document.getElementById('fileInfo').style.display='flex';
+    document.getElementById('fileInfo').innerHTML='<span class="info-chip">📄 '+file.name+'</span><span class="info-chip">📏 '+(file.size/1024).toFixed(1)+' KB</span>';
+    showResult(hash,'');
+}
+
+// Text input
+var hashTimeout;
+function hashText(){
+    clearTimeout(hashTimeout);
+    hashTimeout=setTimeout(async function(){
+        var text=document.getElementById('textInput').value.trim();
+        if(!text){document.getElementById('resultCard').style.display='none';return}
+        var hash=await computeHash(text);
+        showResult(hash,'');
+    },300);
+}
+
+function showError(msg){
+    var el=document.getElementById('fetchError');
+    el.textContent=msg;el.style.display='block';
+}
+
+function copyHash(){
+    navigator.clipboard.writeText(currentHash).then(function(){showToast('✅ 哈希值已复制')});
+}
+function copyTag(){
+    var tag=document.getElementById('tagPreview').textContent;
+    navigator.clipboard.writeText(tag).then(function(){showToast('✅ 完整标签已复制')});
+}
+function showToast(msg){
+    var t=document.getElementById('toast');
+    t.textContent=msg;t.classList.add('show');
+    setTimeout(function(){t.classList.remove('show')},2000);
+}
+</script>
+</body>
+</html>

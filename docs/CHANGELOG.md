@@ -1,4 +1,4 @@
-# DevTools Station - 更新日志
+# EarlyOff Station - 更新日志
 
 ## v1.1.0 (2026-06-28)
 

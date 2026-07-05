@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">可爱便签纸 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/themes.css">
+    <style>
+        :root {
+            --bg: #fff8fc; --card-bg: #ffffff; --text: #5d3a5c; --text-secondary: #b48ab4;
+            --radius: 20px; --radius-sm: 14px;
+            --shadow: 0 6px 28px rgba(244,114,182,0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #fff8fc 0%, #fff0f7 20%, #fce7f3 50%, #f5f0ff 80%, #fff8fc 100%);
+            background-size: 400% 400%;
+            animation: bgFloat 18s ease infinite;
+            min-height: 100vh; color: var(--text); line-height: 1.6;
+        }
+        @keyframes bgFloat { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+        /* Floating decorations */
+        .float-deco { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .float-deco span {
+            position: absolute; font-size: 2rem; opacity: 0.07;
+            animation: floatDeco 20s infinite ease-in-out;
+        }
+        .float-deco span:nth-child(1){ top: 4%; left: 6%; animation-delay: 0s; }
+        .float-deco span:nth-child(2){ top: 12%; right: 10%; animation-delay: -5s; font-size: 2.5rem; }
+        .float-deco span:nth-child(3){ top: 35%; left: 3%; animation-delay: -10s; font-size: 3rem; }
+        .float-deco span:nth-child(4){ top: 58%; right: 5%; animation-delay: -15s; font-size: 2.2rem; }
+        .float-deco span:nth-child(5){ top: 80%; left: 25%; animation-delay: -3s; font-size: 2.8rem; }
+        .float-deco span:nth-child(6){ top: 20%; left: 50%; animation-delay: -12s; font-size: 1.8rem; }
+        @keyframes floatDeco {
+            0% { transform: translateY(0) rotate(0deg) scale(1); }
+            25% { transform: translateY(-30px) rotate(8deg) scale(1.12); }
+            50% { transform: translateY(-10px) rotate(-4deg) scale(0.92); }
+            75% { transform: translateY(-38px) rotate(6deg) scale(1.05); }
+            100% { transform: translateY(0) rotate(0deg) scale(1); }
+        }
+
+        /* Top bar */
+        .topbar {
+            display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+            background: rgba(255,255,255,0.88); backdrop-filter: blur(14px);
+            border-bottom: 1px solid #f5d4e8; position: sticky; top: 0; z-index: 10;
+            box-shadow: 0 2px 16px rgba(244,114,182,0.06);
+        }
+        .topbar a { color: var(--text-secondary); text-decoration: none; font-size: 13px; font-weight: 500; transition: color .2s; }
+        .topbar a:hover { color: #f472b6; }
+        .topbar .title { font-size: 15px; font-weight: 600; flex: 1; background: linear-gradient(135deg, #ec4899, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .topbar .note-count { font-size: 13px; color: #c084b2; }
+
+        .content { max-width: 780px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex; align-items: center; gap: 10px; padding: 14px 20px; margin-bottom: 16px;
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); border: 1.5px solid #fce7f3;
+            flex-wrap: wrap;
+        }
+        .toolbar .btn {
+            padding: 8px 18px; border: none; border-radius: 22px; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all .22s; display: flex; align-items: center; gap: 5px;
+        }
+        .btn-add {
+            background: linear-gradient(135deg, #f472b6, #e879f9);
+            color: #fff; box-shadow: 0 3px 12px rgba(244,114,182,0.3);
+        }
+        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(244,114,182,0.4); }
+        .btn-clear {
+            background: #fff; color: #c084b2; border: 1.5px solid #f5d4e8 !important;
+        }
+        .btn-clear:hover { background: #fff5fb; border-color: #f472b6 !important; color: #f472b6; }
+
+        .theme-pills { display: flex; gap: 6px; margin-left: auto; }
+        .theme-pill {
+            width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent;
+            cursor: pointer; transition: all .2s;
+        }
+        .theme-pill:hover { transform: scale(1.15); }
+        .theme-pill.active { border-color: #ec4899; box-shadow: 0 0 0 3px rgba(236,72,153,0.15); }
+
+        /* Notes grid - masonry-like */
+        .notes-grid { columns: 3; column-gap: 16px; }
+        @media (max-width: 700px) { .notes-grid { columns: 2; } }
+        @media (max-width: 450px) { .notes-grid { columns: 1; } }
+
+        .sticky-note {
+            break-inside: avoid; margin-bottom: 16px; padding: 18px;
+            border-radius: 16px; position: relative; cursor: pointer;
+            transition: transform .25s, box-shadow .25s;
+            animation: popIn .35s ease-out backwards;
+            min-height: 80px;
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.85) translateY(12px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .sticky-note:hover { transform: translateY(-3px); }
+        .sticky-note:active { cursor: grabbing; }
+
+        /* Note color themes */
+        .note-pink  { background: linear-gradient(135deg, #fff0f6, #ffe4ec); border: 1.5px solid #fccfdf; color: #8b3a5c; }
+        .note-purple{ background: linear-gradient(135deg, #faf5ff, #f3e8ff); border: 1.5px solid #e2d0f5; color: #5b3a8b; }
+        .note-blue  { background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border: 1.5px solid #cfe4f5; color: #3a5a8b; }
+        .note-mint  { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1.5px solid #c8e6d4; color: #3a6b4a; }
+        .note-peach { background: linear-gradient(135deg, #fff7ed, #ffedd5); border: 1.5px solid #fdd4a8; color: #7a4e2a; }
+        .note-lavender { background: linear-gradient(135deg, #f8f6ff, #ede9fe); border: 1.5px solid #d4cef0; color: #4a3a7a; }
+
+        .sticky-note .note-content {
+            font-size: 14px; line-height: 1.7; white-space: pre-wrap; word-break: break-word;
+            outline: none; min-height: 40px; max-height: 180px; overflow-y: auto;
+        }
+        .sticky-note .note-content:empty::before {
+            content: '✏️ 写点什么...'; color: #c084b2; opacity: 0.5;
+        }
+        .sticky-note .note-time {
+            font-size: 11px; text-align: right; margin-top: 10px; opacity: 0.45;
+        }
+        .sticky-note .note-actions {
+            display: flex; gap: 6px; justify-content: flex-end; margin-top: 6px;
+            opacity: 0; transition: opacity .2s;
+        }
+        .sticky-note:hover .note-actions { opacity: 1; }
+        .note-actions button {
+            background: rgba(255,255,255,0.7); border: none; border-radius: 14px;
+            padding: 5px 12px; font-size: 12px; cursor: pointer; transition: all .2s;
+            backdrop-filter: blur(4px);
+        }
+        .note-actions button:hover { background: rgba(255,255,255,0.95); }
+        .note-actions .btn-del:hover { color: #ef4444; }
+        .note-actions .btn-pin { color: #f59e0b; }
+        .note-pinned { order: -1; }
+        .note-pinned::before {
+            content: '📌'; position: absolute; top: -8px; right: 12px; font-size: 16px;
+            animation: pinBounce .5s ease;
+        }
+        @keyframes pinBounce { 0% { transform: translateY(-20px); } 60% { transform: translateY(2px); } 100% { transform: translateY(0); } }
+
+        /* Decorative tape */
+        .note-pink::after, .note-purple::after, .note-blue::after,
+        .note-mint::after, .note-peach::after, .note-lavender::after {
+            content: ''; position: absolute; top: -6px; left: 50%; transform: translateX(-50%) rotate(-3deg);
+            width: 36px; height: 10px; border-radius: 3px; opacity: 0.6;
+        }
+        .note-pink::after { background: #fbcfe8; }
+        .note-purple::after { background: #ddd6fe; }
+        .note-blue::after { background: #bae6fd; }
+        .note-mint::after { background: #bbf7d0; }
+        .note-peach::after { background: #fed7aa; }
+        .note-lavender::after { background: #c4b5fd; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--text-secondary);
+        }
+        .empty-state .icon { font-size: 4.5rem; margin-bottom: 16px; animation: bounce 2s infinite; }
+        @keyframes bounce {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .empty-state h3 { font-size: 1.3rem; margin-bottom: 6px; color: #c084b2; }
+        .empty-state p { font-size: 0.95rem; }
+
+        /* Modal for editing large note content */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.25); z-index: 100;
+            backdrop-filter: blur(2px); align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-dialog {
+            background: #fff; border-radius: var(--radius); padding: 28px;
+            width: 90%; max-width: 460px; box-shadow: 0 20px 60px rgba(244,114,182,0.2);
+            border: 2px solid #fce7f3;
+        }
+        .modal-dialog h3 { margin-bottom: 12px; background: linear-gradient(135deg, #ec4899, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .modal-dialog textarea {
+            width: 100%; min-height: 160px; border: 1.5px solid #f5d4e8; border-radius: 14px;
+            padding: 14px; font-size: 14px; font-family: inherit; resize: vertical;
+            outline: none; line-height: 1.7; color: var(--text);
+        }
+        .modal-dialog textarea:focus { border-color: #f472b6; }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+        .modal-actions button {
+            padding: 9px 22px; border-radius: 22px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s;
+        }
+        .modal-save { background: linear-gradient(135deg, #f472b6, #e879f9); color: #fff; }
+        .modal-save:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(244,114,182,0.35); }
+        .modal-cancel { background: #fce7f3; color: #c084b2; }
+        .modal-cancel:hover { background: #f5d4e8; }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #ec4899, #a855f7); color: #fff;
+            padding: 10px 24px; border-radius: 25px; font-size: 13px; font-weight: 500;
+            z-index: 200; opacity: 0; transition: opacity .3s;
+            box-shadow: 0 8px 28px rgba(236,72,153,0.35);
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="float-deco">
+        <span>🌸</span><span>🎀</span><span>💖</span><span>✨</span><span>💕</span><span>🌷</span>
+    </div>
+
+    <div class="topbar">
+        <a href="/">← 首页</a>
+        <span class="title">🎀 可爱便签纸</span>
+        <span class="note-count" id="noteCount">0 张便签</span>
+    </div>
+
+    <div class="content">
+        <div class="toolbar">
+            <button class="btn btn-add" onclick="addNote()">＋ 新建便签</button>
+            <button class="btn btn-clear" onclick="clearAll()">🗑 清空全部</button>
+            <div class="theme-pills">
+                <span class="theme-pill active" style="background:linear-gradient(135deg,#fff0f6,#ffe4ec)" data-theme="note-pink" onclick="setDefaultTheme('note-pink',this)" title="粉色"></span>
+                <span class="theme-pill" style="background:linear-gradient(135deg,#faf5ff,#f3e8ff)" data-theme="note-purple" onclick="setDefaultTheme('note-purple',this)" title="紫色"></span>
+                <span class="theme-pill" style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe)" data-theme="note-blue" onclick="setDefaultTheme('note-blue',this)" title="蓝色"></span>
+                <span class="theme-pill" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7)" data-theme="note-mint" onclick="setDefaultTheme('note-mint',this)" title="薄荷"></span>
+                <span class="theme-pill" style="background:linear-gradient(135deg,#fff7ed,#ffedd5)" data-theme="note-peach" onclick="setDefaultTheme('note-peach',this)" title="蜜桃"></span>
+                <span class="theme-pill" style="background:linear-gradient(135deg,#f8f6ff,#ede9fe)" data-theme="note-lavender" onclick="setDefaultTheme('note-lavender',this)" title="薰衣草"></span>
+            </div>
+        </div>
+
+        <div class="notes-grid" id="notesGrid">
+            <div class="empty-state" id="emptyState">
+                <div class="icon">📝</div>
+                <h3>还没有便签哦~</h3>
+                <p>点击「新建便签」写点什么吧！💕</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-dialog">
+            <h3>✏️ 编辑便签</h3>
+            <textarea id="editTextarea" placeholder="写下你的小心事..."></textarea>
+            <div class="modal-actions">
+                <button class="modal-cancel" onclick="closeModal()">取消</button>
+                <button class="modal-save" onclick="saveModal()">保存 💾</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const STORAGE_KEY = 'cute-notes-data';
+        const THEME_KEY = 'cute-notes-default-theme';
+        const themes = ['note-pink','note-purple','note-blue','note-mint','note-peach','note-lavender'];
+
+        let notes = [];
+        let defaultTheme = localStorage.getItem(THEME_KEY) || 'note-pink';
+        let editingId = null;
+
+        function loadNotes() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                notes = raw ? JSON.parse(raw) : [];
+            } catch(e) { notes = []; }
+            if (!Array.isArray(notes)) notes = [];
+        }
+
+        function saveNotes() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+        }
+
+        function addNote(content = '', themeOverride = null) {
+            const note = {
+                id: Date.now(),
+                content: content,
+                theme: themeOverride || defaultTheme,
+                pinned: false,
+                createdAt: new Date().toISOString()
+            };
+            notes.unshift(note);
+            saveNotes();
+            render();
+            showToast('📝 便签已创建~');
+        }
+
+        function deleteNote(id, e) {
+            if (e) e.stopPropagation();
+            notes = notes.filter(n => n.id !== id);
+            saveNotes();
+            render();
+            showToast('🗑 便签已删除');
+        }
+
+        function togglePin(id, e) {
+            if (e) e.stopPropagation();
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                note.pinned = !note.pinned;
+                saveNotes();
+                render();
+                showToast(note.pinned ? '📌 已置顶' : '📌 已取消置顶');
+            }
+        }
+
+        function cycleTheme(id, e) {
+            if (e) e.stopPropagation();
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                const idx = themes.indexOf(note.theme);
+                note.theme = themes[(idx + 1) % themes.length];
+                saveNotes();
+                render();
+            }
+        }
+
+        function openModal(id) {
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+            editingId = id;
+            document.getElementById('editTextarea').value = note.content;
+            document.getElementById('editModal').classList.add('show');
+            document.getElementById('editTextarea').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('show');
+            editingId = null;
+        }
+
+        function saveModal() {
+            if (editingId === null) return;
+            const note = notes.find(n => n.id === editingId);
+            if (note) {
+                note.content = document.getElementById('editTextarea').value;
+                saveNotes();
+                render();
+            }
+            closeModal();
+            showToast('💾 已保存~');
+        }
+
+        function clearAll() {
+            if (notes.length === 0) return;
+            if (confirm('确定要清空所有便签吗？这个操作不可恢复哦 😢')) {
+                notes = [];
+                saveNotes();
+                render();
+                showToast('✨ 便签已清空');
+            }
+        }
+
+        function setDefaultTheme(theme, el) {
+            defaultTheme = theme;
+            localStorage.setItem(THEME_KEY, theme);
+            document.querySelectorAll('.theme-pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function formatTime(iso) {
+            const d = new Date(iso);
+            const now = new Date();
+            const diff = now - d;
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前';
+            const m = d.getMonth() + 1;
+            const day = d.getDate();
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return `${m}月${day}日 ${hh}:${mm}`;
+        }
+
+        function render() {
+            const grid = document.getElementById('notesGrid');
+            const empty = document.getElementById('emptyState');
+            const count = document.getElementById('noteCount');
+
+            count.textContent = notes.length + ' 张便签';
+
+            if (notes.length === 0) {
+                grid.innerHTML = '';
+                grid.appendChild(createEmptyState());
+                return;
+            }
+
+            const sorted = [...notes].sort((a, b) => {
+                if (a.pinned && !b.pinned) return -1;
+                if (!a.pinned && b.pinned) return 1;
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+
+            grid.innerHTML = sorted.map((note, i) => `
+                <div class="sticky-note ${note.theme} ${note.pinned ? 'note-pinned' : ''}"
+                     style="animation-delay:${i * 0.05}s"
+                     ondblclick="openModal(${note.id})">
+                    <div class="note-content" onclick="openModal(${note.id})">${escapeHtml(note.content) || ''}</div>
+                    <div class="note-time">${formatTime(note.createdAt)}</div>
+                    <div class="note-actions">
+                        <button class="btn-pin" onclick="togglePin(${note.id}, event)" title="置顶">📌</button>
+                        <button onclick="cycleTheme(${note.id}, event)" title="换颜色">🎨</button>
+                        <button class="btn-del" onclick="deleteNote(${note.id}, event)" title="删除">×</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function createEmptyState() {
+            const div = document.createElement('div');
+            div.className = 'empty-state';
+            div.id = 'emptyState';
+            div.innerHTML = '<div class="icon">📝</div><h3>还没有便签哦~</h3><p>点击「新建便签」写点什么吧！💕</p>';
+            return div;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), 1800);
+        }
+
+        // Init
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault(); addNote();
+            }
+        });
+
+        // Set initial active theme pill
+        document.querySelectorAll('.theme-pill').forEach(p => {
+            if (p.dataset.theme === defaultTheme) p.classList.add('active');
+        });
+
+        loadNotes();
+        render();
+    </script>
+</body>
+</html>

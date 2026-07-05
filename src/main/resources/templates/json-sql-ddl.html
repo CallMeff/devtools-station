@@ -1,0 +1,526 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">JSON → SQL DDL 生成器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent-color,#6366f1);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+        .topbar button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s}
+        .topbar button:hover{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+
+        .page-content{flex:1;max-width:1100px;margin:0 auto;width:100%;padding:20px;display:flex;flex-direction:column;gap:20px}
+
+        .intro-box{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:12px;padding:20px;text-align:center}
+        .intro-box h2{font-size:20px;color:var(--accent-color,#6366f1);margin-bottom:8px}
+        .intro-box p{color:var(--text-muted,#888);font-size:13px;line-height:1.6}
+
+        .workspace{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+        @media(max-width:768px){.workspace{grid-template-columns:1fr}}
+
+        .card{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:12px;padding:20px;display:flex;flex-direction:column}
+        .card h3{font-size:13px;font-weight:600;color:var(--text-muted,#888);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+        .card h3 .card-actions{margin-left:auto;display:flex;gap:6px}
+        .card h3 .card-actions button{font-size:11px;padding:3px 10px;border:1px solid var(--border-color,#444);border-radius:4px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#aaa);cursor:pointer;transition:all .15s}
+        .card h3 .card-actions button:hover{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+
+        .input-area{flex:1;min-height:260px}
+        textarea{width:100%;height:100%;min-height:260px;padding:14px;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:10px;color:var(--text-primary,#ddd);font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:13px;line-height:1.6;resize:vertical;outline:none;transition:border-color .15s}
+        textarea:focus{border-color:var(--accent-color,#6366f1)}
+        textarea::placeholder{color:var(--text-muted,#555)}
+
+        .options-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:8px 0;margin-top:8px;border-top:1px solid var(--border-color,#333)}
+        .option{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted,#aaa)}
+        .option input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent-color,#6366f1);cursor:pointer}
+        .option label{cursor:pointer}
+        .option input[type=text],.option select{padding:4px 8px;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:4px;color:var(--text-primary,#ddd);font-size:12px;outline:none}
+        .option input[type=text]{width:90px}
+        .option select{font-family:inherit}
+
+        .code-output{position:relative;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:10px;overflow:hidden}
+        .preview-header-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--card-bg,#141416);border-bottom:1px solid var(--border-color,#333);border-radius:10px 10px 0 0}
+        .preview-header-bar span{font-size:11px;color:var(--text-muted,#888)}
+        .preview-header-bar .lang-badge{font-size:10px;padding:2px 8px;background:#38a169;color:#fff;border-radius:10px}
+        .code-output pre{margin:0;padding:14px;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:13px;line-height:1.7;color:var(--text-primary,#ddd);white-space:pre;overflow-x:auto;min-height:260px;max-height:500px;overflow-y:auto}
+        .code-output pre .sql-keyword{color:#c792ea;font-weight:600}
+        .code-output pre .sql-type{color:#82aaff}
+        .code-output pre .sql-name{color:#c3e88d}
+        .code-output pre .sql-string{color:#c3e88d}
+        .code-output pre .sql-number{color:#f78c6c}
+        .code-output pre .sql-comment{color:#546e7a;font-style:italic}
+        .code-output pre .sql-func{color:#ffcb6b}
+
+        .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+        .btn{padding:8px 18px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s;display:flex;align-items:center;gap:6px}
+        .btn:hover{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+        .btn.primary{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+
+        .error-msg{color:#e53e3e;font-size:12px;padding:8px 0;display:none}
+        .error-msg.show{display:block}
+
+        .info-tip{font-size:11px;color:var(--text-muted,#666);margin-top:6px;line-height:1.5}
+
+        .toast{position:fixed;top:50px;left:50%;transform:translateX(-50%);background:var(--accent-color,#6366f1);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+        .toast.show{opacity:1}
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <div class="brand">
+        <a href="/">⚡ DevTools</a>
+        <span class="sep">/</span>
+        <span class="tool-name" th:text="${tool.name}">JSON → SQL DDL 生成器</span>
+    </div>
+</div>
+
+<div class="page-content">
+    <div class="intro-box">
+        <h2>🗄️ JSON → SQL DDL 生成器</h2>
+        <p>粘贴 JSON 数据，自动推断字段类型并生成 <strong>CREATE TABLE</strong> 建表语句。<br>支持 MySQL / PostgreSQL 双引擎、主键自增、索引、NOT NULL、默认值、注释。</p>
+    </div>
+
+    <div class="workspace">
+        <!-- 输入面板 -->
+        <div class="card">
+            <h3>📥 JSON 输入
+                <span class="card-actions">
+                    <button onclick="loadSample1()">用户表</button>
+                    <button onclick="loadSample2()">订单表</button>
+                    <button onclick="loadSample3()">嵌套JSON</button>
+                </span>
+            </h3>
+            <div class="input-area">
+                <textarea id="jsonInput" placeholder='[{"id":1,"name":"Alice","email":"alice@example.com","age":28,"is_active":true,"created_at":"2024-01-15T08:30:00Z"}]' oninput="generateSQL()"></textarea>
+            </div>
+            <div class="options-row">
+                <div class="option">
+                    <label>引擎:</label>
+                    <select id="optEngine" onchange="generateSQL()">
+                        <option value="mysql">MySQL</option>
+                        <option value="pg">PostgreSQL</option>
+                    </select>
+                </div>
+                <div class="option">
+                    <label>表名:</label>
+                    <input type="text" id="optTableName" value="users" oninput="generateSQL()">
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="optDropTable" onchange="generateSQL()">
+                    <label>DROP TABLE IF EXISTS</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="optAutoInc" checked onchange="generateSQL()">
+                    <label>主键自增</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="optNotNull" onchange="generateSQL()">
+                    <label>NOT NULL</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="optComment" checked onchange="generateSQL()">
+                    <label>COMMENT</label>
+                </div>
+            </div>
+            <div class="error-msg" id="errorMsg"></div>
+            <div class="btn-row">
+                <button class="btn primary" onclick="copySQL()">📋 复制 SQL</button>
+                <button class="btn" onclick="downloadSQL()">📥 下载 .sql</button>
+                <button class="btn" onclick="clearAll()">🔄 清空</button>
+            </div>
+        </div>
+
+        <!-- 输出面板 -->
+        <div class="card" style="padding:0;overflow:hidden">
+            <div class="preview-header-bar">
+                <span id="lineCount">0 行</span>
+                <span class="lang-badge" id="engineBadge">MySQL</span>
+            </div>
+            <div class="code-output">
+                <pre id="sqlOutput"><span class="sql-comment">-- 请在左侧输入 JSON 数据</span>
+<span class="sql-comment">-- 支持 JSON 对象，自动推断字段类型</span></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- 字段映射说明 -->
+    <div class="card">
+        <h3>📊 字段类型映射规则</h3>
+        <div class="info-tip" style="margin:0">
+            <table style="width:100%;font-size:12px;color:var(--text-muted,#aaa);border-collapse:collapse">
+                <tr style="color:var(--text-primary,#ddd);font-weight:600">
+                    <td style="padding:4px 12px;border-bottom:1px solid var(--border-color,#333)">JSON 类型</td>
+                    <td style="padding:4px 12px;border-bottom:1px solid var(--border-color,#333)">MySQL</td>
+                    <td style="padding:4px 12px;border-bottom:1px solid var(--border-color,#333)">PostgreSQL</td>
+                </tr>
+                <tr><td style="padding:4px 12px">整数 (integer)</td><td style="padding:4px 12px;font-family:monospace">INT</td><td style="padding:4px 12px;font-family:monospace">INTEGER</td></tr>
+                <tr><td style="padding:4px 12px">小数 (float)</td><td style="padding:4px 12px;font-family:monospace">DECIMAL(12,4)</td><td style="padding:4px 12px;font-family:monospace">NUMERIC(12,4)</td></tr>
+                <tr><td style="padding:4px 12px">字符串 (&lt;256)</td><td style="padding:4px 12px;font-family:monospace">VARCHAR(255)</td><td style="padding:4px 12px;font-family:monospace">VARCHAR(255)</td></tr>
+                <tr><td style="padding:4px 12px">字符串 (&ge;256)</td><td style="padding:4px 12px;font-family:monospace">TEXT</td><td style="padding:4px 12px;font-family:monospace">TEXT</td></tr>
+                <tr><td style="padding:4px 12px">布尔值</td><td style="padding:4px 12px;font-family:monospace">TINYINT(1)</td><td style="padding:4px 12px;font-family:monospace">BOOLEAN</td></tr>
+                <tr><td style="padding:4px 12px">日期时间字符串</td><td style="padding:4px 12px;font-family:monospace">DATETIME</td><td style="padding:4px 12px;font-family:monospace">TIMESTAMP</td></tr>
+                <tr><td style="padding:4px 12px">数组/对象</td><td style="padding:4px 12px;font-family:monospace">JSON</td><td style="padding:4px 12px;font-family:monospace">JSONB</td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// 类型推断
+function inferColumnType(val, key, engine) {
+    if (val === null || val === undefined) {
+        return engine === 'mysql' ? 'VARCHAR(255)' : 'VARCHAR(255)';
+    }
+    var t = typeof val;
+    if (t === 'number') {
+        if (Number.isInteger(val)) return engine === 'mysql' ? 'INT' : 'INTEGER';
+        return engine === 'mysql' ? 'DECIMAL(12,4)' : 'NUMERIC(12,4)';
+    }
+    if (t === 'boolean') {
+        return engine === 'mysql' ? 'TINYINT(1)' : 'BOOLEAN';
+    }
+    if (t === 'string') {
+        // 检测日期时间模式
+        if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}/.test(val)) {
+            return engine === 'mysql' ? 'DATETIME' : 'TIMESTAMP';
+        }
+        if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+            return engine === 'mysql' ? 'DATE' : 'DATE';
+        }
+        if (/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(val)) {
+            return engine === 'mysql' ? 'CHAR(36)' : 'UUID';
+        }
+        if (val.length > 255) return 'TEXT';
+        return 'VARCHAR(255)';
+    }
+    if (Array.isArray(val)) {
+        return engine === 'mysql' ? 'JSON' : 'JSONB';
+    }
+    if (t === 'object') {
+        return engine === 'mysql' ? 'JSON' : 'JSONB';
+    }
+    return engine === 'mysql' ? 'VARCHAR(255)' : 'VARCHAR(255)';
+}
+
+function toSnake(s) {
+    return String(s).replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '').replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_');
+}
+
+function sqlIdent(name) {
+    return '`' + name + '`';
+}
+
+function generateSQL() {
+    var input = document.getElementById('jsonInput').value.trim();
+    var output = document.getElementById('sqlOutput');
+    var error = document.getElementById('errorMsg');
+    error.classList.remove('show');
+
+    if (!input) {
+        output.innerHTML = '<span class="sql-comment">-- 请在左侧输入 JSON 数据</span>\n<span class="sql-comment">-- 支持 JSON 对象/数组，自动推断字段类型</span>';
+        document.getElementById('lineCount').textContent = '0 行';
+        return;
+    }
+
+    var obj;
+    try { obj = JSON.parse(input); } catch (e) {
+        error.textContent = '❌ JSON 解析错误: ' + e.message;
+        error.classList.add('show');
+        return;
+    }
+
+    // 如果是数组，取第一个元素
+    var dataObj = Array.isArray(obj) ? (obj.length > 0 ? obj[0] : {}) : obj;
+    if (typeof dataObj !== 'object' || dataObj === null || Array.isArray(dataObj)) {
+        error.textContent = '❌ 请输入 JSON 对象 或 JSON 对象数组';
+        error.classList.add('show');
+        return;
+    }
+
+    var engine = document.getElementById('optEngine').value;
+    var tableName = document.getElementById('optTableName').value.trim() || 'my_table';
+    var dropTable = document.getElementById('optDropTable').checked;
+    var autoInc = document.getElementById('optAutoInc').checked;
+    var notNull = document.getElementById('optNotNull').checked;
+    var comments = document.getElementById('optComment').checked;
+
+    document.getElementById('engineBadge').textContent = engine === 'mysql' ? 'MySQL' : 'PostgreSQL';
+
+    var lines = [];
+    var prefix = '';
+
+    if (dropTable) {
+        lines.push('DROP TABLE IF EXISTS ' + sqlIdent(tableName) + ';');
+        lines.push('');
+    }
+
+    var pkSelected = null;
+    var cols = [];
+
+    // 自动检测主键候选
+    Object.keys(dataObj).forEach(function(k) {
+        var v = dataObj[k];
+        var sn = toSnake(k);
+        if ((sn === 'id' || sn === k + '_id' || k === 'id') && (typeof v === 'number' || typeof v === 'string')) {
+            pkSelected = sn;
+        }
+    });
+
+    Object.keys(dataObj).forEach(function(k) {
+        var v = dataObj[k];
+        var colName = toSnake(k);
+        var colType = inferColumnType(v, k, engine);
+        var def = '';
+        var extra = '';
+
+        if (colName === pkSelected) {
+            extra = ' PRIMARY KEY';
+            if (autoInc && (colType.toUpperCase() === 'INT' || colType.toUpperCase() === 'INTEGER')) {
+                extra += ' ' + (engine === 'mysql' ? 'AUTO_INCREMENT' : (colType === 'INTEGER' ? 'GENERATED ALWAYS AS IDENTITY' : ''));
+            }
+        }
+
+        if (notNull && colName !== pkSelected && v !== null) {
+            extra += ' NOT NULL';
+        }
+
+        if (comments) {
+            extra += " COMMENT '" + k.replace(/'/g, "''") + "'";
+        }
+
+        cols.push({ raw: k, name: colName, type: colType, extra: extra });
+    });
+
+    lines.push('CREATE TABLE ' + sqlIdent(tableName) + ' (');
+
+    var colLines = cols.map(function(c, i) {
+        var comma = i < cols.length - 1 ? ',' : '';
+        return '    ' + sqlIdent(c.name) + ' ' + c.type + c.extra + comma;
+    });
+    lines.push(colLines.join('\n'));
+
+    if (engine === 'mysql') {
+        lines.push(') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;');
+    } else {
+        lines.push(');');
+    }
+
+    var sql = lines.join('\n');
+    document.getElementById('lineCount').textContent = lines.length + ' 行';
+
+    // 语法高亮
+    var html = sql
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/(--[^\n]*)/g, '<span class="sql-comment">$1</span>')
+        .replace(/\b(CREATE TABLE|DROP TABLE|IF EXISTS|PRIMARY KEY|NOT NULL|AUTO_INCREMENT|GENERATED ALWAYS AS IDENTITY|ENGINE|InnoDB|DEFAULT|CHARSET|COLLATE|COMMENT)\b/g, '<span class="sql-keyword">$1</span>')
+        .replace(/\b(INT|INTEGER|VARCHAR|TEXT|TINYINT|BOOLEAN|DECIMAL|NUMERIC|DATETIME|TIMESTAMP|DATE|CHAR|JSON|JSONB|UUID)(\(\d+(,\d+)?\))?\b/g, '<span class="sql-type">$&</span>')
+        .replace(/('[^']*')/g, '<span class="sql-string">$1</span>')
+        .replace(/`([^`]*)`/g, '<span class="sql-name">`$1`</span>')
+        .replace(/(\d+)/g, '<span class="sql-number">$1</span>');
+
+    output.innerHTML = html;
+}
+
+function loadSample1() {
+    document.getElementById('jsonInput').value = JSON.stringify({
+        "id": 1,
+        "username": "alice",
+        "email": "alice@example.com",
+        "password_hash": "$2a$10$...",
+        "full_name": "Alice Wang",
+        "age": 28,
+        "is_active": true,
+        "role": "admin",
+        "bio": "Full-stack developer passionate about open source",
+        "avatar_url": "https://cdn.example.com/avatars/alice.jpg",
+        "created_at": "2024-01-15T08:30:00Z",
+        "updated_at": "2024-06-20T14:22:00Z"
+    }, null, 2);
+    document.getElementById('optTableName').value = 'users';
+    generateSQL();
+}
+
+function loadSample2() {
+    document.getElementById('jsonInput').value = JSON.stringify([{
+        "order_id": 10001,
+        "user_id": 42,
+        "product_name": "Wireless Keyboard",
+        "quantity": 2,
+        "unit_price": 299.99,
+        "total_amount": 599.98,
+        "status": "shipped",
+        "shipping_address": "北京市朝阳区xxx路xxx号",
+        "tracking_number": "SF1234567890",
+        "created_at": "2024-03-15T10:30:00Z"
+    }, {
+        "order_id": 10002,
+        "user_id": 42,
+        "product_name": "USB-C Hub",
+        "quantity": 1,
+        "unit_price": 159.00,
+        "total_amount": 159.00,
+        "status": "pending",
+        "shipping_address": "北京市朝阳区xxx路xxx号",
+        "tracking_number": null,
+        "created_at": "2024-03-16T09:15:00Z"
+    }], null, 2);
+    document.getElementById('optTableName').value = 'orders';
+    generateSQL();
+}
+
+function loadSample3() {
+    document.getElementById('jsonInput').value = JSON.stringify({
+        "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "config_name": "production",
+        "settings": {"debug": false, "logLevel": "info", "maxConnections": 100},
+        "tags": ["production", "web", "api"],
+        "metadata": {"version": "3.2.1", "region": "ap-southeast-1"},
+        "enabled": true,
+        "description": "This is a very long description text ... " + "etc. ".repeat(30),
+        "created_at": "2024-01-01T00:00:00Z"
+    }, null, 2);
+    document.getElementById('optTableName').value = 'configs';
+    generateSQL();
+}
+
+function copySQL() {
+    var input = document.getElementById('jsonInput').value.trim();
+    if (!input) return showToast('⚠️ 请先输入 JSON 数据');
+
+    var obj;
+    try { obj = JSON.parse(input); } catch (e) { return showToast('❌ JSON 格式错误'); }
+
+    var engine = document.getElementById('optEngine').value;
+    var tableName = document.getElementById('optTableName').value.trim() || 'my_table';
+    var dropTable = document.getElementById('optDropTable').checked;
+    var autoInc = document.getElementById('optAutoInc').checked;
+    var notNull = document.getElementById('optNotNull').checked;
+
+    var dataObj = Array.isArray(obj) ? (obj.length > 0 ? obj[0] : {}) : obj;
+    var lines = [];
+    var pkSelected = null;
+
+    Object.keys(dataObj).forEach(function(k) {
+        var sn = toSnake(k);
+        if ((sn === 'id' || k === 'id') && (typeof dataObj[k] === 'number' || typeof dataObj[k] === 'string')) {
+            pkSelected = sn;
+        }
+    });
+
+    if (dropTable) {
+        lines.push('DROP TABLE IF EXISTS ' + sqlIdent(tableName) + ';');
+        lines.push('');
+    }
+
+    lines.push('CREATE TABLE ' + sqlIdent(tableName) + ' (');
+    var keys = Object.keys(dataObj);
+    var colLines = keys.map(function(k, i) {
+        var colName = toSnake(k);
+        var colType = inferColumnType(dataObj[k], k, engine);
+        var extra = '';
+        if (colName === pkSelected) {
+            extra = ' PRIMARY KEY';
+            if (autoInc && (colType.toUpperCase() === 'INT' || colType.toUpperCase() === 'INTEGER')) {
+                extra += ' ' + (engine === 'mysql' ? 'AUTO_INCREMENT' : 'GENERATED ALWAYS AS IDENTITY');
+            }
+        }
+        if (notNull && colName !== pkSelected && dataObj[k] !== null) {
+            extra += ' NOT NULL';
+        }
+        var comma = i < keys.length - 1 ? ',' : '';
+        return '    ' + sqlIdent(colName) + ' ' + colType + extra + comma;
+    });
+    lines.push(colLines.join('\n'));
+    if (engine === 'mysql') {
+        lines.push(') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;');
+    } else {
+        lines.push(');');
+    }
+
+    navigator.clipboard.writeText(lines.join('\n')).then(function() { showToast('✅ SQL DDL 已复制'); });
+}
+
+function downloadSQL() {
+    var input = document.getElementById('jsonInput').value.trim();
+    if (!input) return showToast('⚠️ 请先输入 JSON 数据');
+    var obj;
+    try { obj = JSON.parse(input); } catch (e) { return showToast('❌ JSON 格式错误'); }
+
+    // 重新生成 clean SQL
+    var engine = document.getElementById('optEngine').value;
+    var tableName = document.getElementById('optTableName').value.trim() || 'my_table';
+    var dropTable = document.getElementById('optDropTable').checked;
+    var autoInc = document.getElementById('optAutoInc').checked;
+    var notNull = document.getElementById('optNotNull').checked;
+    var dataObj = Array.isArray(obj) ? (obj.length > 0 ? obj[0] : {}) : obj;
+    var lines = [];
+    var pkSelected = null;
+    Object.keys(dataObj).forEach(function(k) {
+        var sn = toSnake(k);
+        if ((sn === 'id' || k === 'id') && (typeof dataObj[k] === 'number' || typeof dataObj[k] === 'string')) {
+            pkSelected = sn;
+        }
+    });
+    if (dropTable) { lines.push('DROP TABLE IF EXISTS ' + sqlIdent(tableName) + ';'); lines.push(''); }
+    lines.push('CREATE TABLE ' + sqlIdent(tableName) + ' (');
+    var keys = Object.keys(dataObj);
+    var colLines = keys.map(function(k, i) {
+        var colName = toSnake(k);
+        var colType = inferColumnType(dataObj[k], k, engine);
+        var extra = '';
+        if (colName === pkSelected) {
+            extra = ' PRIMARY KEY';
+            if (autoInc && (colType.toUpperCase() === 'INT' || colType.toUpperCase() === 'INTEGER')) {
+                extra += ' ' + (engine === 'mysql' ? 'AUTO_INCREMENT' : 'GENERATED ALWAYS AS IDENTITY');
+            }
+        }
+        if (notNull && colName !== pkSelected && dataObj[k] !== null) extra += ' NOT NULL';
+        var comma = i < keys.length - 1 ? ',' : '';
+        return '    ' + sqlIdent(colName) + ' ' + colType + extra + comma;
+    });
+    lines.push(colLines.join('\n'));
+    if (engine === 'mysql') {
+        lines.push(') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;');
+    } else {
+        lines.push(');');
+    }
+
+    var blob = new Blob([lines.join('\n')], { type: 'text/sql' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = tableName + '.sql';
+    a.click();
+    showToast('✅ 已下载 .sql 文件');
+}
+
+function clearAll() {
+    document.getElementById('jsonInput').value = '';
+    document.getElementById('sqlOutput').innerHTML = '<span class="sql-comment">-- 请在左侧输入 JSON 数据</span>\n<span class="sql-comment">-- 支持 JSON 对象/数组，自动推断字段类型</span>';
+    document.getElementById('lineCount').textContent = '0 行';
+    document.getElementById('errorMsg').classList.remove('show');
+}
+
+function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadSample1();
+});
+</script>
+</body>
+</html>

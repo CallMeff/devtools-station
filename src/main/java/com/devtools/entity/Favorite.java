@@ -27,6 +27,12 @@ public class Favorite {
     /** 排序权重（越小越靠前） */
     private Integer sortOrder;
 
+    /** 桌面 X 坐标（百分比 0~1） */
+    private Double posX;
+
+    /** 桌面 Y 坐标（百分比 0~1） */
+    private Double posY;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 }

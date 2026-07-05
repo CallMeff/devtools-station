@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>轻断食规划工具 · 间歇性断食计划</title>
+<style>
+  :root {
+    --pink: #f8a4c8;
+    --pink-dark: #e87d9f;
+    --pink-light: #fce4ec;
+    --mint: #a8e6cf;
+    --mint-dark: #6bc4a1;
+    --mint-light: #e0f7ec;
+    --lavender: #c3aed6;
+    --lavender-dark: #9b7ec4;
+    --peach: #ffd3b6;
+    --peach-dark: #f0b586;
+    --orange: #ffb74d;
+    --orange-light: #fff3e0;
+    --bg: #fef9f4;
+    --card-bg: #ffffff;
+    --text: #4a3f47;
+    --text-light: #8a7f87;
+    --text-lighter: #b0a5ad;
+    --border: #f0e6ee;
+    --shadow: 0 2px 16px rgba(180,140,160,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+    background:var(--bg);color:var(--text);min-height:100vh;
+    background-image:radial-gradient(circle at 20% 10%,rgba(248,164,200,0.08) 0%,transparent 50%),
+                     radial-gradient(circle at 80% 90%,rgba(168,230,207,0.08) 0%,transparent 50%);
+  }
+  .container{max-width:960px;margin:0 auto;padding:20px 24px 40px;}
+  .header{text-align:center;padding:30px 0 20px;}
+  .header .icon{font-size:48px;display:block;margin-bottom:8px;}
+  .header h1{font-size:28px;font-weight:700;background:linear-gradient(135deg,var(--pink-dark),var(--lavender-dark));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .header p{color:var(--text-light);margin-top:6px;font-size:14px;}
+
+  /* ===== Disclaimer Modal ===== */
+  .modal-overlay{position:fixed;inset:0;background:rgba(60,40,50,0.55);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);animation:fadeIn 0.3s ease;}
+  .modal-overlay.hidden{display:none;}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .disclaimer-modal{background:white;border-radius:var(--radius);padding:32px 28px 24px;max-width:520px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,0.2);text-align:center;animation:slideUp 0.35s ease;}
+  @keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .disclaimer-modal .warn-icon{font-size:48px;display:block;margin-bottom:12px;}
+  .disclaimer-modal h2{font-size:20px;color:#d4547a;margin-bottom:14px;}
+  .disclaimer-modal .disclaimer-text{text-align:left;font-size:13px;color:var(--text-light);line-height:1.8;background:#fff5f7;border-radius:var(--radius-sm);padding:16px;margin-bottom:16px;border-left:3px solid var(--pink);}
+  .disclaimer-modal .disclaimer-text ul{padding-left:18px;}
+  .disclaimer-modal .disclaimer-text li{margin-bottom:4px;}
+  .btn-agree{background:linear-gradient(135deg,var(--pink),var(--lavender-dark));color:white;border:none;padding:12px 48px;border-radius:50px;font-size:15px;font-weight:600;cursor:pointer;transition:var(--transition);box-shadow:0 4px 14px rgba(200,120,160,0.3);}
+  .btn-agree:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(200,120,160,0.4);}
+  .btn-disagree{background:none;border:1px solid var(--border);color:var(--text-light);padding:10px 36px;border-radius:50px;font-size:13px;cursor:pointer;margin-right:12px;transition:var(--transition);}
+  .btn-disagree:hover{background:#f5f0f3;}
+
+  /* ===== Section ===== */
+  .section{background:var(--card-bg);border-radius:var(--radius);padding:24px;margin-bottom:20px;box-shadow:var(--shadow);border:1px solid var(--border);}
+  .section-title{font-size:17px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:var(--text);}
+
+  /* ===== Fasting Cards ===== */
+  .fasting-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;}
+  .fasting-card{border:2px solid var(--border);border-radius:var(--radius-sm);padding:16px 14px;text-align:center;cursor:pointer;transition:var(--transition);position:relative;background:var(--card-bg);}
+  .fasting-card:hover{border-color:var(--pink);transform:translateY(-2px);box-shadow:0 4px 12px rgba(248,164,200,0.15);}
+  .fasting-card.selected{border-color:var(--pink-dark);background:linear-gradient(135deg,#fff5f8,#fde8ef);box-shadow:0 0 0 3px rgba(248,164,200,0.2);}
+  .fasting-card .method-name{font-size:20px;font-weight:800;color:var(--pink-dark);margin-bottom:4px;}
+  .fasting-card .method-label{font-size:12px;color:var(--text-light);}
+  .fasting-card .suitable-badge{display:inline-block;font-size:10px;padding:3px 8px;border-radius:20px;margin-top:8px;background:var(--mint-light);color:var(--mint-dark);font-weight:500;}
+  .fasting-card .check-mark{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:var(--pink-dark);color:white;display:none;align-items:center;justify-content:center;font-size:12px;}
+  .fasting-card.selected .check-mark{display:flex;}
+  .method-detail{margin-top:16px;padding:16px;background:#fdf8fa;border-radius:var(--radius-sm);border:1px dashed var(--border);display:none;font-size:13px;line-height:1.8;color:var(--text-light);}
+  .method-detail.show{display:block;}
+  .tag{display:inline-block;padding:2px 10px;border-radius:20px;margin:2px 4px;font-size:11px;font-weight:500;}
+  .tag-green{background:var(--mint-light);color:var(--mint-dark);}
+  .tag-pink{background:var(--pink-light);color:var(--pink-dark);}
+  .tag-yellow{background:#fff3cd;color:#b8860b;}
+
+  /* ===== Timeline Slider ===== */
+  .timeline-wrap{user-select:none;-webkit-user-select:none;}
+  .timeline-info-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .timeline-times{display:flex;align-items:center;gap:12px;font-size:15px;}
+  .timeline-times .time-val{font-size:26px;font-weight:800;color:var(--pink-dark);}
+  .timeline-times .time-sep{color:var(--text-lighter);}
+  .timeline-summary{font-size:13px;color:var(--text-light);padding:8px 14px;background:var(--mint-light);border-radius:20px;font-weight:500;display:flex;align-items:center;gap:6px;}
+  .timeline-bar-outer{position:relative;height:54px;background:var(--pink-light);border-radius:28px;overflow:hidden;cursor:pointer;border:2px solid var(--border);margin:8px 0;transition:background 0.3s ease;}
+  .timeline-eat-block{position:absolute;top:4px;height:calc(100% - 8px);background:linear-gradient(135deg,var(--mint),var(--mint-dark));border-radius:24px;cursor:grab;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;letter-spacing:1px;box-shadow:0 2px 8px rgba(107,196,161,0.4);transition:left 0.1s ease,width 0.35s ease;min-width:40px;z-index:2;}
+  .timeline-eat-block:active{cursor:grabbing;box-shadow:0 4px 16px rgba(107,196,161,0.6);}
+
+  /* Meal markers on timeline */
+  .timeline-meal-marker{position:absolute;top:6px;width:18px;height:18px;border-radius:50%;border:2px solid white;cursor:pointer;transition:var(--transition);z-index:3;box-shadow:0 1px 4px rgba(0,0,0,0.2);transform:translateX(-50%);}
+  .timeline-meal-marker:hover{transform:translateX(-50%) scale(1.3);z-index:5;}
+  .timeline-meal-marker.marker-breakfast{background:#ffb74d;}
+  .timeline-meal-marker.marker-lunch{background:#e87d9f;}
+  .timeline-meal-marker.marker-dinner{background:#9b7ec4;}
+  .timeline-meal-marker.marker-snack{background:#f0b586;}
+
+  /* Meal marker tooltip */
+  .meal-marker-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#4a3f47;color:white;padding:6px 12px;border-radius:8px;font-size:11px;white-space:nowrap;pointer-events:none;display:none;z-index:10;}
+  .meal-marker-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#4a3f47;}
+  .timeline-meal-marker:hover .meal-marker-tooltip{display:block;}
+
+  /* Meal detail popup (click on marker) */
+  .meal-popup{position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:500;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;}
+  .meal-popup.hidden{display:none;}
+  .meal-popup-inner{background:white;border-radius:var(--radius);padding:24px;max-width:360px;width:90%;box-shadow:0 8px 30px rgba(0,0,0,0.2);text-align:center;}
+  .meal-popup-inner h3{font-size:18px;margin-bottom:14px;color:var(--pink-dark);}
+  .meal-popup-inner .popup-macro{display:inline-block;padding:4px 12px;border-radius:12px;margin:4px;font-size:12px;font-weight:500;}
+  .meal-popup-inner .popup-macro.protein-pop{background:var(--pink-light);color:var(--pink-dark);}
+  .meal-popup-inner .popup-macro.veggie-pop{background:var(--mint-light);color:var(--mint-dark);}
+  .meal-popup-inner .popup-macro.carb-pop{background:var(--orange-light);color:#e67e22;}
+  .meal-popup-inner .btn-close-popup{margin-top:16px;padding:8px 24px;border:none;border-radius:50px;background:var(--pink-light);color:var(--pink-dark);font-weight:600;cursor:pointer;font-size:13px;transition:var(--transition);}
+  .meal-popup-inner .btn-close-popup:hover{background:var(--pink);color:white;}
+
+  .timeline-ticks{display:flex;justify-content:space-between;font-size:10px;color:var(--text-lighter);padding:0 2px;margin-top:2px;}
+  .timeline-ticks span{text-align:center;width:0;}
+  .timeline-minor-ticks{position:relative;height:10px;margin-bottom:-2px;}
+  .timeline-minor-ticks .mtick{position:absolute;top:0;height:6px;width:1px;background:var(--border);transform:translateX(-50%);}
+  .timeline-minor-ticks .mtick.hour{height:10px;width:1.5px;background:#d0c4ce;}
+  .timeline-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text-lighter);margin-top:6px;}
+
+  /* ===== Meal Planner ===== */
+  .meal-planner-intro{font-size:13px;color:var(--text-light);margin-bottom:16px;line-height:1.8;padding:12px 16px;background:#fdf8fa;border-radius:var(--radius-sm);}
+  .meal-card{background:white;border:2px solid var(--border);border-radius:var(--radius-sm);padding:18px;margin-bottom:14px;transition:var(--transition);position:relative;}
+  .meal-card:hover{border-color:var(--pink);}
+  .meal-card .meal-card-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+  .meal-card .meal-card-header .meal-label{font-weight:700;font-size:15px;}
+  .meal-period-select{padding:6px 12px;border:2px solid var(--border);border-radius:20px;font-size:13px;color:var(--text);background:white;cursor:pointer;font-family:inherit;outline:none;}
+  .meal-period-select:focus{border-color:var(--pink);}
+  .meal-time-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:var(--text-light);}
+  .meal-time-input{padding:4px 10px;border:2px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:white;outline:none;transition:var(--transition);}
+  .meal-time-input:focus{border-color:var(--pink);}
+  .meal-time-warn{color:#e67e22;font-size:11px;display:none;}
+  .meal-time-warn.show{display:inline;}
+  .meal-macro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  @media(max-width:640px){.meal-macro-grid{grid-template-columns:1fr;}}
+  .macro-group{background:#fcfcfd;border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);}
+  .macro-group .macro-label{font-weight:700;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .macro-group .macro-label.protein-l{color:#e87d9f;}
+  .macro-group .macro-label.veggie-l{color:#6bc4a1;}
+  .macro-group .macro-label.carb-l{color:#ffb74d;}
+  .macro-group .macro-recommend{font-size:11px;color:var(--text-lighter);margin-bottom:8px;background:#f5f0f3;padding:4px 8px;border-radius:8px;display:inline-block;}
+  .input-wrap{position:relative;display:flex;align-items:center;}
+  .input-wrap input{width:100%;padding:8px 32px 8px 10px;border:2px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:white;transition:var(--transition);}
+  .input-wrap input:focus{outline:none;border-color:var(--pink);}
+  .btn-reset-input{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;border:none;background:transparent;color:var(--text-lighter);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition);opacity:0;pointer-events:none;}
+  .input-wrap input:not(:placeholder-shown)~.btn-reset-input,.input-wrap.has-value .btn-reset-input{opacity:1;pointer-events:auto;}
+  .btn-reset-input:hover{background:#fce4ec;color:var(--pink-dark);}
+  .macro-group .food-suggestions{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;}
+  .macro-group .food-suggest-tag{padding:3px 8px;border-radius:12px;font-size:10px;background:#f8f0f4;color:var(--text-light);cursor:pointer;border:1px solid transparent;transition:var(--transition);}
+  .macro-group .food-suggest-tag:hover{border-color:var(--pink);background:var(--pink-light);}
+  .meal-card .btn-remove-meal{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;border:none;background:#fce4ec;color:var(--pink-dark);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition);z-index:2;}
+  .meal-card .btn-remove-meal:hover{background:#f8a4c8;color:white;}
+
+  .meal-summary-box{background:linear-gradient(135deg,#f0faf4,#fffbf5);border-radius:var(--radius-sm);padding:18px;border:1px dashed var(--mint-dark);margin-top:16px;}
+  .meal-summary-box h4{font-size:14px;margin-bottom:10px;color:var(--mint-dark);}
+  .meal-summary-box .summary-row{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--text);}
+  .meal-summary-box .summary-item{flex:1;min-width:100px;text-align:center;padding:8px;background:white;border-radius:8px;}
+  .meal-summary-box .summary-item .s-val{font-size:20px;font-weight:800;color:var(--pink-dark);}
+
+  /* ===== 7-Day Plan ===== */
+  .plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;}
+  .day-card{border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;transition:var(--transition);position:relative;}
+  .day-card:hover{border-color:var(--pink);}
+  .day-card.today{border-color:var(--pink-dark);background:#fffbfc;}
+  .day-card .day-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .day-card .day-name{font-weight:700;font-size:15px;}
+  .day-card .day-date{font-size:12px;color:var(--text-lighter);}
+  .day-card .meal-block{padding:8px 10px;border-radius:8px;margin:6px 0;font-size:12px;background:var(--mint-light);color:var(--mint-dark);font-weight:500;display:flex;align-items:center;gap:6px;}
+  .day-card .meal-block.fast{background:var(--pink-light);color:var(--pink-dark);}
+  .day-card .meal-custom{font-size:11px;color:var(--text-lighter);padding:4px 10px;display:flex;flex-direction:column;gap:3px;}
+  .day-card .meal-custom .custom-line{display:flex;align-items:center;gap:4px;}
+
+  /* ===== Check-in ===== */
+  .progress-section{margin-top:8px;}
+  .progress-bar-container{height:28px;background:#f0e6ee;border-radius:20px;overflow:hidden;margin:10px 0;position:relative;}
+  .progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--pink),var(--lavender-dark));border-radius:20px;transition:width 0.5s;display:flex;align-items:center;justify-content:flex-end;padding-right:12px;color:white;font-size:12px;font-weight:700;min-width:0;}
+  .progress-stats{display:flex;justify-content:space-around;margin-top:8px;}
+  .stat-item{text-align:center;}
+  .stat-value{font-size:24px;font-weight:800;color:var(--pink-dark);}
+  .stat-label{font-size:11px;color:var(--text-lighter);}
+  .checkin-days{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+  .checkin-day{width:42px;height:42px;border-radius:10px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--transition);font-size:13px;font-weight:600;background:white;user-select:none;}
+  .checkin-day:hover{border-color:var(--pink);}
+  .checkin-day.done{background:var(--mint);border-color:var(--mint-dark);color:white;}
+  .checkin-day.today-dot{border-color:var(--pink-dark);border-style:dashed;}
+
+  /* ===== Reminder ===== */
+  .reminder-status{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--radius-sm);background:#f8f0f4;margin-top:10px;font-size:13px;}
+  .reminder-status.active{background:var(--mint-light);color:var(--mint-dark);}
+  .reminder-toggle{padding:8px 20px;border:none;border-radius:50px;cursor:pointer;font-size:13px;font-weight:600;transition:var(--transition);}
+  .reminder-toggle.on{background:var(--mint);color:white;}
+  .reminder-toggle.off{background:#e0d6dc;color:var(--text-light);}
+
+  /* ===== Buttons ===== */
+  .btn{padding:12px 28px;border:none;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;transition:var(--transition);font-family:inherit;}
+  .btn-primary{background:linear-gradient(135deg,var(--pink),var(--lavender-dark));color:white;box-shadow:0 4px 14px rgba(200,120,160,0.25);}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(200,120,160,0.35);}
+  .btn-secondary{background:white;border:2px solid var(--border);color:var(--text);}
+  .btn-secondary:hover{border-color:var(--pink);}
+  .btn-sm{padding:6px 14px;font-size:12px;}
+  .btn-outline{padding:8px 18px;border:2px solid var(--mint-dark);border-radius:50px;background:white;color:var(--mint-dark);cursor:pointer;font-weight:600;font-size:13px;transition:var(--transition);font-family:inherit;}
+  .btn-outline:hover{background:var(--mint-light);}
+  .btn-widget{background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:white;border:none;padding:10px 22px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;transition:var(--transition);font-family:inherit;box-shadow:0 3px 10px rgba(108,92,231,0.3);}
+  .btn-widget:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(108,92,231,0.4);}
+
+  /* ===== Widget Panel (inline) ===== */
+  .widget-panel{background:white;border-radius:var(--radius);margin-bottom:20px;box-shadow:0 4px 20px rgba(108,92,231,0.15);border:2px solid #a29bfe;overflow:hidden;display:none;}
+  .widget-panel.show{display:block;}
+  .widget-header{background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:white;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:14px;}
+  .widget-header .widget-actions{display:flex;gap:6px;}
+  .widget-header .widget-btn{padding:4px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.5);background:rgba(255,255,255,0.15);color:white;font-size:11px;cursor:pointer;transition:var(--transition);}
+  .widget-header .widget-btn:hover{background:rgba(255,255,255,0.3);}
+  .widget-body{padding:16px;}
+  .widget-body .widget-timeline{position:relative;height:42px;background:var(--pink-light);border-radius:21px;margin:8px 0 6px;border:1px solid var(--border);}
+  .widget-body .widget-eat-block{position:absolute;top:3px;height:calc(100% - 6px);background:linear-gradient(135deg,var(--mint),var(--mint-dark));border-radius:18px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:11px;letter-spacing:1px;z-index:2;}
+  .widget-body .widget-meal-marker{position:absolute;top:5px;width:14px;height:14px;border-radius:50%;border:2px solid white;cursor:pointer;transition:transform 0.15s;z-index:3;transform:translateX(-50%);box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+  .widget-body .widget-meal-marker:hover{transform:translateX(-50%) scale(1.2);}
+  .widget-body .widget-meal-marker.marker-breakfast{background:#ffb74d;}
+  .widget-body .widget-meal-marker.marker-lunch{background:#e87d9f;}
+  .widget-body .widget-meal-marker.marker-dinner{background:#9b7ec4;}
+  .widget-body .widget-meal-marker.marker-snack{background:#f0b586;}
+  .widget-body .widget-ticks{display:flex;justify-content:space-between;font-size:9px;color:var(--text-lighter);padding:0 1px;}
+  .widget-body .widget-minor-ticks{position:relative;height:7px;margin-bottom:-1px;}
+  .widget-body .widget-minor-ticks .wmtick{position:absolute;top:0;height:4px;width:1px;background:var(--border);transform:translateX(-50%);}
+  .widget-body .widget-minor-ticks .wmtick.hour{height:7px;width:1px;background:#d0c4ce;}
+  .widget-body .widget-times{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:10px;}
+  .widget-body .widget-times .w-time{font-weight:800;color:var(--pink-dark);}
+  .widget-checkin-row{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+  .widget-checkin-row .btn-checkin-widget{padding:8px 20px;border-radius:50px;border:none;background:linear-gradient(135deg,var(--mint),var(--mint-dark));color:white;font-weight:600;font-size:13px;cursor:pointer;transition:var(--transition);}
+  .widget-checkin-row .btn-checkin-widget:hover{box-shadow:0 3px 10px rgba(107,196,161,0.4);}
+  .widget-checkin-row .btn-checkin-widget.done-today{background:var(--pink);}
+
+  /* ===== Widget Calendar ===== */
+  .widget-calendar{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+  .widget-calendar .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .widget-calendar .cal-title{font-weight:700;font-size:13px;color:var(--text);}
+  .widget-calendar .cal-nav{font-size:11px;padding:2px 10px;border-radius:12px;border:1px solid var(--border);background:white;cursor:pointer;transition:var(--transition);}
+  .widget-calendar .cal-nav:hover{border-color:var(--pink);background:var(--pink-light);}
+  .widget-calendar .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;}
+  .widget-calendar .cal-day-header{font-size:10px;color:var(--text-lighter);padding:4px 0;font-weight:600;}
+  .widget-calendar .cal-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;border-radius:6px;cursor:default;transition:var(--transition);position:relative;}
+  .widget-calendar .cal-cell.has-checkin{background:var(--mint);color:white;font-weight:700;}
+  .widget-calendar .cal-cell.today-cell{border:2px solid var(--pink-dark);}
+  .widget-calendar .cal-cell.empty{color:var(--text-lighter);}
+  .widget-calendar .cal-legend{display:flex;gap:16px;font-size:10px;color:var(--text-lighter);margin-top:8px;align-items:center;}
+  .widget-calendar .cal-legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  .widget-calendar .cal-legend-dot.done-dot{background:var(--mint);}
+
+  /* ===== Tip ===== */
+  .tip-banner{background:linear-gradient(135deg,#fff9db,#fff3cd);border:1px solid #f0d87c;border-radius:var(--radius-sm);padding:12px 16px;font-size:12px;color:#8b6914;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+  /* ===== Responsive ===== */
+  @media(max-width:640px){
+    .container{padding:12px;}
+    .fasting-grid{grid-template-columns:repeat(2,1fr);}
+    .plan-grid{grid-template-columns:1fr;}
+    .header h1{font-size:22px;}
+    .timeline-info-top{flex-direction:column;align-items:flex-start;}
+    .timeline-eat-block{font-size:10px;}
+    .meal-macro-grid{grid-template-columns:1fr;}
+    .widget-calendar .cal-grid{gap:1px;}
+    .widget-body .widget-timeline{height:36px;}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ===== HEADER ===== -->
+  <div class="header">
+    <span class="icon">⏳</span>
+    <h1>轻断食规划工具</h1>
+    <p>间歇性断食计划 · 灵活拖动进食窗口 · 桌面小组件 · 打卡追踪</p>
+  </div>
+
+  <!-- ===== DISCLAIMER MODAL ===== -->
+  <div class="modal-overlay" id="disclaimerModal">
+    <div class="disclaimer-modal">
+      <span class="warn-icon">⚠️</span>
+      <h2>重要免责声明</h2>
+      <div class="disclaimer-text">
+        <p>📌 <strong>请仔细阅读以下声明：</strong></p>
+        <ul>
+          <li>本工具提供的是<strong>通用间歇性断食参考信息</strong>，<strong>不构成医疗建议</strong></li>
+          <li>断食方案因人而异，每个人身体状况不同</li>
+          <li>食材营养数据为公开资料整理，仅供参考</li>
+        </ul>
+        <p style="margin-top:8px;">🚫 <strong>以下人群请先咨询医生：</strong></p>
+        <ul>
+          <li>怀孕、哺乳期或备孕中的女性</li>
+          <li>有基础疾病者（糖尿病、低血糖、高血压、心脏病等）</li>
+          <li>体重过轻（BMI &lt; 18.5）、有进食障碍史者</li>
+          <li>青少年、儿童、老年人</li>
+        </ul>
+        <p style="margin-top:8px;font-size:11px;color:#999;">
+          开发者不承担因使用本工具产生的任何健康相关责任。使用即表示您已理解并同意以上声明。
+        </p>
+      </div>
+      <button class="btn-disagree" onclick="handleDisagree()">我不同意，返回</button>
+      <button class="btn-agree" onclick="handleAgree()">我已阅读并同意，开始使用</button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 1: FASTING METHOD ===== -->
+  <div class="section" id="step1">
+    <div class="section-title"><span class="s-icon">⚡</span> 第 1 步：选择断食方式</div>
+    <div class="tip-banner">💡 点击任一方案查看详细介绍，选择最适合你的断食方式。不同方案对应不同长度的进食窗口。</div>
+    <div class="fasting-grid" id="fastingGrid"></div>
+    <div class="method-detail" id="methodDetail"></div>
+  </div>
+
+  <!-- ===== STEP 2: DRAGGABLE TIME WINDOW + MEAL MARKERS ===== -->
+  <div class="section" id="step2">
+    <div class="section-title"><span class="s-icon">🕐</span> 第 2 步：拖动设置进食窗口</div>
+    <div class="tip-banner">✋ 蓝色滑块长度 = 进食窗口时长（与第 1 步方案对应）。直接<strong>拖动蓝色滑块</strong>调整进食时间段。生成计划后，餐食时间点会以 <span style="color:#ffb74d;">🟡</span><span style="color:#e87d9f;">🔴</span><span style="color:#9b7ec4;">🟣</span> 小圆点标在滑块上，点击可看菜单。</div>
+    <div class="timeline-wrap" id="timelineWrap">
+      <div class="timeline-info-top">
+        <div class="timeline-times">
+          <span style="color:var(--text-light);">🍽️ 进食</span>
+          <span class="time-val" id="eatStartTime">09:00</span>
+          <span class="time-sep">~</span>
+          <span class="time-val" id="eatEndTime">17:00</span>
+        </div>
+        <div class="timeline-summary" id="timelineSummary">
+          💪 进食 <strong id="eatHoursDisplay">8</strong>h · ⏳ 断食 <strong id="fastHoursDisplay">16</strong>h
+        </div>
+      </div>
+      <div class="timeline-bar-outer" id="timelineBarOuter">
+        <div class="timeline-eat-block" id="eatBlock">🍽️ 进食窗口</div>
+        <div id="mealMarkers"></div>
+      </div>
+      <div class="timeline-minor-ticks" id="timelineMinorTicks"></div>
+      <div class="timeline-ticks">
+        <span>0:00</span><span>3:00</span><span>6:00</span><span>9:00</span>
+        <span>12:00</span><span>15:00</span><span>18:00</span><span>21:00</span><span>24:00</span>
+      </div>
+      <div class="timeline-labels"><span>🌙 断食期</span><span>🌙 断食期</span></div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3: CUSTOM MEAL PLANNER ===== -->
+  <div class="section" id="step3">
+    <div class="section-title"><span class="s-icon">📝</span> 第 3 步：自定义饮食计划</div>
+    <div class="meal-planner-intro">
+      <strong>🍱 让每一餐都均衡：</strong>为每餐设置<strong style="color:var(--pink-dark);">具体时间</strong>和食材。<br>
+      设置的时间点会自动显示在第二步的时间轴上。每个输入框右侧有 <strong style="color:var(--pink-dark);">✕ 重置按钮</strong>。
+    </div>
+    <!-- Add meal row at TOP -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <button class="btn-outline" onclick="addMealCard()">＋ 添加餐食</button>
+      <button class="btn btn-sm btn-secondary" onclick="useMealPreset('light')">🍳 轻食模板</button>
+      <button class="btn btn-sm btn-secondary" onclick="useMealPreset('balanced')">🥗 均衡模板</button>
+      <button class="btn btn-sm btn-secondary" onclick="useMealPreset('hearty')">🍖 丰盛模板</button>
+    </div>
+    <div id="mealCards">
+      <!-- Meal cards generated here -->
+    </div>
+    <!-- Daily Summary -->
+    <div class="meal-summary-box" id="mealSummaryBox" style="display:none;">
+      <h4>📊 今日营养估算</h4>
+      <div class="summary-row" id="mealSummaryRow"></div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 4: 7-DAY PLAN ===== -->
+  <div class="section" id="step4">
+    <div class="section-title"><span class="s-icon">📅</span> 第 4 步：生成 7 天周期计划</div>
+    <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="generatePlan()">✨ 生成我的 7 天断食计划</button>
+      <button class="btn btn-sm btn-secondary" onclick="resetPlan()">🔄 重置计划</button>
+      <button class="btn btn-sm btn-secondary" onclick="exportPlan()">📋 复制计划文本</button>
+    </div>
+    <div class="plan-grid" id="planGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text-lighter);">
+        🌟 设置好上方参数后，点击「生成我的 7 天断食计划」<br>
+        <span style="font-size:12px;">计划将包含每日进食窗口和你的自定义餐食安排</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 5: REMINDER & CHECK-IN ===== -->
+  <div class="section" id="step5">
+    <div class="section-title"><span class="s-icon">🔔</span> 第 5 步：进食提醒 & 打卡</div>
+    <div class="reminder-status" id="reminderStatus">
+      <span>🔕</span>
+      <span>浏览器进食提醒已关闭</span>
+      <button class="reminder-toggle off" onclick="toggleReminder()" style="margin-left:auto;">开启提醒</button>
+    </div>
+    <p style="font-size:11px;color:var(--text-lighter);margin-top:6px;">
+      开启后将在进食窗口开始/结束时推送浏览器通知（需要浏览器权限）
+    </p>
+    <div class="progress-section" style="margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <strong style="font-size:14px;">📋 今日打卡</strong>
+        <button class="btn btn-sm btn-primary" onclick="doCheckin()" id="checkinBtn">✅ 打卡今日断食</button>
+      </div>
+      <div class="progress-bar-container" style="margin-top:14px;">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%;">0/7</div>
+      </div>
+      <div class="progress-stats">
+        <div class="stat-item"><div class="stat-value" id="statDays">0</div><div class="stat-label">已完成天数</div></div>
+        <div class="stat-item"><div class="stat-value" id="statStreak">0</div><div class="stat-label">🔥 连续打卡</div></div>
+        <div class="stat-item"><div class="stat-value" id="statTotal">0</div><div class="stat-label">总打卡次数</div></div>
+      </div>
+      <div class="checkin-days" id="checkinDays" style="position:relative;"></div>
+    </div>
+  </div>
+
+  <!-- ===== DESKTOP WIDGET PANEL ===== -->
+  <div class="widget-panel" id="widgetPanel">
+    <div class="widget-header">
+      <span>🖥️ 桌面小组件 · 断食追踪</span>
+      <div class="widget-actions">
+        <button class="widget-btn" onclick="openWidgetPopup()" title="在新窗口打开">↗️ 弹出窗口</button>
+        <button class="widget-btn" onclick="closeWidgetPanel()">✕</button>
+      </div>
+    </div>
+    <div class="widget-body">
+      <div class="widget-times">
+        <span style="color:var(--text-light);font-size:11px;">🌙 断食</span>
+        <span class="w-time" id="wEatStart">09:00</span>
+        <span style="color:var(--text-lighter);">~</span>
+        <span class="w-time" id="wEatEnd">17:00</span>
+        <span style="color:var(--text-light);font-size:11px;">🌙 断食</span>
+      </div>
+      <div class="widget-timeline" id="widgetTimeline">
+        <div class="widget-eat-block" id="widgetEatBlock">🍽️</div>
+        <div id="widgetMealMarkers"></div>
+      </div>
+      <div class="widget-minor-ticks" id="widgetMinorTicks"></div>
+      <div class="widget-ticks">
+        <span>0</span><span>6</span><span>12</span><span>18</span><span>24</span>
+      </div>
+
+      <!-- Check-in -->
+      <div class="widget-checkin-row">
+        <button class="btn-checkin-widget" id="widgetCheckinBtn" onclick="doCheckin()">✅ 今日打卡</button>
+        <span style="font-size:11px;color:var(--text-lighter);" id="widgetCheckinHint">还没打卡哦~</span>
+      </div>
+
+      <!-- Calendar -->
+      <div class="widget-calendar" id="widgetCalendar"></div>
+    </div>
+  </div>
+
+</div><!-- /.container -->
+
+<!-- Meal detail popup (click marker) -->
+<div class="meal-popup hidden" id="mealPopup">
+  <div class="meal-popup-inner" id="mealPopupInner"></div>
+</div>
+
+<script>
+// ============ FASTING METHODS ============
+const FASTING_METHODS = [
+  {id:'14-10',name:'14:10',label:'新手入门',eatH:10,fastH:14,icon:'🌱',suitable:'断食新手、初次尝试',
+   desc:'<span class="tag tag-green">新手友好</span> <span class="tag tag-pink">入门首选</span><br><br>🔹 <strong>14小时断食 + 10小时进食</strong><br>🔹 最容易坚持的入门方案，接近正常饮食节奏<br>🔹 建议先从这个方案开始，逐步延长断食时间<br><br>👥 <strong>适合人群：</strong>断食新手、想尝试但怕太难坚持的你'},
+  {id:'16-8',name:'16:8',label:'经典方案',eatH:8,fastH:16,icon:'⭐',suitable:'大多数健康成年人',
+   desc:'<span class="tag tag-green">最受欢迎</span> <span class="tag tag-yellow">经典推荐</span><br><br>🔹 <strong>16小时断食 + 8小时进食</strong><br>🔹 最常见且研究最多的方案<br>🔹 每天跳过一顿（早餐或晚餐），大部分人可适应<br><br>👥 <strong>适合人群：</strong>日常上班族、健康成年人、有明显减重目标者'},
+  {id:'18-6',name:'18:6',label:'进阶挑战',eatH:6,fastH:18,icon:'🔥',suitable:'有断食经验者',
+   desc:'<span class="tag tag-yellow">中级难度</span> <span class="tag tag-pink">加速效果</span><br><br>🔹 <strong>18小时断食 + 6小时进食</strong><br>🔹 建议已有 16:8 经验后再尝试<br>🔹 身体进入深度脂肪燃烧状态时间更长<br><br>👥 <strong>适合人群：</strong>有断食经验者、想要更快见效的进阶玩家'},
+  {id:'20-4',name:'20:4',label:'战士饮食',eatH:4,fastH:20,icon:'⚔️',suitable:'经验丰富的断食者',
+   desc:'<span class="tag tag-pink">高强度</span> <span class="tag tag-yellow">需谨慎</span><br><br>🔹 <strong>20小时断食 + 4小时进食</strong>（又名「战士饮食法」）<br>🔹 必须在 4 小时内摄入全天所需营养，注意营养均衡<br><br>👥 <strong>适合人群：</strong>经验丰富的断食者、有营养知识基础者'},
+  {id:'5-2',name:'5:2',label:'轻断食法',eatH:24,fastH:0,icon:'📊',suitable:'不想每天限时的人群',
+   desc:'<span class="tag tag-green">灵活模式</span> <span class="tag tag-pink">隔日执行</span><br><br>🔹 <strong>5天正常饮食 + 2天低热量（500-600大卡）</strong><br>🔹 非连续的两天低热量，其余5天正常吃<br>🔹 例：周一和周四只摄入 500 大卡<br><br>👥 <strong>适合人群：</strong>不想每天限时、喜欢灵活性、社交活动多的人'},
+  {id:'omad',name:'OMAD',label:'一日一餐',eatH:2,fastH:22,icon:'🍽️',suitable:'资深断食实践者',
+   desc:'<span class="tag tag-pink">极限模式</span> <span class="tag tag-yellow">仅限老手</span><br><br>🔹 <strong>一天只吃一顿饭（One Meal A Day）</strong><br>🔹 每天仅 1-2 小时进食窗口<br>🔹 一餐需包含全天所需蛋白质/纤维/微量元素<br>🔹 ⚠️ 不建议初学者尝试<br><br>👥 <strong>适合人群：</strong>资深断食实践者、有营养师指导者'}
+];
+
+const FASTING_INTRO_OVERWRITE = {
+  '5-2':'<span class="tag tag-green">灵活模式</span> <span class="tag tag-pink">隔日执行</span><br><br>🔹 <strong>5天正常饮食 + 2天低热量（500-600大卡）</strong><br>🔹 非连续两天低热量，其余5天正常吃<br>🔹 不需要固定进食窗口，按自己节奏安排<br><br>👥 <strong>适合人群：</strong>不想每天限时、喜欢灵活性的人',
+  'omad':'<span class="tag tag-pink">极限模式</span> <span class="tag tag-yellow">仅限老手</span><br><br>🔹 <strong>一天只吃一顿饭（One Meal A Day）</strong><br>🔹 将全天营养集中在 2 小时窗口内摄入<br>🔹 ⚠️ 不建议初学者尝试<br><br>👥 <strong>适合人群：</strong>资深断食实践者、有营养师指导者'
+};
+
+// ============ CHINESE FOOD DATABASE ============
+const CHINESE_FOODS = {
+  protein:[
+    {name:'鸡蛋',emoji:'🥚',macros:'蛋白质 13g | 脂肪 9g | 碳水 1.1g',kcal:155},
+    {name:'鸡胸肉',emoji:'🍗',macros:'蛋白质 31g | 脂肪 3.6g',kcal:133},
+    {name:'猪瘦肉',emoji:'🥩',macros:'蛋白质 20g | 脂肪 6.5g',kcal:143},
+    {name:'牛腱子',emoji:'🐂',macros:'蛋白质 22g | 脂肪 8g',kcal:125},
+    {name:'虾仁',emoji:'🦐',macros:'蛋白质 18g | 脂肪 0.8g',kcal:87},
+    {name:'草鱼/鲈鱼',emoji:'🐟',macros:'蛋白质 17g | 脂肪 5.2g',kcal:113},
+    {name:'巴沙鱼',emoji:'🐠',macros:'蛋白质 15g | 脂肪 1.8g',kcal:82},
+    {name:'豆腐',emoji:'🧈',macros:'蛋白质 8g | 脂肪 4.8g',kcal:76},
+    {name:'豆浆',emoji:'🥛',macros:'蛋白质 1.8g /100ml',kcal:31},
+    {name:'酸奶',emoji:'🍶',macros:'蛋白质 2.5g /100ml',kcal:72},
+    {name:'鸭肉',emoji:'🦆',macros:'蛋白质 15g | 脂肪 20g',kcal:240},
+    {name:'鸡腿肉',emoji:'🍖',macros:'蛋白质 19g | 脂肪 13g',kcal:181},
+    {name:'豆腐干',emoji:'🫘',macros:'蛋白质 16g | 脂肪 8g',kcal:140},
+    {name:'牛奶',emoji:'🥛',macros:'蛋白质 3g /100ml',kcal:54}
+  ],
+  veggie:[
+    {name:'西兰花',emoji:'🥦',macros:'纤维 2.6g | 维C丰富',kcal:34},
+    {name:'菠菜',emoji:'🥬',macros:'纤维 2.2g | 铁丰富',kcal:23},
+    {name:'大白菜',emoji:'🥬',macros:'纤维 1g | 低热量',kcal:13},
+    {name:'番茄',emoji:'🍅',macros:'纤维 1.2g | 茄红素',kcal:18},
+    {name:'黄瓜',emoji:'🥒',macros:'纤维 0.5g | 水分足',kcal:16},
+    {name:'胡萝卜',emoji:'🥕',macros:'纤维 2.8g | β胡萝卜素',kcal:41},
+    {name:'芹菜',emoji:'🌿',macros:'纤维 1.6g | 钾丰富',kcal:16},
+    {name:'青椒',emoji:'🫑',macros:'纤维 1.7g | 维C极高',kcal:22},
+    {name:'生菜',emoji:'🥗',macros:'纤维 1.3g | 极低热量',kcal:15},
+    {name:'香菇',emoji:'🍄',macros:'纤维 2.5g | 多糖体',kcal:34},
+    {name:'冬瓜',emoji:'🍈',macros:'纤维 0.7g | 极低热量',kcal:11},
+    {name:'油麦菜',emoji:'🥬',macros:'纤维 1.5g | 清脆',kcal:15}
+  ],
+  carb:[
+    {name:'米饭',emoji:'🍚',macros:'碳水 28g | GI较高',kcal:116},
+    {name:'馒头',emoji:'🥖',macros:'碳水 44g | 北方主食',kcal:223},
+    {name:'面条(煮)',emoji:'🍜',macros:'碳水 25g | 做法多样',kcal:110},
+    {name:'红薯',emoji:'🍠',macros:'碳水 24g | 低GI',kcal:99},
+    {name:'玉米',emoji:'🌽',macros:'碳水 23g | 叶黄素',kcal:112},
+    {name:'燕麦粥',emoji:'🥣',macros:'碳水 12g | 饱腹感强',kcal:71},
+    {name:'土豆',emoji:'🥔',macros:'碳水 17g | 维C丰富',kcal:76},
+    {name:'全麦面包',emoji:'🍞',macros:'碳水 41g | 低GI',kcal:246},
+    {name:'糙米饭',emoji:'🍚',macros:'碳水 26g | 营养保留',kcal:123},
+    {name:'小米粥',emoji:'🥣',macros:'碳水 8g | 养胃',kcal:46},
+    {name:'荞麦面',emoji:'🍝',macros:'碳水 20g | 低GI',kcal:100},
+    {name:'山药',emoji:'🥖',macros:'碳水 31g | 健脾',kcal:135}
+  ]
+};
+
+// ============ MEAL RECOMMENDATIONS ============
+function getMealRecommendations() {
+  const m = FASTING_METHODS.find(f=>f.id===state.fasting);
+  if(!m) return {protein:'20-30g (~100-150g肉/蛋/豆)',veggie:'100-200g (2-3拳)',carb:'50-80g (~150-250g熟饭)',meals:2};
+  if(m.id==='5-2') return {protein:'20-30g (~100-150g)',veggie:'150-250g (3-4拳)',carb:'50-80g (~150-250g)',meals:3};
+  if(m.id==='omad') return {protein:'50-70g (~250-350g)',veggie:'300-400g (5-6拳)',carb:'100-150g (~300-400g)',meals:1};
+  if(m.eatH>=8) return {protein:'20-30g (~100-150g)',veggie:'100-200g (2-3拳)',carb:'50-80g (~150-250g)',meals:2};
+  if(m.eatH>=6) return {protein:'25-35g (~120-180g)',veggie:'150-250g (3-4拳)',carb:'60-90g (~180-280g)',meals:2};
+  if(m.eatH>=4) return {protein:'30-45g (~150-220g)',veggie:'200-300g (3-5拳)',carb:'80-120g (~250-350g)',meals:2};
+  return {protein:'40-60g (~200-300g)',veggie:'250-350g (4-6拳)',carb:'100-150g (~300-400g)',meals:1};
+}
+
+// ============ MEAL PRESETS ============
+const MEAL_PRESETS = {
+  light:[
+    {period:'breakfast',protein:'鸡蛋2个',veggie:'小番茄+生菜',carb:'全麦面包1片'},
+    {period:'lunch',protein:'鸡胸肉',veggie:'西兰花+胡萝卜',carb:'糙米饭半碗'}
+  ],
+  balanced:[
+    {period:'breakfast',protein:'牛奶+鸡蛋',veggie:'黄瓜',carb:'燕麦粥'},
+    {period:'lunch',protein:'牛腱子',veggie:'菠菜+香菇',carb:'米饭'},
+    {period:'dinner',protein:'虾仁+豆腐',veggie:'西兰花+番茄',carb:'红薯半根'}
+  ],
+  hearty:[
+    {period:'breakfast',protein:'鸡蛋+酸奶',veggie:'大白菜',carb:'馒头或面条'},
+    {period:'lunch',protein:'猪瘦肉',veggie:'青椒+胡萝卜',carb:'米饭'},
+    {period:'dinner',protein:'草鱼/鲈鱼',veggie:'油麦菜+冬瓜',carb:'米饭或土豆'}
+  ]
+};
+
+// ============ STATE ============
+let state = {
+  agreed:false,
+  fasting:null,
+  eatStartMinutes:540,
+  meals:[],
+  planGenerated:false,
+  reminderOn:false,
+  checkins:{},
+  totalCheckins:0,
+  calendarMonth:null // {year, month} for widget calendar
+};
+
+// ============ INIT ============
+document.addEventListener('DOMContentLoaded',()=>{
+  loadState();
+  if(!state.agreed){document.getElementById('disclaimerModal').classList.remove('hidden');}
+  renderFastingCards();
+  renderMealCards();
+  renderCheckinDays();
+  updateStats();
+
+  if(state.fasting){
+    const card=document.querySelector(`[data-fid="${state.fasting}"]`);
+    if(card)card.classList.add('selected');
+    showMethodDetail(state.fasting);
+    updateTimeline();
+  }
+  if(state.planGenerated)renderPlan();
+  if(state.reminderOn)scheduleReminders();
+  updateReminderUI();
+  updateWidgetPanel();
+  renderWidgetCalendar();
+});
+
+// ============ DISCLAIMER ============
+function handleAgree(){state.agreed=true;document.getElementById('disclaimerModal').classList.add('hidden');saveState();}
+function handleDisagree(){
+  const modal=document.getElementById('disclaimerModal');
+  modal.querySelector('h2').textContent='感谢你的关注';
+  modal.querySelector('.disclaimer-text').innerHTML='<p style="text-align:center;padding:20px;">为了你的健康安全，使用前需要确认免责声明。如果你改变主意，可以随时刷新页面重新查看。</p>';
+  modal.querySelector('.btn-disagree').style.display='none';
+  modal.querySelector('.btn-agree').textContent='好的，我知道了';
+  modal.querySelector('.btn-agree').onclick=()=>{modal.classList.add('hidden');};
+}
+
+// ============ FASTING CARDS ============
+function renderFastingCards(){
+  document.getElementById('fastingGrid').innerHTML=FASTING_METHODS.map(m=>`
+    <div class="fasting-card ${state.fasting===m.id?'selected':''}" data-fid="${m.id}" onclick="selectFasting('${m.id}')">
+      <span class="check-mark">✓</span>
+      <span style="font-size:28px;">${m.icon}</span>
+      <div class="method-name">${m.name}</div>
+      <div class="method-label">${m.label}</div>
+      <span class="suitable-badge">${m.suitable}</span>
+    </div>
+  `).join('');
+}
+function selectFasting(id){
+  state.fasting=id;
+  document.querySelectorAll('.fasting-card').forEach(c=>c.classList.remove('selected'));
+  const card=document.querySelector(`[data-fid="${id}"]`);
+  if(card)card.classList.add('selected');
+  showMethodDetail(id);
+  updateTimeline();
+  // Auto-assign default times based on eating window
+  autoAssignMealTimes();
+  renderMealCards();
+  updateWidgetPanel();
+  if(state.planGenerated)generatePlan();
+  saveState();
+}
+function showMethodDetail(id){
+  const m=FASTING_METHODS.find(f=>f.id===id);
+  const detail=document.getElementById('methodDetail');
+  if(m){
+    detail.innerHTML=`<strong style="font-size:15px;color:var(--pink-dark);">${m.icon} ${m.name} —— ${m.label}</strong>${FASTING_INTRO_OVERWRITE[id] || m.desc}`;
+    detail.classList.add('show');
+  }else{detail.classList.remove('show');}
+}
+
+// Auto-assign default meal times based on eating window
+function autoAssignMealTimes(){
+  const m=FASTING_METHODS.find(f=>f.id===state.fasting);
+  if(!m||m.eatH<=0||m.eatH>=24){return;}
+  const startM=state.eatStartMinutes;
+  const eatWindow=m.eatH*60;
+  state.meals.forEach((meal,i)=>{
+    if(!meal.time||meal.time===undefined){
+      const n=state.meals.length;
+      const offset=Math.round(eatWindow*(i+1)/(n+1));
+      meal.time=startM+offset;
+    }
+  });
+}
+
+// ============ TIMELINE SLIDER + MEAL MARKERS ============
+function updateTimeline(){
+  const m=FASTING_METHODS.find(f=>f.id===state.fasting);
+  const block=document.getElementById('eatBlock');
+  const outer=document.getElementById('timelineBarOuter');
+  const eatStartEl=document.getElementById('eatStartTime');
+  const eatEndEl=document.getElementById('eatEndTime');
+  const eatHoursEl=document.getElementById('eatHoursDisplay');
+  const fastHoursEl=document.getElementById('fastHoursDisplay');
+  const summaryEl=document.getElementById('timelineSummary');
+  if(!block||!outer||!eatStartEl||!eatEndEl||!eatHoursEl||!fastHoursEl||!summaryEl)return;
+
+  if(!m||m.eatH<=0||m.eatH>=24){
+    block.style.display='none';
+    eatStartEl.textContent='--:--';
+    eatEndEl.textContent='--:--';
+    eatHoursEl.textContent='-';
+    fastHoursEl.textContent='-';
+    if(m&&m.id==='5-2'){
+      summaryEl.innerHTML='📊 弹性安排 · 5天正常 + 2天低热量';
+    }
+    if(m&&m.id==='omad'){
+      block.style.display='flex';
+      const pct=100*(2/24);
+      block.style.width=pct+'%';
+      const baseMinutes=state.eatStartMinutes||720;
+      const leftPct=100*(baseMinutes/1440);
+      block.style.left=Math.min(leftPct,100-pct)+'%';
+      eatStartEl.textContent=minutesToTime(baseMinutes);
+      eatEndEl.textContent=minutesToTime(Math.min(baseMinutes+120,1440));
+      eatHoursEl.textContent='2';
+      fastHoursEl.textContent='22';
+      summaryEl.innerHTML='⚠️ <strong>极限模式</strong> · 进食 <strong>2</strong>h · 断食 <strong>22</strong>h';
+      renderMealMarkers();
+    }
+    return;
+  }
+
+  block.style.display='flex';
+  const eatPct=100*(m.eatH/24);
+  block.style.width=eatPct+'%';
+
+  let baseM=state.eatStartMinutes;
+  const eatMins=m.eatH*60;
+  if(baseM+eatMins>1440)baseM=1440-eatMins;
+  if(baseM<0)baseM=0;
+  state.eatStartMinutes=baseM;
+
+  const leftPct=100*(baseM/1440);
+  block.style.left=leftPct+'%';
+
+  const endM=baseM+eatMins;
+  eatStartEl.textContent=minutesToTime(baseM);
+  eatEndEl.textContent=minutesToTime(endM);
+  eatHoursEl.textContent=m.eatH;
+  fastHoursEl.textContent=m.fastH;
+  summaryEl.innerHTML='💪 进食 <strong>'+m.eatH+'</strong>h · ⏳ 断食 <strong>'+m.fastH+'</strong>h';
+
+  renderMealMarkers();
+  renderMinorTicks();
+}
+
+// Render minor hourly tick marks on timeline
+function renderMinorTicks(){
+  const container=document.getElementById('timelineMinorTicks');
+  if(!container)return;
+  let html='';
+  // 24 hours, each hour = 100/24 ≈ 4.1667%, half hour = ~2.0833%
+  for(let h=0;h<=24;h++){
+    // Full hour tick (taller)
+    html+=`<span class="mtick hour" style="left:${(h/24)*100}%;"></span>`;
+    if(h<24){
+      // Half hour tick (shorter)
+      html+=`<span class="mtick" style="left:${((h+0.5)/24)*100}%;"></span>`;
+    }
+  }
+  container.innerHTML=html;
+}
+
+// Render meal time markers on timeline (only after plan is generated)
+function renderMealMarkers(){
+  const container=document.getElementById('mealMarkers');
+  if(!container)return;
+  if(!state.planGenerated){container.innerHTML='';return;}
+  const m=FASTING_METHODS.find(f=>f.id===state.fasting);
+  if(!m||m.eatH<=0||m.eatH>=24){container.innerHTML='';return;}
+
+  const eatStart=state.eatStartMinutes;
+  const eatWindow=m.eatH*60;
+
+  const validMeals=state.meals.filter(meal=>{
+    if(!meal.time&&meal.time!==0)return false;
+    return true;
+  });
+
+  container.innerHTML=validMeals.map((meal,i)=>{
+    const t=meal.time;
+    if(t===undefined||t===null)return '';
+    const minutesFromStart=t-eatStart;
+    // Position within eat block: 0% = eatStart, 100% = eatEnd
+    const posPct=Math.max(0,Math.min(100,(minutesFromStart/eatWindow)*100));
+    const leftPct=parseFloat(document.getElementById('eatBlock').style.left)||0;
+    const totalPct=leftPct+posPct*(parseFloat(document.getElementById('eatBlock').style.width)||0)/100;
+    const cls='marker-'+meal.period;
+    const mealInfo=buildMealInfo(meal);
+    return `<div class="timeline-meal-marker ${cls}" style="left:${totalPct}%;" onclick="event.stopPropagation();showMealPopup(${i})" title="${mealInfo}">
+      <span class="meal-marker-tooltip">${mealInfo}</span>
+    </div>`;
+  }).join('');
+}
+
+function buildMealInfo(meal){
+  const periodLabels={breakfast:'🌅早',lunch:'☀️午',dinner:'🌙晚',snack:'🍌加'};
+  const label=periodLabels[meal.period]||'餐';
+  const t=meal.time!==undefined?minutesToTime(meal.time):'--:--';
+  const parts=[];
+  if(meal.protein)parts.push('🥩'+meal.protein);
+  if(meal.veggie)parts.push('🥬'+meal.veggie);
+  if(meal.carb)parts.push('🍚'+meal.carb);
+  const food=parts.length>0?parts.join(' ') : '待定';
+  return label+' '+t+' · '+food;
+}
+
+// Meal detail popup
+function showMealPopup(idx){
+  const meal=state.meals[idx];
+  if(!meal)return;
+  const periodLabels={breakfast:'🌅 早餐',lunch:'☀️ 午餐',dinner:'🌙 晚餐',snack:'🍌 加餐'};
+  const label=periodLabels[meal.period]||'餐食';
+  const t=meal.time!==undefined?minutesToTime(meal.time):'--:--';
+  const popup=document.getElementById('mealPopup');
+  const inner=document.getElementById('mealPopupInner');
+  inner.innerHTML=`
+    <h3>${label} · ${t}</h3>
+    ${meal.protein?`<span class="popup-macro protein-pop">🥩 ${meal.protein}</span>`:''}
+    ${meal.veggie?`<span class="popup-macro veggie-pop">🥬 ${meal.veggie}</span>`:''}
+    ${meal.carb?`<span class="popup-macro carb-pop">🍚 ${meal.carb}</span>`:''}
+    ${!meal.protein&&!meal.veggie&&!meal.carb?'<p style="color:var(--text-lighter);font-size:14px;">尚未填写食材详情 🍽️</p>':''}
+    <br>
+    <button class="btn-close-popup" onclick="hideMealPopup()">关闭</button>
+  `;
+  popup.classList.remove('hidden');
+}
+function hideMealPopup(){
+  document.getElementById('mealPopup').classList.add('hidden');
+}
+// Close popup on overlay click
+document.getElementById('mealPopup').addEventListener('click',function(e){
+  if(e.target===this)hideMealPopup();
+});
+
+// Drag logic
+(function(){
+  let dragging=false,startX=0,startLeftPct=0;
+  const block=document.getElementById('eatBlock');
+  const outer=document.getElementById('timelineBarOuter');
+
+  function onStart(e){
+    const m=FASTING_METHODS.find(f=>f.id===state.fasting);
+    if(!m||m.eatH<=0||m.eatH>=24)return;
+    e.preventDefault();
+    dragging=true;
+    startX=e.touches?e.touches[0].clientX:e.clientX;
+    startLeftPct=parseFloat(block.style.left)||0;
+    block.style.transition='left 0.08s ease';
+  }
+
+  function onMove(e){
+    if(!dragging)return;
+    e.preventDefault();
+    const m=FASTING_METHODS.find(f=>f.id===state.fasting);
+    if(!m)return;
+    const rect=outer.getBoundingClientRect();
+    const dx=(e.touches?e.touches[0].clientX:e.clientX)-startX;
+    const dpct=(dx/rect.width)*100;
+    let newPct=startLeftPct+dpct;
+    const eatPct=100*(m.eatH/24);
+    newPct=Math.max(0,Math.min(100-eatPct,newPct));
+    const snapPct=(30/1440)*100;
+    newPct=Math.round(newPct/snapPct)*snapPct;
+    block.style.left=newPct+'%';
+
+    const mins=Math.round((newPct/100)*1440);
+    state.eatStartMinutes=mins;
+    const endM=mins+m.eatH*60;
+    document.getElementById('eatStartTime').textContent=minutesToTime(mins);
+    document.getElementById('eatEndTime').textContent=minutesToTime(endM);
+    renderMealMarkers();
+  }
+
+  function onEnd(){
+    if(!dragging)return;
+    dragging=false;
+    block.style.transition='left 0.1s ease, width 0.35s ease';
+    autoAssignMealTimes();
+    renderMealMarkers();
+    updateWidgetPanel();
+    saveState();
+    if(state.reminderOn){clearReminders();scheduleReminders();}
+  }
+
+  block.addEventListener('mousedown',onStart);
+  block.addEventListener('touchstart',onStart,{passive:false});
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('mouseup',onEnd);
+  document.addEventListener('touchend',onEnd);
+
+  outer.addEventListener('click',function(e){
+    if(e.target.closest('.timeline-meal-marker'))return; // skip marker clicks
+    if(e.target===block||block.contains(e.target))return;
+    const m=FASTING_METHODS.find(f=>f.id===state.fasting);
+    if(!m||m.eatH<=0||m.eatH>=24)return;
+    const rect=outer.getBoundingClientRect();
+    const x=e.clientX-rect.left;
+    let pct=(x/rect.width)*100;
+    const eatPct=100*(m.eatH/24);
+    pct=Math.max(0,Math.min(100-eatPct,pct-eatPct/2));
+    const snapPct=(30/1440)*100;
+    pct=Math.round(pct/snapPct)*snapPct;
+    pct=Math.max(0,Math.min(100-eatPct,pct));
+    state.eatStartMinutes=Math.round((pct/100)*1440);
+    autoAssignMealTimes();
+    updateTimeline();
+    updateWidgetPanel();
+    saveState();
+    if(state.reminderOn){clearReminders();scheduleReminders();}
+  });
+})();
+
+function minutesToTime(mins){
+  const h=Math.floor(mins/60)%24;
+  const m=mins%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+}
+
+// ============ CUSTOM MEAL PLANNER ============
+function addMealCard(initData){
+  const init=initData||{period:'lunch',protein:'',veggie:'',carb:''};
+  // Auto-assign time based on eating window and meal position
+  if(!init.time){
+    const m=FASTING_METHODS.find(f=>f.id===state.fasting);
+    if(m&&m.eatH>0&&m.eatH<24){
+      const n=state.meals.length+1;
+      const startM=state.eatStartMinutes;
+      const eatWindow=m.eatH*60;
+      init.time=startM+Math.round(eatWindow*(n)/(n+1));
+    }else{
+      init.time=720; // default noon
+    }
+  }
+  state.meals.push({...init});
+  renderMealCards();
+  renderMealMarkers();
+  updateTimeline();
+  updateWidgetPanel();
+  saveState();
+}
+
+function removeMealCard(idx){
+  state.meals.splice(idx,1);
+  renderMealCards();
+  renderMealMarkers();
+  updateTimeline();
+  updateWidgetPanel();
+  saveState();
+}
+
+function updateMealField(idx,field,value){
+  state.meals[idx][field]=value;
+  updateMealSummary();
+  renderMealMarkers();
+  updateWidgetPanel();
+  saveState();
+}
+
+function updateMealTime(idx,value){
+  if(!value){state.meals[idx].time=undefined;renderMealCards();renderMealMarkers();updateWidgetPanel();saveState();return;}
+  const parts=value.split(':');
+  const mins=parseInt(parts[0])*60+parseInt(parts[1]);
+  state.meals[idx].time=mins;
+
+  // Show warning if time is outside eating window
+  const m=FASTING_METHODS.find(f=>f.id===state.fasting);
+  if(m&&m.eatH>0&&m.eatH<24){
+    const start=state.eatStartMinutes;
+    const end=start+m.eatH*60;
+    if(mins<start||mins>end){
+      const warn=document.querySelector(`#meal-${idx} .meal-time-warn`);
+      if(warn)warn.classList.add('show');
+    }
+  }
+  renderMealMarkers();
+  updateWidgetPanel();
+  saveState();
+}
+
+function resetMealField(idx,field){
+  state.meals[idx][field]='';
+  renderMealCards();
+  updateMealSummary();
+  renderMealMarkers();
+  updateWidgetPanel();
+  saveState();
+}
+
+function renderMealCards(){
+  const container=document.getElementById('mealCards');
+  const rec=getMealRecommendations();
+  if(state.meals.length===0){
+    container.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-lighter);">点击上方「添加餐食」按钮开始规划，让每一天都吃得均衡 🍱</div>`;
+    document.getElementById('mealSummaryBox').style.display='none';
+    return;
+  }
+  const periodLabels={breakfast:'🌅 早餐',lunch:'☀️ 午餐',dinner:'🌙 晚餐',snack:'🍌 加餐'};
+  const proteinFoods=CHINESE_FOODS.protein.map(f=>f.name);
+  const veggieFoods=CHINESE_FOODS.veggie.map(f=>f.name);
+  const carbFoods=CHINESE_FOODS.carb.map(f=>f.name);
+
+  // Check time bounds for warning
+  const m=FASTING_METHODS.find(f=>f.id===state.fasting);
+  let timeBounds='';
+  if(m&&m.eatH>0&&m.eatH<24){
+    const s=minutesToTime(state.eatStartMinutes);
+    const e=minutesToTime(state.eatStartMinutes+m.eatH*60);
+    timeBounds=` (进食窗口: ${s}~${e})`;
+  }
+
+  container.innerHTML=state.meals.map((meal,idx)=>{
+    const t=meal.time!==undefined?minutesToTime(meal.time):'';
+    // Check if time within window
+    let timeOk=true;
+    if(m&&m.eatH>0&&m.eatH<24&&meal.time!==undefined&&meal.time!==null){
+      const start=state.eatStartMinutes;
+      const end=start+m.eatH*60;
+      timeOk=meal.time>=start&&meal.time<=end;
+    }
+    return `<div class="meal-card" id="meal-${idx}">
+      <button class="btn-remove-meal" onclick="removeMealCard(${idx})" title="删除此餐">✕</button>
+      <div class="meal-card-header">
+        <span class="meal-label">🥘 餐食 #${idx+1}</span>
+        <select class="meal-period-select" onchange="updateMealField(${idx},'period',this.value);renderMealMarkers();">
+          ${Object.entries(periodLabels).map(([k,v])=>`<option value="${k}" ${meal.period===k?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="meal-time-row">
+        <span>⏰ 进食时间：</span>
+        <input type="time" class="meal-time-input" value="${t}" onchange="updateMealTime(${idx},this.value)" style="min-width:120px;">
+        <span class="meal-time-warn ${timeOk?'':'show'}">⚠️ 时间超出进食窗口${timeBounds}</span>
+        ${t?`<span style="font-size:11px;color:var(--text-light);">→ 显示在时间轴上</span>`:''}
+      </div>
+      <div class="meal-macro-grid">
+        <div class="macro-group">
+          <div class="macro-label protein-l">🥩 蛋白质</div>
+          <div class="macro-recommend">📏 建议：${rec.protein}</div>
+          <div class="input-wrap ${meal.protein?'has-value':''}">
+            <input type="text" placeholder="例如：鸡胸肉 150g" value="${meal.protein}" oninput="updateMealField(${idx},'protein',this.value);this.closest('.input-wrap').classList.toggle('has-value',!!this.value)">
+            <button class="btn-reset-input" onclick="event.stopPropagation();resetMealField(${idx},'protein')" title="清空蛋白质">✕</button>
+          </div>
+          <div class="food-suggestions">${proteinFoods.slice(0,6).map(n=>`<span class="food-suggest-tag" onclick="quickFill(${idx},'protein','${n}',this)">${n}</span>`).join('')}</div>
+        </div>
+        <div class="macro-group">
+          <div class="macro-label veggie-l">🥬 蔬菜</div>
+          <div class="macro-recommend">📏 建议：${rec.veggie}</div>
+          <div class="input-wrap ${meal.veggie?'has-value':''}">
+            <input type="text" placeholder="例如：西兰花 200g" value="${meal.veggie}" oninput="updateMealField(${idx},'veggie',this.value);this.closest('.input-wrap').classList.toggle('has-value',!!this.value)">
+            <button class="btn-reset-input" onclick="event.stopPropagation();resetMealField(${idx},'veggie')" title="清空蔬菜">✕</button>
+          </div>
+          <div class="food-suggestions">${veggieFoods.slice(0,6).map(n=>`<span class="food-suggest-tag" onclick="quickFill(${idx},'veggie','${n}',this)">${n}</span>`).join('')}</div>
+        </div>
+        <div class="macro-group">
+          <div class="macro-label carb-l">🍚 碳水</div>
+          <div class="macro-recommend">📏 建议：${rec.carb}</div>
+          <div class="input-wrap ${meal.carb?'has-value':''}">
+            <input type="text" placeholder="例如：糙米饭 200g" value="${meal.carb}" oninput="updateMealField(${idx},'carb',this.value);this.closest('.input-wrap').classList.toggle('has-value',!!this.value)">
+            <button class="btn-reset-input" onclick="event.stopPropagation();resetMealField(${idx},'carb')" title="清空碳水">✕</button>
+          </div>
+          <div class="food-suggestions">${carbFoods.slice(0,6).map(n=>`<span class="food-suggest-tag" onclick="quickFill(${idx},'carb','${n}',this)">${n}</span>`).join('')}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateMealSummary();
+}
+
+function quickFill(idx,field,name,el){
+  const input=el.closest('.macro-group').querySelector('input');
+  const current=input.value;
+  input.value=current?current+', '+name:name;
+  input.closest('.input-wrap').classList.toggle('has-value',!!input.value);
+  updateMealField(idx,field,input.value);
+}
+
+function updateMealSummary(){
+  const box=document.getElementById('mealSummaryBox');
+  const row=document.getElementById('mealSummaryRow');
+  if(state.meals.length===0||state.meals.every(m=>!m.protein&&!m.veggie&&!m.carb)){
+    box.style.display='none';
+    return;
+  }
+  box.style.display='block';
+  const mealCount=state.meals.length;
+  const hasProtein=state.meals.filter(m=>m.protein.trim()).length;
+  const hasVeggie=state.meals.filter(m=>m.veggie.trim()).length;
+  const hasCarb=state.meals.filter(m=>m.carb.trim()).length;
+  row.innerHTML=`
+    <div class="summary-item"><div class="s-val">${mealCount}</div><div style="font-size:11px;color:var(--text-lighter);">总餐数</div></div>
+    <div class="summary-item" style="border-left:2px solid #fce4ec;"><div class="s-val" style="color:#e87d9f;">${hasProtein}</div><div style="font-size:11px;color:var(--text-lighter);">含蛋白质</div></div>
+    <div class="summary-item" style="border-left:2px solid #e0f7ec;"><div class="s-val" style="color:#6bc4a1;">${hasVeggie}</div><div style="font-size:11px;color:var(--text-lighter);">含蔬菜</div></div>
+    <div class="summary-item" style="border-left:2px solid #fff3e0;"><div class="s-val" style="color:#ffb74d;">${hasCarb}</div><div style="font-size:11px;color:var(--text-lighter);">含碳水</div></div>
+  `;
+}
+
+function useMealPreset(type){
+  state.meals=JSON.parse(JSON.stringify(MEAL_PRESETS[type]));
+  autoAssignMealTimes();
+  renderMealCards();
+  renderMealMarkers();
+  updateTimeline();
+  updateWidgetPanel();
+  saveState();
+}
+
+// ============ 7-DAY PLAN ============
+function generatePlan(){
+  if(!state.fasting){alert('请先在第 1 步选择一个断食方式哦~');return;}
+  state.planGenerated=true;
+  renderPlan();
+  updateWidgetPanel();
+  renderWidgetCalendar();
+  saveState();
+}
+function resetPlan(){
+  state.planGenerated=false;
+  document.getElementById('planGrid').innerHTML=`
+    <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text-lighter);">
+      🌟 设置好上方参数后，点击「生成我的 7 天断食计划」<br>
+      <span style="font-size:12px;">计划将包含每日进食窗口和你的自定义餐食安排</span>
+    </div>`;
+  closeWidgetPanel();
+  saveState();
+}
+function exportPlan(){
+  const grid=document.getElementById('planGrid');
+  const text=grid.innerText;
+  navigator.clipboard.writeText(text).then(()=>alert('✅ 计划已复制到剪贴板！')).catch(()=>alert('复制失败，请手动选中复制'));
+}
+
+function renderPlan(){
+  const m=FASTING_METHODS.find(f=>f.id===state.fasting);
+  if(!m)return;
+  const today=new Date();
+  const dayNames=['周日','周一','周二','周三','周四','周五','周六'];
+  const hasCustomMeals=state.meals.length>0;
+
+  let html='';
+  for(let i=0;i<7;i++){
+    const d=new Date(today);d.setDate(d.getDate()+i);
+    const dayName=dayNames[d.getDay()];
+    const dateStr=(d.getMonth()+1)+'/'+d.getDate();
+    const isToday=i===0;
+
+    html+=`<div class="day-card ${isToday?'today':''}">
+      <div class="day-header">
+        <span class="day-name">${isToday?'📍':'📅'} ${dayName}</span>
+        <span class="day-date">${dateStr}</span>
+      </div>`;
+
+    if(m.id==='5-2'){
+      if(i===2||i===5){
+        html+=`<div class="meal-block fast">⏳ 轻断日 · 500-600大卡</div>`;
+        html+=`<div class="meal-custom"><span>🥗 大量蔬菜 + 少量蛋白质</span><span>⚠️ 避免碳水和油脂</span></div>`;
+      }else{
+        html+=`<div class="meal-block">🕐 正常日 · 均衡饮食</div>`;
+        html+=renderDayMeals(hasCustomMeals);
+      }
+    }else if(m.id==='omad'){
+      const startT=minutesToTime(state.eatStartMinutes);
+      const endT=minutesToTime(Math.min(state.eatStartMinutes+120,1440));
+      html+=`<div class="meal-block fast">⏳ 断食至 ${startT}</div>`;
+      html+=`<div class="meal-block">🍽️ 一餐完成 ${startT}~${endT}</div>`;
+      html+=renderDayMeals(hasCustomMeals);
+    }else{
+      const startT=minutesToTime(state.eatStartMinutes);
+      const endT=minutesToTime(state.eatStartMinutes+m.eatH*60);
+      html+=`<div class="meal-block fast">⏳ 断食期 ~${startT}</div>`;
+      html+=`<div class="meal-block">🍽️ 进食 ${startT}~${endT} (${m.eatH}h)</div>`;
+      html+=renderDayMeals(hasCustomMeals);
+    }
+    html+=`</div>`;
+  }
+  document.getElementById('planGrid').innerHTML=html;
+}
+
+function renderDayMeals(hasCustom){
+  if(hasCustom&&state.meals.length>0){
+    const periodLabels={breakfast:'🌅早',lunch:'☀️午',dinner:'🌙晚',snack:'🍌加'};
+    let lines='';
+    state.meals.forEach(m=>{
+      const label=periodLabels[m.period]||m.period;
+      const t=m.time!==undefined?' '+minutesToTime(m.time):'';
+      const parts=[];
+      if(m.protein)parts.push('🥩'+m.protein);
+      if(m.veggie)parts.push('🥬'+m.veggie);
+      if(m.carb)parts.push('🍚'+m.carb);
+      if(parts.length>0)lines+=`<div class="custom-line"><strong>${label}${t}</strong> ${parts.join(' · ')}</div>`;
+    });
+    return `<div class="meal-custom">${lines||'<span style="color:var(--text-lighter);">待补充食材详情</span>'}</div>`;
+  }
+  return `<div class="meal-custom"><span style="color:var(--text-lighter);">💡 在第 3 步自定义餐食</span></div>`;
+}
+
+// ============ REMINDER ============
+function toggleReminder(){
+  if(!state.reminderOn){
+    if(!('Notification' in window)){alert('你的浏览器不支持桌面通知功能哦~');return;}
+    Notification.requestPermission().then(perm=>{
+      if(perm==='granted'){state.reminderOn=true;updateReminderUI();scheduleReminders();saveState();}
+      else{alert('需要允许通知权限才能使用提醒功能~');}
+    });
+  }else{
+    state.reminderOn=false;clearReminders();updateReminderUI();saveState();
+  }
+}
+let reminderTimers=[];
+function scheduleReminders(){
+  clearReminders();
+  if(!state.fasting||!state.reminderOn)return;
+  const m=FASTING_METHODS.find(f=>f.id===state.fasting);
+  if(!m||m.eatH<=0||m.eatH>=24)return;
+  const now=new Date();
+  const startMins=state.eatStartMinutes;
+  const startH=Math.floor(startMins/60);
+  const startMin=startMins%60;
+  const startTime=new Date(now);startTime.setHours(startH,startMin,0,0);
+  if(startTime<=now)startTime.setDate(startTime.getDate()+1);
+  const startDelay=startTime-now;
+  if(startDelay>0){
+    reminderTimers.push(setTimeout(()=>{
+      new Notification('🍽️ 进食窗口开始啦！',{body:'你的进食时间到了！记得按计划均衡饮食~'});
+      scheduleReminders();
+    },startDelay));
+  }
+  const endMins=startMins+m.eatH*60;
+  const endH=Math.floor(endMins/60);
+  const endMin=endMins%60;
+  const endTime=new Date(now);endTime.setHours(endH,endMin,0,0);
+  if(endTime<=now)endTime.setDate(endTime.getDate()+1);
+  const endDelay=endTime-now-30*60*1000;
+  if(endDelay>0){
+    reminderTimers.push(setTimeout(()=>{
+      new Notification('⏳ 进食窗口即将结束！',{body:'还有30分钟，准备好开始断食阶段~'});
+      scheduleReminders();
+    },endDelay));
+  }
+}
+function clearReminders(){reminderTimers.forEach(t=>clearTimeout(t));reminderTimers=[];}
+function updateReminderUI(){
+  const status=document.getElementById('reminderStatus');
+  if(state.reminderOn){
+    status.className='reminder-status active';
+    status.innerHTML=`<span>🔔</span><span>浏览器进食提醒已开启</span><button class="reminder-toggle on" onclick="toggleReminder()" style="margin-left:auto;">关闭提醒</button>`;
+  }else{
+    status.className='reminder-status';
+    status.innerHTML=`<span>🔕</span><span>浏览器进食提醒已关闭</span><button class="reminder-toggle off" onclick="toggleReminder()" style="margin-left:auto;">开启提醒</button>`;
+  }
+}
+
+// ============ CHECK-IN ============
+function doCheckin(){
+  const today=new Date().toISOString().split('T')[0];
+  if(state.checkins[today]){alert('今天已经打卡过了哦~ 明天继续加油！🔥');return;}
+  state.checkins[today]=true;
+  state.totalCheckins=(state.totalCheckins||0)+1;
+  renderCheckinDays();updateStats();saveState();
+  updateWidgetCheckinState();
+  renderWidgetCalendar();
+  const btn=document.getElementById('checkinBtn');
+  btn.textContent='✅ 已打卡！';btn.style.background='linear-gradient(135deg, #6bc4a1, #4db88d)';
+  setTimeout(()=>{btn.textContent='✅ 打卡今日断食';btn.style.background='';},2000);
+}
+function renderCheckinDays(){
+  const container=document.getElementById('checkinDays');
+  const today=new Date();
+  let html='';
+  for(let i=6;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const key=d.toISOString().split('T')[0];
+    const isToday=i===0;
+    const done=!!state.checkins[key];
+    html+=`<span class="checkin-day ${done?'done':''} ${isToday?'today-dot':''}"
+      ${!done&&i<=0?`onclick="doCheckin()" title="点击打卡"`:''} style="position:relative;">
+      ${done?'✅':d.getDate()}${isToday&&!done?'<span style="position:absolute;top:-4px;right:-4px;font-size:12px;">💫</span>':''}</span>`;
+  }
+  container.innerHTML=html;
+}
+function updateStats(){
+  const today=new Date();
+  const keys=Object.keys(state.checkins).filter(k=>{
+    const d=new Date(k);const diff=Math.floor((today-d)/(1000*60*60*24));return diff>=0&&diff<7;
+  });
+  const doneDays=keys.length;
+  let streak=0;
+  for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()-i);if(state.checkins[d.toISOString().split('T')[0]])streak++;else break;}
+  document.getElementById('statDays').textContent=doneDays;
+  document.getElementById('statStreak').textContent=streak;
+  document.getElementById('statTotal').textContent=state.totalCheckins||0;
+  const pct=Math.round((doneDays/7)*100);
+  const fill=document.getElementById('progressFill');
+  fill.style.width=pct+'%';fill.textContent=pct>10?doneDays+'/7':'';
+}
+
+// ============ WIDGET PANEL ============
+function updateWidgetPanel(){
+  if(!state.planGenerated||!state.fasting){return;}
+  const panel=document.getElementById('widgetPanel');
+  panel.classList.add('show');
+
+  const m=FASTING_METHODS.find(f=>f.id===state.fasting);
+  if(!m||m.eatH<=0||m.eatH>=24){
+    // 5:2 - show special widget
+    updateWidgetFor52();
+    return;
+  }
+
+  const startM=state.eatStartMinutes;
+  const endM=startM+m.eatH*60;
+  document.getElementById('wEatStart').textContent=minutesToTime(startM);
+  document.getElementById('wEatEnd').textContent=minutesToTime(endM);
+
+  // Widget timeline
+  const wBlock=document.getElementById('widgetEatBlock');
+  const wTimeline=document.getElementById('widgetTimeline');
+  const eatPct=100*(m.eatH/24);
+  const leftPct=100*(startM/1440);
+  wBlock.style.width=eatPct+'%';
+  wBlock.style.left=leftPct+'%';
+
+  // Widget meal markers
+  const wMarkers=document.getElementById('widgetMealMarkers');
+  const validMeals=state.meals.filter(meal=>meal.time!==undefined&&meal.time!==null);
+  wMarkers.innerHTML=validMeals.map((meal,i)=>{
+    const t=meal.time;
+    const minutesFromStart=t-startM;
+    if(minutesFromStart<0||minutesFromStart>m.eatH*60)return '';
+    const posPct=(minutesFromStart/(m.eatH*60))*100;
+    const totalPct=leftPct+posPct*eatPct/100;
+    const cls='marker-'+meal.period;
+    return `<div class="widget-meal-marker ${cls}" style="left:${totalPct}%;" onclick="showMealPopup(${i})" title="${buildMealInfo(meal)}"></div>`;
+  }).join('');
+
+  // Widget minor ticks
+  renderWidgetMinorTicks();
+
+  updateWidgetCheckinState();
+  renderWidgetCalendar();
+}
+
+function updateWidgetFor52(){
+  document.getElementById('wEatStart').textContent='弹性';
+  document.getElementById('wEatEnd').textContent='安排';
+  const wBlock=document.getElementById('widgetEatBlock');
+  wBlock.style.width='100%';wBlock.style.left='0%';
+  document.getElementById('widgetMealMarkers').innerHTML='';
+  updateWidgetCheckinState();
+  renderWidgetCalendar();
+}
+
+function updateWidgetCheckinState(){
+  const today=new Date().toISOString().split('T')[0];
+  const done=!!state.checkins[today];
+  const btn=document.getElementById('widgetCheckinBtn');
+  const hint=document.getElementById('widgetCheckinHint');
+  if(done){
+    btn.textContent='✅ 今日已完成';
+    btn.classList.add('done-today');
+    hint.textContent='太棒了！明天继续加油 🔥';
+  }else{
+    btn.textContent='✅ 今日打卡';
+    btn.classList.remove('done-today');
+    hint.textContent='还没打卡哦~';
+  }
+}
+
+function closeWidgetPanel(){
+  document.getElementById('widgetPanel').classList.remove('show');
+}
+
+function renderWidgetMinorTicks(){
+  const container=document.getElementById('widgetMinorTicks');
+  if(!container)return;
+  let html='';
+  for(let h=0;h<=24;h++){
+    html+=`<span class="wmtick hour" style="left:${(h/24)*100}%;"></span>`;
+    if(h<24){
+      html+=`<span class="wmtick" style="left:${((h+0.5)/24)*100}%;"></span>`;
+    }
+  }
+  container.innerHTML=html;
+}
+
+// ============ WIDGET CALENDAR ============
+function renderWidgetCalendar(offsetMonths){
+  // Persist offset in state so navigation isn't lost on re-render
+  if(offsetMonths===undefined){
+    offsetMonths=state.calendarOffset||0;
+  }else{
+    state.calendarOffset=offsetMonths;
+  }
+  const now=new Date();
+  const displayMonth=new Date(now.getFullYear(),now.getMonth()+offsetMonths,1);
+  const year=displayMonth.getFullYear();
+  const month=displayMonth.getMonth();
+  const today=new Date();
+  const todayStr=today.toISOString().split('T')[0];
+
+  const calDiv=document.getElementById('widgetCalendar');
+  if(!calDiv)return;
+
+  const monthNames=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const prevDaysInMonth=new Date(year,month,0).getDate();
+
+  let html=`<div class="cal-header">
+    <button class="cal-nav" onclick="renderWidgetCalendar(${offsetMonths-1})">◀ 上月</button>
+    <span class="cal-title">📅 ${year}年 ${monthNames[month]}</span>
+    <button class="cal-nav" onclick="renderWidgetCalendar(${offsetMonths+1})">下月 ▶</button>
+  </div>`;
+
+  html+=`<div class="cal-grid">`;
+  const dayHeaders=['日','一','二','三','四','五','六'];
+  dayHeaders.forEach(h=>{html+=`<div class="cal-day-header">${h}</div>`;});
+
+  // Previous month's trailing days — also check for checkins
+  for(let i=firstDay-1;i>=0;i--){
+    const d=prevDaysInMonth-i;
+    const prevMonth=month===0?11:month-1;
+    const prevYear=month===0?year-1:year;
+    const dateStr=`${prevYear}-${String(prevMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const hasCheckin=!!state.checkins[dateStr];
+    let cls='cal-cell empty';
+    if(hasCheckin)cls+=' has-checkin';
+    html+=`<div class="${cls}">${d}</div>`;
+  }
+
+  // Current month days
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=dateStr===todayStr;
+    const hasCheckin=!!state.checkins[dateStr];
+    let cls='cal-cell';
+    if(hasCheckin)cls+=' has-checkin';
+    if(isToday)cls+=' today-cell';
+    html+=`<div class="${cls}">${d}</div>`;
+  }
+
+  // Remaining cells for a full grid — check for next month checkins
+  const totalCells=firstDay+daysInMonth;
+  const remaining=Math.ceil(totalCells/7)*7-totalCells;
+  const nextMonth=month===11?0:month+1;
+  const nextYear=month===11?year+1:year;
+  for(let i=1;i<=remaining;i++){
+    const dateStr=`${nextYear}-${String(nextMonth+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    const hasCheckin=!!state.checkins[dateStr];
+    let cls='cal-cell empty';
+    if(hasCheckin)cls+=' has-checkin';
+    html+=`<div class="${cls}">${i}</div>`;
+  }
+  html+=`</div>`;
+
+  html+=`<div class="cal-legend">
+    <span><span class="cal-legend-dot done-dot"></span> 已完成打卡</span>
+    <span style="margin-left:auto;font-size:10px;" id="calMonthStats"></span>
+  </div>`;
+
+  calDiv.innerHTML=html;
+
+  // Stats for this month
+  let monthDone=0;
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if(state.checkins[dateStr])monthDone++;
+  }
+  document.getElementById('calMonthStats').textContent=`本月打卡 ${monthDone}/${daysInMonth}`;
+}
+
+// ============ WIDGET POPUP ============
+function openWidgetPopup(){
+  const width=420,height=700;
+  const left=window.screen.width-width-20;
+  const top=100;
+  const w=window.open('','fastingWidget','width='+width+',height='+height+',left='+left+',top='+top+',resizable=yes,scrollbars=no');
+
+  const widgetHTML=`<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>轻断食小组件</title>
+<style>
+  :root{--pink:#f8a4c8;--pink-dark:#e87d9f;--pink-light:#fce4ec;--mint:#a8e6cf;--mint-dark:#6bc4a1;--mint-light:#e0f7ec;--lavender-dark:#9b7ec4;--orange:#ffb74d;--peach:#f0b586;--bg:#fef9f4;--text:#4a3f47;--text-light:#8a7f87;--text-lighter:#b0a5ad;--border:#f0e6ee;--radius:12px;--radius-sm:8px;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);padding:14px;min-height:100vh;}
+  .widget-header{text-align:center;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #a29bfe;}
+  .widget-header h3{font-size:16px;color:#6c5ce7;}
+  .widget-header .w-sub{font-size:11px;color:var(--text-lighter);}
+  .timeline-section{margin-bottom:14px;}
+  .timeline-times{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px;}
+  .timeline-times .w-time{font-weight:800;font-size:18px;color:var(--pink-dark);}
+  .timeline-bar{position:relative;height:44px;background:var(--pink-light);border-radius:22px;border:1px solid var(--border);}
+  .timeline-eat{position:absolute;top:3px;height:calc(100% - 6px);background:linear-gradient(135deg,var(--mint),var(--mint-dark));border-radius:20px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:11px;z-index:2;}
+  .timeline-marker{position:absolute;top:6px;width:12px;height:12px;border-radius:50%;border:2px solid white;z-index:3;transform:translateX(-50%);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+  .timeline-marker:hover{transform:translateX(-50%) scale(1.3);}
+  .timeline-marker.marker-breakfast{background:#ffb74d;}
+  .timeline-marker.marker-lunch{background:#e87d9f;}
+  .timeline-marker.marker-dinner{background:#9b7ec4;}
+  .timeline-marker.marker-snack{background:#f0b586;}
+  .timeline-ticks{display:flex;justify-content:space-between;font-size:9px;color:var(--text-lighter);padding:0 1px;margin-top:2px;}
+  .meal-list{margin:12px 0;}
+  .meal-list .ml-item{padding:8px 12px;border-radius:8px;margin:6px 0;background:white;border:1px solid var(--border);font-size:12px;cursor:pointer;transition:0.15s;display:flex;align-items:center;gap:8px;}
+  .meal-list .ml-item:hover{border-color:var(--pink);}
+  .meal-list .ml-item .ml-time{font-weight:700;color:var(--pink-dark);min-width:44px;}
+  .meal-list .ml-item .ml-food{flex:1;color:var(--text-light);}
+  .checkin-area{display:flex;align-items:center;gap:10px;padding:10px;background:var(--mint-light);border-radius:var(--radius-sm);margin:12px 0;}
+  .btn-checkin{padding:8px 20px;border-radius:20px;border:none;font-weight:700;font-size:13px;cursor:pointer;background:linear-gradient(135deg,var(--mint),var(--mint-dark));color:white;transition:0.2s;}
+  .btn-checkin:hover{box-shadow:0 3px 10px rgba(107,196,161,0.4);}
+  .btn-checkin.done{background:var(--pink);}
+  .calendar{margin-top:12px;}
+  .cal-month{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px;font-weight:700;}
+  .cal-nav{font-size:11px;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:white;cursor:pointer;}
+  .cal-nav:hover{border-color:var(--pink);}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;}
+  .cal-day-h{font-size:9px;color:var(--text-lighter);padding:3px 0;font-weight:600;}
+  .cal-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:10px;border-radius:4px;}
+  .cal-cell.done{background:var(--mint);color:white;font-weight:700;}
+  .cal-cell.today{border:2px solid var(--pink-dark);}
+  .cal-cell.empty{color:var(--text-lighter);}
+  .sync-note{text-align:center;font-size:10px;color:var(--text-lighter);margin-top:12px;}
+</style>
+</head>
+<body>
+<div id="widgetRoot">加载中...</div>
+<script>
+  // Read state from localStorage
+  function getState(){
+    try{return JSON.parse(localStorage.getItem('devtools-fasting-state')||'{}');}catch(e){return{};}
+  }
+  function minutesToTime(m){const h=Math.floor(m/60)%24;const mm=m%60;return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0');}
+  var calOffset=0;
+
+  function render(){
+    var s=getState();
+    if(!s.fasting){
+      document.getElementById('widgetRoot').innerHTML='<p style="text-align:center;padding:40px;color:#b0a5ad;">请先在工具中生成断食计划 📝</p>';
+      return;
+    }
+
+    // Map fasting methods (same as main)
+    var METHODS=[{id:'14-10',eatH:10,fastH:14},{id:'16-8',eatH:8,fastH:16},{id:'18-6',eatH:6,fastH:18},{id:'20-4',eatH:4,fastH:20},{id:'5-2',eatH:24,fastH:0},{id:'omad',eatH:2,fastH:22}];
+    var m=METHODS.find(function(f){return f.id===s.fasting;});
+    if(!m)return;
+
+    var startM=s.eatStartMinutes||540;
+    var today=new Date().toISOString().split('T')[0];
+    var doneToday=!!(s.checkins||{})[today];
+
+    var html='';
+
+    if(m.eatH<=0||m.eatH>=24){
+      // 5:2 or special
+      html+='<div class="timeline-section"><div class="timeline-times"><span class="w-time">5:2</span><span class="w-time">弹性</span></div><div class="timeline-bar"><div class="timeline-eat" style="width:100%;left:0;">正常饮食 × 5天 + 低热量 × 2天</div></div></div>';
+    }else{
+      var eatPct=100*(m.eatH/24);
+      var leftPct=100*(startM/1440);
+      var endM=startM+m.eatH*60;
+      html+='<div class="timeline-section">';
+      html+='<div class="timeline-times"><span class="w-time">'+minutesToTime(startM)+'</span><span style="color:#b0a5ad;">~</span><span class="w-time">'+minutesToTime(endM)+'</span></div>';
+      html+='<div class="timeline-bar">';
+      html+='<div class="timeline-eat" style="width:'+eatPct+'%;left:'+leftPct+'%;">🍽️ '+m.eatH+'h 进食</div>';
+      // Meal markers
+      var meals=s.meals||[];
+      meals.forEach(function(meal,i){
+        if(meal.time===undefined||meal.time===null)return;
+        var t=meal.time;
+        var minFromStart=t-startM;
+        if(minFromStart<0||minFromStart>m.eatH*60)return;
+        var posPct=(minFromStart/(m.eatH*60))*100;
+        var totalPct=leftPct+posPct*eatPct/100;
+        html+='<div class="timeline-marker marker-'+meal.period+'" style="left:'+totalPct+'%;" title="'+meal.protein+' '+meal.veggie+' '+meal.carb+'"></div>';
+      });
+      html+='</div>';
+      html+='<div class="timeline-ticks"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>';
+      html+='</div>';
+    }
+
+    // Meal list
+    html+='<div class="meal-list"><strong style="font-size:13px;">🍽️ 今日餐单</strong>';
+    var periodLabels={breakfast:'🌅早',lunch:'☀️午',dinner:'🌙晚',snack:'🍌加'};
+    var hasMeals=false;
+    (s.meals||[]).forEach(function(meal){
+      var parts=[];
+      if(meal.protein)parts.push('🥩'+meal.protein);
+      if(meal.veggie)parts.push('🥬'+meal.veggie);
+      if(meal.carb)parts.push('🍚'+meal.carb);
+      if(parts.length===0)return;
+      hasMeals=true;
+      var t=meal.time!==undefined?minutesToTime(meal.time):'--:--';
+      var label=periodLabels[meal.period]||'餐';
+      html+='<div class="ml-item"><span class="ml-time">'+t+'</span><span>'+label+'</span><span class="ml-food">'+parts.join(' ')+'</span></div>';
+    });
+    if(!hasMeals)html+='<div style="color:#b0a5ad;font-size:11px;padding:8px;">暂未设置餐食</div>';
+    html+='</div>';
+
+    // Check-in
+    html+='<div class="checkin-area">';
+    if(doneToday){
+      html+='<span>✅</span><span style="font-size:12px;">今日已打卡！</span>';
+    }else{
+      html+='<button class="btn-checkin" onclick="doCheckinWidget()">✅ 今日打卡</button><span style="font-size:11px;color:#8a7f87;">记录今天的断食计划</span>';
+    }
+    html+='</div>';
+
+    // Calendar
+    html+=renderCalendar(s,calOffset);
+
+    html+='<div class="sync-note">🔄 自动同步 · 刷新即更新</div>';
+    document.getElementById('widgetRoot').innerHTML=html;
+  }
+
+  function renderCalendar(s,off){
+    var now=new Date();
+    var dm=new Date(now.getFullYear(),now.getMonth()+off,1);
+    var y=dm.getFullYear(),mo=dm.getMonth();
+    var today=new Date().toISOString().split('T')[0];
+    var mn=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    var fd=new Date(y,mo,1).getDay();
+    var dim=new Date(y,mo+1,0).getDate();
+    var pdim=new Date(y,mo,0).getDate();
+    var ch=mn[mo];
+
+    var h='<div class="calendar"><div class="cal-month">';
+    h+='<button class="cal-nav" onclick="calOffset--;renderPopup()">◀ 上月</button>';
+    h+='<span>📅 '+y+'年 '+ch+'</span>';
+    h+='<button class="cal-nav" onclick="calOffset++;renderPopup()">下月 ▶</button>';
+    h+='</div><div class="cal-grid">';
+    ['日','一','二','三','四','五','六'].forEach(function(dh){h+='<div class="cal-day-h">'+dh+'</div>';});
+    for(var i=fd-1;i>=0;i--){h+='<div class="cal-cell empty">'+(pdim-i)+'</div>';}
+    for(var d=1;d<=dim;d++){
+      var ds=y+'-'+String(mo+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      var isT=ds===today;
+      var ck=!!(s.checkins||{})[ds];
+      var cls='cal-cell';
+      if(ck)cls+=' done';
+      if(isT)cls+=' today';
+      h+='<div class="'+cls+'">'+d+'</div>';
+    }
+    var tc=fd+dim;
+    var rem=Math.ceil(tc/7)*7-tc;
+    for(var j=1;j<=rem;j++){h+='<div class="cal-cell empty">'+j+'</div>';}
+    h+='</div></div>';
+    return h;
+  }
+
+  function doCheckinWidget(){
+    var s=getState();
+    var today=new Date().toISOString().split('T')[0];
+    if((s.checkins||{})[today]){alert('今天已经打卡过了哦~ 🔥');return;}
+    s.checkins=s.checkins||{};
+    s.checkins[today]=true;
+    s.totalCheckins=(s.totalCheckins||0)+1;
+    localStorage.setItem('devtools-fasting-state',JSON.stringify(s));
+    renderPopup();
+  }
+
+  function renderPopup(){render();}
+
+  // Initial render
+  render();
+
+  // Periodic sync from localStorage
+  setInterval(render,1500);
+
+  // Listen for storage changes from main page
+  window.addEventListener('storage',function(e){
+    if(e.key==='devtools-fasting-state')render();
+  });
+<\/script>
+</body>
+</html>`;
+
+  w.document.write(widgetHTML);
+  w.document.close();
+}
+
+// ============ PERSISTENCE ============
+function saveState(){
+  localStorage.setItem('devtools-fasting-state',JSON.stringify(state));
+}
+function loadState(){
+  try{
+    const raw=localStorage.getItem('devtools-fasting-state');
+    if(raw){const data=JSON.parse(raw);state={...state,...data};}
+    if(state.prefs)delete state.prefs;
+  }catch(e){}
+}
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){
+    if(!state.agreed)handleAgree();
+  }
+});
+</script>
+</body>
+</html>

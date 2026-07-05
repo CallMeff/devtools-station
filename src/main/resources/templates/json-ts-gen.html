@@ -1,0 +1,390 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">JSON → TypeScript 接口生成器 - DevTools Station</title>
+    <meta name="description" th:content="${tool.description}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script>(function(){var t=localStorage.getItem('devtools-theme');if(t){document.documentElement.className='theme-'+t;}})()</script>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);min-height:100vh;display:flex;flex-direction:column}
+        .topbar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--bg-secondary,#1e1e2e);border-bottom:1px solid var(--border-color,#333);min-height:42px;flex-shrink:0}
+        .topbar .brand{display:flex;align-items:center;gap:8px;margin-right:auto}
+        .topbar .brand a{color:var(--accent-color,#6366f1);text-decoration:none;font-size:18px;font-weight:bold}
+        .topbar .brand .sep{color:var(--text-muted,#888);margin:0 4px}
+        .topbar .brand .tool-name{color:var(--text-primary,#ddd);font-size:14px}
+        .topbar button{padding:5px 12px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s}
+        .topbar button:hover{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+
+        .page-content{flex:1;max-width:1100px;margin:0 auto;width:100%;padding:20px;display:flex;flex-direction:column;gap:20px}
+
+        .intro-box{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:12px;padding:20px;text-align:center}
+        .intro-box h2{font-size:20px;color:var(--accent-color,#6366f1);margin-bottom:8px}
+        .intro-box p{color:var(--text-muted,#888);font-size:13px;line-height:1.6}
+
+        .workspace{display:grid;grid-template-columns:1fr 1fr;gap:20px;flex:1}
+        @media(max-width:768px){.workspace{grid-template-columns:1fr}}
+
+        .card{background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:12px;padding:20px;display:flex;flex-direction:column}
+        .card h3{font-size:13px;font-weight:600;color:var(--text-muted,#888);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+        .card h3 .card-actions{margin-left:auto;display:flex;gap:6px}
+        .card h3 .card-actions button{font-size:11px;padding:3px 10px;border:1px solid var(--border-color,#444);border-radius:4px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#aaa);cursor:pointer;transition:all .15s}
+        .card h3 .card-actions button:hover{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+
+        .input-area{flex:1;min-height:260px}
+        textarea{width:100%;height:100%;min-height:260px;padding:14px;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:10px;color:var(--text-primary,#ddd);font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:13px;line-height:1.6;resize:vertical;outline:none;transition:border-color .15s}
+        textarea:focus{border-color:var(--accent-color,#6366f1)}
+        textarea::placeholder{color:var(--text-muted,#555)}
+
+        .options-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:8px 0;margin-top:8px;border-top:1px solid var(--border-color,#333)}
+        .option{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted,#aaa)}
+        .option input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent-color,#6366f1);cursor:pointer}
+        .option label{cursor:pointer}
+        .option select{padding:4px 8px;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:4px;color:var(--text-primary,#ddd);font-size:12px;outline:none}
+
+        .preview-header-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--card-bg,#141416);border-bottom:1px solid var(--border-color,#333);border-radius:10px 10px 0 0}
+        .preview-header-bar span{font-size:11px;color:var(--text-muted,#888)}
+        .preview-header-bar .lang-badge{font-size:10px;padding:2px 8px;background:#3178c6;color:#fff;border-radius:10px}
+
+        .code-output{position:relative;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-top:none;border-radius:0 0 10px 10px;overflow:hidden}
+        .code-output pre{margin:0;padding:14px;font-family:'SF Mono','JetBrains Mono','Consolas',monospace;font-size:13px;line-height:1.7;color:var(--text-primary,#ddd);white-space:pre;overflow-x:auto;min-height:260px;max-height:500px;overflow-y:auto}
+        .code-output pre .ts-keyword{color:#c792ea}
+        .code-output pre .ts-type{color:#82aaff}
+        .code-output pre .ts-string{color:#c3e88d}
+        .code-output pre .ts-prop{color:#80cbc4}
+        .code-output pre .ts-comment{color:#546e7a;font-style:italic}
+        .code-output pre .ts-number{color:#f78c6c}
+
+        .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+        .btn{padding:8px 18px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-primary,#ddd);cursor:pointer;font-size:13px;transition:all .15s;display:flex;align-items:center;gap:6px}
+        .btn:hover{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+        .btn.primary{background:var(--accent-color,#6366f1);border-color:var(--accent-color,#6366f1);color:#fff}
+
+        .error-msg{color:#e53e3e;font-size:12px;padding:8px 0;display:none}
+        .error-msg.show{display:block}
+        .info-tip{font-size:11px;color:var(--text-muted,#666);margin-top:6px;line-height:1.5}
+
+        .toast{position:fixed;top:50px;left:50%;transform:translateX(-50%);background:var(--accent-color,#6366f1);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+        .toast.show{opacity:1}
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <div class="brand">
+        <a href="/">⚡ DevTools</a>
+        <span class="sep">/</span>
+        <span class="tool-name" th:text="${tool.name}">JSON → TypeScript 接口生成器</span>
+    </div>
+</div>
+
+<div class="page-content">
+    <div class="intro-box">
+        <h2>📋 JSON → TypeScript 接口生成器</h2>
+        <p>粘贴 JSON 数据，自动生成 TypeScript <code>interface</code>/<code>type</code> 类型定义。<br>支持嵌套对象、数组类型推断、可选属性、联合类型、readonly 修饰符、导出命名空间。</p>
+    </div>
+
+    <div class="workspace">
+        <!-- 输入面板 -->
+        <div class="card">
+            <h3>📥 JSON 输入
+                <span class="card-actions">
+                    <button onclick="loadSample1()">用户数据</button>
+                    <button onclick="loadSample2()">API 响应</button>
+                    <button onclick="loadSample3()">复杂嵌套</button>
+                </span>
+            </h3>
+            <div class="input-area">
+                <textarea id="jsonInput" placeholder='{"id":1,"name":"Alice","email":"alice@example.com","roles":["admin","editor"],"profile":{"age":28,"bio":null}}' oninput="generateTS()"></textarea>
+            </div>
+            <div class="options-row">
+                <div class="option">
+                    <input type="checkbox" id="optExport" checked onchange="generateTS()">
+                    <label>export</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="optReadonly" onchange="generateTS()">
+                    <label>readonly</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="optOptional" checked onchange="generateTS()">
+                    <label>可选属性(?)</label>
+                </div>
+                <div class="option">
+                    <label>根类型名:</label>
+                    <input type="text" id="optRootName" value="Root" style="width:80px;padding:4px 8px;background:var(--bg-tertiary,#2a2a3a);border:1px solid var(--border-color,#444);border-radius:4px;color:var(--text-primary,#ddd);font-size:12px" oninput="generateTS()">
+                </div>
+                <div class="option">
+                    <select id="optStyle" onchange="generateTS()">
+                        <option value="interface">interface</option>
+                        <option value="type">type</option>
+                    </select>
+                </div>
+            </div>
+            <div class="error-msg" id="errorMsg"></div>
+            <div class="btn-row">
+                <button class="btn primary" onclick="copyTS()">📋 复制 TypeScript</button>
+                <button class="btn" onclick="downloadTS()">📥 下载 .ts 文件</button>
+                <button class="btn" onclick="clearAll()">🔄 清空</button>
+            </div>
+        </div>
+
+        <!-- 输出面板 -->
+        <div class="card" style="padding:0;overflow:hidden">
+            <div class="preview-header-bar">
+                <span id="lineCount">0 行</span>
+                <span class="lang-badge">TypeScript</span>
+            </div>
+            <div class="code-output">
+                <pre id="tsOutput"><span class="ts-comment">// 请在左侧输入 JSON 数据</span>
+<span class="ts-comment">// 支持嵌套对象、数组、null 值类型推断</span></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function inferTStype(val, key, depth) {
+    if (val === null || val === undefined) return 'null';
+    var t = typeof val;
+    if (t === 'string') return 'string';
+    if (t === 'number') return 'number';
+    if (t === 'boolean') return 'boolean';
+    if (Array.isArray(val)) {
+        if (val.length === 0) return 'any[]';
+        var types = [];
+        for (var i = 0; i < val.length; i++) {
+            types.push(inferTStype(val[i], key + 'Item', depth + 1));
+        }
+        var unique = [];
+        for (var i = 0; i < types.length; i++) {
+            if (unique.indexOf(types[i]) === -1) unique.push(types[i]);
+        }
+        if (unique.length === 1 && unique[0] !== 'null') return unique[0] + '[]';
+        if (unique.length === 1) return 'any[]';
+        var nonNull = [];
+        for (var i = 0; i < unique.length; i++) {
+            if (unique[i] !== 'null') nonNull.push(unique[i]);
+        }
+        if (nonNull.length === 1) return nonNull[0] + '[]';
+        return '(' + (nonNull.length > 0 ? nonNull.join(' | ') : 'any') + ')[]';
+    }
+    if (t === 'object') {
+        return toInterface(val, key || 'Obj', depth + 1);
+    }
+    return 'any';
+}
+
+function toPropName(k) {
+    if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k)) return k;
+    return JSON.stringify(k);
+}
+
+var interfaces = {};
+var ifaceOrder = [];
+
+function toInterface(obj, name, depth) {
+    if (depth > 10) return 'any /* max depth */';
+    var keys = Object.keys(obj);
+    var props = [];
+    for (var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        var v = obj[k];
+        var tsType = inferTStype(v, capitalize(k), depth);
+        var optional = document.getElementById('optOptional').checked ? '?' : '';
+        var readonly = document.getElementById('optReadonly').checked ? 'readonly ' : '';
+        props.push({ name: k, type: tsType, optional: optional, readonly: readonly });
+    }
+    interfaces[name] = { name: name, props: props };
+    if (ifaceOrder.indexOf(name) === -1) ifaceOrder.push(name);
+    return name;
+}
+
+function capitalize(s) {
+    if (!s) return '';
+    s = String(s).replace(/[^a-zA-Z0-9_]/g, '');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function renderInterface(iface) {
+    var style = document.getElementById('optStyle').value;
+    var exp = document.getElementById('optExport').checked ? 'export ' : '';
+    var lines = [];
+    if (style === 'interface') {
+        lines.push(exp + 'interface ' + iface.name + ' {');
+        for (var i = 0; i < iface.props.length; i++) {
+            var p = iface.props[i];
+            lines.push('  ' + p.readonly + toPropName(p.name) + p.optional + ': ' + p.type + ';');
+        }
+        lines.push('}');
+    } else {
+        lines.push(exp + 'type ' + iface.name + ' = {');
+        for (var i = 0; i < iface.props.length; i++) {
+            var p = iface.props[i];
+            lines.push('  ' + p.readonly + toPropName(p.name) + p.optional + ': ' + p.type + ';');
+        }
+        lines.push('};');
+    }
+    return lines.join('\n');
+}
+
+function generateTS() {
+    var input = document.getElementById('jsonInput').value.trim();
+    var output = document.getElementById('tsOutput');
+    var error = document.getElementById('errorMsg');
+    error.classList.remove('show');
+
+    if (!input) {
+        output.innerHTML = '<span class="ts-comment">// 请在左侧输入 JSON 数据</span>\n<span class="ts-comment">// 支持嵌套对象、数组、null 值类型推断</span>';
+        document.getElementById('lineCount').textContent = '0 行';
+        return;
+    }
+
+    var obj;
+    try {
+        obj = JSON.parse(input);
+    } catch (e) {
+        error.textContent = '❌ JSON 解析错误: ' + e.message;
+        error.classList.add('show');
+        output.innerHTML = '<span style="color:#e53e3e">// JSON 解析失败</span>';
+        document.getElementById('lineCount').textContent = '0 行';
+        return;
+    }
+
+    interfaces = {};
+    ifaceOrder = [];
+    var rootName = document.getElementById('optRootName').value.trim() || 'Root';
+    inferTStype(obj, rootName, 0);
+
+    var allLines = [];
+    for (var i = 0; i < ifaceOrder.length; i++) {
+        if (i > 0) allLines.push('');
+        var iface = interfaces[ifaceOrder[i]];
+        allLines.push(renderInterface(iface));
+    }
+
+    var tsCode = allLines.join('\n');
+    document.getElementById('lineCount').textContent = allLines.length + ' 行';
+
+    // 语法高亮
+    var html = tsCode
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/^(\s*)(export|interface|type|readonly)(\s)/gm, '$1<span class="ts-keyword">$2</span>$3')
+        .replace(/:\s*(string|number|boolean|any|null|void|never)(\b)/g, ': <span class="ts-type">$1</span>$2')
+        .replace(/(:\s*)("[^"]*")/g, '$1<span class="ts-string">$2</span>')
+        .replace(/(\/\/[^\n]*)/g, '<span class="ts-comment">$1</span>');
+    output.innerHTML = html;
+}
+
+function loadSample1() {
+    document.getElementById('jsonInput').value = JSON.stringify({
+        "id": 1,
+        "name": "Alice",
+        "email": "alice@example.com",
+        "age": 28,
+        "isActive": true,
+        "roles": ["admin", "editor"],
+        "profile": {
+            "avatar": "https://example.com/avatar.jpg",
+            "bio": "Full-stack developer",
+            "socialLinks": ["github.com/alice", "twitter.com/alice"]
+        },
+        "createdAt": "2024-01-15T08:30:00Z"
+    }, null, 2);
+    generateTS();
+}
+
+function loadSample2() {
+    document.getElementById('jsonInput').value = JSON.stringify({
+        "code": 0,
+        "message": "success",
+        "data": {
+            "items": [
+                {"id": 1, "title": "Post 1", "tags": ["tech", "js"], "published": true},
+                {"id": 2, "title": "Post 2", "tags": ["design"], "published": false}
+            ],
+            "pagination": {"page": 1, "pageSize": 20, "total": 100}
+        }
+    }, null, 2);
+    generateTS();
+}
+
+function loadSample3() {
+    document.getElementById('jsonInput').value = JSON.stringify({
+        "config": {
+            "app": {"name": "MyApp", "version": "2.1.0", "debug": false},
+            "database": {"host": "localhost", "port": 5432, "pool": {"min": 2, "max": 10}},
+            "features": {"darkMode": true, "experiments": ["feature_a", "feature_b"]}
+        },
+        "users": [{"id": "u1", "permissions": ["read", "write"], "metadata": {"lastLogin": null}}]
+    }, null, 2);
+    generateTS();
+}
+
+function copyTS() {
+    var input = document.getElementById('jsonInput').value.trim();
+    if (!input) return showToast('⚠️ 请先输入 JSON 数据');
+    var obj;
+    try { obj = JSON.parse(input); } catch (e) { return showToast('❌ JSON 格式错误'); }
+
+    interfaces = {};
+    ifaceOrder = [];
+    var rootName = document.getElementById('optRootName').value.trim() || 'Root';
+    inferTStype(obj, rootName, 0);
+
+    var allLines = [];
+    for (var i = 0; i < ifaceOrder.length; i++) {
+        if (i > 0) allLines.push('');
+        allLines.push(renderInterface(interfaces[ifaceOrder[i]]));
+    }
+    navigator.clipboard.writeText(allLines.join('\n')).then(function() { showToast('✅ TypeScript 类型定义已复制'); });
+}
+
+function downloadTS() {
+    var input = document.getElementById('jsonInput').value.trim();
+    if (!input) return showToast('⚠️ 请先输入 JSON 数据');
+    var obj;
+    try { obj = JSON.parse(input); } catch (e) { return showToast('❌ JSON 格式错误'); }
+
+    interfaces = {};
+    ifaceOrder = [];
+    var rootName = document.getElementById('optRootName').value.trim() || 'Root';
+    inferTStype(obj, rootName, 0);
+
+    var allLines = [];
+    for (var i = 0; i < ifaceOrder.length; i++) {
+        if (i > 0) allLines.push('');
+        allLines.push(renderInterface(interfaces[ifaceOrder[i]]));
+    }
+    var blob = new Blob([allLines.join('\n')], { type: 'text/typescript' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (rootName || 'types') + '.ts';
+    a.click();
+    showToast('✅ 已下载 .ts 文件');
+}
+
+function clearAll() {
+    document.getElementById('jsonInput').value = '';
+    document.getElementById('tsOutput').innerHTML = '<span class="ts-comment">// 请在左侧输入 JSON 数据</span>\n<span class="ts-comment">// 支持嵌套对象、数组、null 值类型推断</span>';
+    document.getElementById('lineCount').textContent = '0 行';
+    document.getElementById('errorMsg').classList.remove('show');
+}
+
+function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadSample1();
+});
+</script>
+</body>
+</html>

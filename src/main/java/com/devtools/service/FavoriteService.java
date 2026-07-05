@@ -131,4 +131,55 @@ public class FavoriteService extends ServiceImpl<FavoriteMapper, Favorite> {
             }
         }
     }
+
+    /**
+     * 获取用户收藏的工具位置（toolId → {xp, yp}）
+     */
+    public Map<String, Map<String, Double>> getUserFavoritePositions(Long userId) {
+        List<Favorite> favorites = this.list(new LambdaQueryWrapper<Favorite>()
+                .eq(Favorite::getUserId, userId)
+                .isNotNull(Favorite::getPosX)
+                .isNotNull(Favorite::getPosY));
+
+        Map<String, Map<String, Double>> positions = new HashMap<>();
+        for (Favorite fav : favorites) {
+            Map<String, Double> pos = new HashMap<>();
+            pos.put("xp", fav.getPosX());
+            pos.put("yp", fav.getPosY());
+            positions.put(String.valueOf(fav.getToolId()), pos);
+        }
+        return positions;
+    }
+
+    /**
+     * 批量保存工具位置
+     * @param userId 用户 ID
+     * @param positions toolId → {xp, yp}
+     */
+    @Transactional
+    public void savePositions(Long userId, Map<String, Map<String, Double>> positions) {
+        if (positions == null || positions.isEmpty()) return;
+
+        // 查询该用户的所有收藏
+        List<Favorite> favorites = this.list(new LambdaQueryWrapper<Favorite>()
+                .eq(Favorite::getUserId, userId));
+
+        Map<Long, Favorite> favMap = favorites.stream()
+                .collect(Collectors.toMap(Favorite::getToolId, f -> f, (a, b) -> a));
+
+        for (Map.Entry<String, Map<String, Double>> entry : positions.entrySet()) {
+            Long toolId = Long.valueOf(entry.getKey());
+            Favorite fav = favMap.get(toolId);
+            if (fav != null) {
+                Double xp = entry.getValue().get("xp");
+                Double yp = entry.getValue().get("yp");
+                if (xp != null && yp != null) {
+                    fav.setPosX(xp);
+                    fav.setPosY(yp);
+                    this.updateById(fav);
+                }
+            }
+        }
+        log.info("用户 {} 保存 {} 个工具位置", userId, positions.size());
+    }
 }

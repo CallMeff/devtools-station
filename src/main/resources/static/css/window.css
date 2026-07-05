@@ -1,0 +1,621 @@
+/* ============================================
+   Window.css - macOS 风格桌面窗口系统 + 任务栏
+   ============================================ */
+
+/* ========== 任务栏 (Taskbar) ========== */
+.taskbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    z-index: 5000;
+    background: rgba(22, 22, 24, 0.82);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.theme-light .taskbar {
+    background: rgba(250, 250, 252, 0.78);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.taskbar-inner {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    gap: 4px;
+}
+
+/* 任务栏左侧 Logo */
+.taskbar-start {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.taskbar-start:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.taskbar-logo {
+    font-size: 22px;
+    line-height: 1;
+}
+
+/* 任务栏窗口标签区 */
+.taskbar-windows {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 100%;
+    padding: 0 4px;
+    scrollbar-width: none;
+}
+
+.taskbar-windows::-webkit-scrollbar {
+    display: none;
+}
+
+/* 任务栏单个窗口标签 */
+.taskbar-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+    background: transparent;
+    border: none;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+    max-width: 200px;
+    overflow: hidden;
+}
+
+body.theme-light .taskbar-tab {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+.taskbar-tab:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+body.theme-light .taskbar-tab:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.75);
+}
+
+/* 活跃窗口标签 */
+.taskbar-tab.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+body.theme-light .taskbar-tab.active {
+    background: rgba(0, 0, 0, 0.08);
+    color: #111;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* 最小化窗口标签 */
+.taskbar-tab.minimized {
+    opacity: 0.55;
+    background: transparent;
+}
+
+.taskbar-tab.minimized.active {
+    opacity: 0.8;
+}
+
+.taskbar-tab-icon {
+    font-size: 16px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.taskbar-tab-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 任务栏右区域 - 时钟 */
+.taskbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding-right: 4px;
+}
+
+.taskbar-clock {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+body.theme-light .taskbar-clock {
+    color: rgba(0, 0, 0, 0.55);
+}
+
+/* ========== 应用窗口 ========== */
+.app-window {
+    position: fixed;
+    z-index: 1000;
+    border-radius: 10px;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    background: #1e1e22;
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.06),
+        0 10px 40px rgba(0, 0, 0, 0.5),
+        0 0 80px rgba(0, 0, 0, 0.3);
+    transition: box-shadow 0.2s, border-radius 0.25s;
+    min-width: 400px;
+    min-height: 300px;
+}
+
+body.theme-light .app-window {
+    background: #ffffff;
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.06),
+        0 10px 40px rgba(0, 0, 0, 0.12),
+        0 0 80px rgba(0, 0, 0, 0.04);
+}
+
+/* 聚焦窗口 */
+.app-window.focused {
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        0 16px 56px rgba(0, 0, 0, 0.55),
+        0 0 100px rgba(0, 0, 0, 0.35);
+    z-index: 9999 !important;
+}
+
+body.theme-light .app-window.focused {
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.08),
+        0 16px 56px rgba(0, 0, 0, 0.15),
+        0 0 100px rgba(0, 0, 0, 0.05);
+}
+
+.app-window.focused .app-window-titlebar {
+    opacity: 1;
+}
+
+/* 窗口标题栏 */
+.app-window-titlebar {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    padding: 0 12px;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    flex-shrink: 0;
+    border-radius: 10px 10px 0 0;
+    background: rgba(255, 255, 255, 0.04);
+    opacity: 0.85;
+    transition: opacity 0.2s;
+}
+
+body.theme-light .app-window-titlebar {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.app-window-titlebar:active {
+    cursor: grabbing;
+}
+
+/* macOS 风格红绿灯按钮 */
+.win-traffic-lights {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+    margin-right: 12px;
+}
+
+.win-btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: filter 0.15s, transform 0.1s;
+    position: relative;
+}
+
+.win-btn:hover {
+    filter: brightness(0.85);
+}
+
+.win-btn:active {
+    transform: scale(0.9);
+}
+
+.win-close {
+    background: #ff5f57;
+}
+
+.win-minimize {
+    background: #febc2e;
+}
+
+.win-maximize {
+    background: #28c840;
+}
+
+/* 红绿灯 hover 图标 */
+.win-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.12s;
+}
+
+.win-traffic-lights:hover .win-close::after {
+    opacity: 1;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6' viewBox='0 0 6 6'%3E%3Cline x1='1' y1='1' x2='5' y2='5' stroke='%23400000' stroke-width='1'/%3E%3Cline x1='5' y1='1' x2='1' y2='5' stroke='%23400000' stroke-width='1'/%3E%3C/svg%3E") center/6px 6px no-repeat;
+}
+
+.win-traffic-lights:hover .win-minimize::after {
+    opacity: 1;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6' viewBox='0 0 6 6'%3E%3Cline x1='1' y1='3' x2='5' y2='3' stroke='%23995500' stroke-width='1'/%3E%3C/svg%3E") center/6px 6px no-repeat;
+}
+
+.win-traffic-lights:hover .win-maximize::after {
+    opacity: 1;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6' viewBox='0 0 6 6'%3E%3Crect x='1' y='1' width='4' height='4' fill='none' stroke='%23004500' stroke-width='1'/%3E%3C/svg%3E") center/6px 6px no-repeat;
+}
+
+/* 窗口标题 */
+.win-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.win-title-icon {
+    font-size: 15px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.win-title-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.theme-light .win-title-text {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.win-titlebar-spacer {
+    width: 56px;
+    flex-shrink: 0;
+}
+
+/* 窗口内容区 */
+.app-window-body {
+    flex: 1;
+    overflow: hidden;
+    border-radius: 0 0 10px 10px;
+    position: relative;
+}
+
+.app-window-body iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+    background: #0d0d0f;
+}
+
+body.theme-light .app-window-body iframe {
+    background: #fafafa;
+}
+
+/* 窗口加载中 */
+.app-window-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: inherit;
+    z-index: 2;
+}
+
+.app-window-loading::after {
+    content: '';
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: rgba(99, 102, 241, 0.7);
+    border-radius: 50%;
+    animation: winSpin 0.6s linear infinite;
+}
+
+body.theme-light .app-window-loading::after {
+    border-color: rgba(0, 0, 0, 0.08);
+    border-top-color: rgba(99, 102, 241, 0.7);
+}
+
+@keyframes winSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* ========== 窗口调整大小手柄 ========== */
+.win-resize-n,
+.win-resize-s,
+.win-resize-e,
+.win-resize-w,
+.win-resize-ne,
+.win-resize-nw,
+.win-resize-se,
+.win-resize-sw {
+    position: absolute;
+    z-index: 10;
+}
+
+/* 水平边 */
+.win-resize-n {
+    top: -4px;
+    left: 8px;
+    right: 8px;
+    height: 8px;
+    cursor: n-resize;
+}
+
+.win-resize-s {
+    bottom: -4px;
+    left: 8px;
+    right: 8px;
+    height: 8px;
+    cursor: s-resize;
+}
+
+/* 垂直边 */
+.win-resize-e {
+    right: -4px;
+    top: 8px;
+    bottom: 8px;
+    width: 8px;
+    cursor: e-resize;
+}
+
+.win-resize-w {
+    left: -4px;
+    top: 8px;
+    bottom: 8px;
+    width: 8px;
+    cursor: w-resize;
+}
+
+/* 角落 */
+.win-resize-ne { top: -4px; right: -4px; width: 14px; height: 14px; cursor: ne-resize; }
+.win-resize-nw { top: -4px; left: -4px; width: 14px; height: 14px; cursor: nw-resize; }
+.win-resize-se { bottom: -4px; right: -4px; width: 14px; height: 14px; cursor: se-resize; }
+.win-resize-sw { bottom: -4px; left: -4px; width: 14px; height: 14px; cursor: sw-resize; }
+
+/* 最大化时隐藏 resize 手柄 */
+.app-window.maximized .win-resize-n,
+.app-window.maximized .win-resize-s,
+.app-window.maximized .win-resize-e,
+.app-window.maximized .win-resize-w,
+.app-window.maximized .win-resize-ne,
+.app-window.maximized .win-resize-nw,
+.app-window.maximized .win-resize-se,
+.app-window.maximized .win-resize-sw {
+    display: none;
+}
+
+/* ========== 窗口状态 ========== */
+
+/* 最大化 */
+.app-window.maximized {
+    border-radius: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: calc(100% - 48px) !important;
+}
+
+.app-window.maximized .app-window-titlebar {
+    border-radius: 0;
+}
+
+.app-window.maximized .app-window-body {
+    border-radius: 0;
+}
+
+/* 最小化动画 */
+.app-window.minimizing {
+    pointer-events: none;
+    animation: winMinOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.app-window.restoring {
+    animation: winMinIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes winMinOut {
+    to {
+        opacity: 0;
+        transform: translateY(40px) scale(0.7);
+    }
+}
+
+@keyframes winMinIn {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.7);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 窗口不可见（最小化状态） */
+.app-window.minimized {
+    display: none;
+}
+
+/* ========== 桌面为任务栏留空间 ========== */
+.desktop.has-taskbar {
+    bottom: 48px;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 640px) {
+    .app-window {
+        min-width: 280px;
+        min-height: 200px;
+        border-radius: 8px;
+    }
+
+    .app-window-titlebar {
+        height: 36px;
+        padding: 0 8px;
+    }
+
+    .win-btn {
+        width: 10px;
+        height: 10px;
+    }
+
+    .win-traffic-lights {
+        gap: 5px;
+        margin-right: 8px;
+    }
+
+    .taskbar {
+        height: 44px;
+    }
+
+    .taskbar-tab {
+        height: 32px;
+        padding: 0 8px;
+        font-size: 11px;
+        max-width: 120px;
+    }
+}
+
+/* ============================================
+   Windows 风格窗口样式
+   ============================================ */
+
+/* Windows：标题左对齐（覆写 macOS 居中） */
+.os-win .win-title {
+    justify-content: flex-start;
+    margin-right: auto;
+}
+
+/* Windows 标题间距 */
+.os-win .win-title-icon {
+    margin-right: 2px;
+}
+
+/* Windows 标题栏 spacer — 把按钮推到最右边 */
+.os-win .win-titlebar-spacer {
+    width: 0;
+    flex: 1;
+    flex-shrink: 1;
+}
+
+/* Windows 控制按钮组（标题栏右侧） */
+.os-win .win-controls {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+    height: 100%;
+    margin-left: 4px;
+}
+
+/* Windows 风格按钮（方形、带内嵌 SVG 图标、hover 时变色） */
+.os-win .win-btn {
+    width: 46px;
+    height: 100%;
+    border-radius: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.55);
+    transition: background 0.1s, color 0.1s;
+    padding: 0;
+    position: relative;
+}
+
+body.theme-light.os-win .win-btn {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+/* Windows 按钮 hover 效果 */
+.os-win .win-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    filter: none;
+}
+
+body.theme-light.os-win .win-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.75);
+}
+
+/* Windows 关闭按钮 hover — 红色 */
+.os-win .win-close:hover {
+    background: #e81123 !important;
+    color: #fff !important;
+}
+
+/* Windows 小屏按钮缩放 */
+@media (max-width: 640px) {
+    .os-win .win-btn {
+        width: 36px;
+    }
+}

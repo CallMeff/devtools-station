@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">闺蜜默契大挑战 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #fff5fb; --card-bg: #ffffff; --text: #5d3a5c;
+            --text-secondary: #9a7e9b; --accent: #f472b6; --accent-light: #fce7f3;
+            --accent-dark: #db2777; --border: #f5d4e8;
+            --shadow: 0 8px 32px rgba(244,114,182,0.15);
+            --shadow-lg: 0 16px 48px rgba(244,114,182,0.2);
+            --radius: 20px; --radius-sm: 14px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #fff5fb 0%, #fdf2f8 20%, #fce7f3 50%, #e8d5f5 75%, #fff5fb 100%);
+            background-size: 400% 400%;
+            animation: bgFloat 20s ease infinite;
+            min-height: 100vh; color: var(--text); line-height: 1.6;
+            display: flex; flex-direction: column; align-items: center; padding: 20px;
+            overflow-x: hidden;
+        }
+        @keyframes bgFloat {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .container { max-width: 520px; width: 100%; position: relative; z-index: 1; }
+        h1 {
+            text-align: center; font-size: 2em; margin-bottom: 4px;
+            background: linear-gradient(135deg, #e91e63, #f472b6, #a855f7, #ec4899);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; background-size: 300% 300%;
+            animation: titleShine 4s ease infinite;
+        }
+        @keyframes titleShine {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .subtitle { text-align: center; color: #c084b2; font-size: 0.95em; margin-bottom: 24px; }
+
+        .card {
+            background: var(--card-bg); border-radius: var(--radius);
+            padding: 28px 24px; margin-bottom: 20px;
+            box-shadow: var(--shadow); border: 2px solid var(--border);
+            position: relative; overflow: hidden;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #f472b6, #e879f9, #f472b6);
+            background-size: 200% 100%; animation: shimmer 3s ease infinite;
+        }
+        @keyframes shimmer {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .step-indicator {
+            display: flex; justify-content: center; gap: 8px; margin-bottom: 24px;
+        }
+        .step-dot {
+            width: 12px; height: 12px; border-radius: 50%;
+            background: #f5d4e8; transition: all 0.5s ease;
+        }
+        .step-dot.active { background: var(--accent); transform: scale(1.3); box-shadow: 0 0 12px rgba(244,114,182,0.5); }
+        .step-dot.done { background: #a855f7; }
+
+        .input-group { margin-bottom: 16px; }
+        .input-group label {
+            display: block; font-weight: 700; margin-bottom: 6px;
+            color: var(--accent-dark); font-size: 0.95em;
+        }
+        .input-group input, .input-group select {
+            width: 100%; padding: 14px 18px; border: 2px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 1em; color: var(--text);
+            background: #fdf2f8; transition: all 0.3s ease; font-family: inherit;
+        }
+        .input-group input:focus, .input-group select:focus {
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(244,114,182,0.15);
+            background: #fff;
+        }
+
+        .quiz-card {
+            background: var(--card-bg); border-radius: var(--radius);
+            padding: 24px; margin-bottom: 16px;
+            border: 2px solid var(--border); position: relative;
+            animation: cardIn 0.5s cubic-bezier(0.4,0,0.2,1);
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .quiz-num {
+            display: inline-block; background: linear-gradient(135deg, #f472b6, #e879f9);
+            color: #fff; width: 32px; height: 32px; border-radius: 50%;
+            text-align: center; line-height: 32px; font-weight: 700; font-size: 0.85em;
+            margin-bottom: 12px;
+        }
+        .quiz-question { font-size: 1.05em; font-weight: 600; margin-bottom: 16px; color: #4a2040; }
+        .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+        .quiz-option {
+            padding: 14px 18px; border: 2px solid var(--border); border-radius: 14px;
+            cursor: pointer; transition: all 0.3s ease; font-size: 0.95em;
+            background: #fdf2f8; color: var(--text);
+            text-align: left; display: flex; align-items: center; gap: 10px;
+        }
+        .quiz-option:hover { border-color: var(--accent); background: var(--accent-light); transform: translateX(4px); }
+        .quiz-option.selected {
+            border-color: var(--accent); background: linear-gradient(135deg, #fce7f3, #f3e8ff);
+            color: var(--accent-dark); font-weight: 600;
+            box-shadow: 0 4px 16px rgba(244,114,182,0.2);
+        }
+        .quiz-option .opt-letter {
+            width: 30px; height: 30px; border-radius: 10px;
+            background: var(--accent-light); color: var(--accent-dark);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.85em; flex-shrink: 0;
+        }
+        .quiz-option.selected .opt-letter {
+            background: var(--accent); color: #fff;
+        }
+
+        /* Result */
+        .result-section { text-align: center; }
+        .score-ring {
+            position: relative; width: 180px; height: 180px; margin: 0 auto 20px;
+        }
+        .score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .score-ring .ring-bg { fill: none; stroke: #f5d4e8; stroke-width: 12; }
+        .score-ring .ring-progress {
+            fill: none; stroke: url(#scoreGrad); stroke-width: 12;
+            stroke-linecap: round; transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1);
+        }
+        .score-text {
+            position: absolute; inset: 0; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        .score-value { font-size: 3em; font-weight: 800; color: var(--accent); }
+        .score-label { font-size: 0.85em; color: var(--text-secondary); margin-top: -4px; }
+
+        .result-badge {
+            display: inline-block; padding: 8px 24px; border-radius: 25px;
+            font-weight: 700; font-size: 1.1em; margin: 16px 0;
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .badge-soulmate { background: linear-gradient(135deg, #fce7f3, #f3e8ff); color: #db2777; border: 2px solid #f472b6; }
+        .badge-bestie { background: linear-gradient(135deg, #dbeafe, #e0e7ff); color: #4f46e5; border: 2px solid #818cf8; }
+        .badge-close { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #d97706; border: 2px solid #fbbf24; }
+        .badge-acquaintance { background: linear-gradient(135deg, #e0e7ff, #cffafe); color: #0891b2; border: 2px solid #22d3ee; }
+        .badge-stranger { background: linear-gradient(135deg, #f3f4f6, #e5e7eb); color: #6b7280; border: 2px solid #d1d5db; }
+
+        .result-tips {
+            background: #fdf2f8; border-radius: var(--radius-sm);
+            padding: 18px; margin: 20px 0; border: 2px dashed var(--border);
+            text-align: left; line-height: 1.8;
+        }
+        .result-tips h3 { color: var(--accent-dark); margin-bottom: 8px; font-size: 1em; }
+        .result-tips p { color: var(--text); font-size: 0.9em; }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 12px 28px; border-radius: 25px; border: none;
+            font-size: 1em; font-weight: 700; cursor: pointer;
+            transition: all 0.3s ease; font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: #fff; box-shadow: 0 4px 16px rgba(244,114,182,0.35);
+            width: 100%; justify-content: center;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(244,114,182,0.45); }
+        .btn-primary:disabled {
+            opacity: 0.5; cursor: not-allowed; transform: none;
+        }
+        .btn-outline {
+            background: #fff; color: var(--accent-dark);
+            border: 2px solid var(--accent);
+        }
+        .btn-outline:hover { background: var(--accent-light); }
+        .btn-sm { padding: 8px 18px; font-size: 0.85em; border-radius: 20px; }
+
+        .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+        /* Toast */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: #fff; padding: 14px 28px; border-radius: 30px;
+            font-weight: 600; z-index: 200;
+            box-shadow: 0 8px 30px rgba(244,114,182,0.4);
+            animation: toastIn 0.4s ease, toastOut 0.4s ease 2s forwards;
+            white-space: nowrap; font-size: 0.95em;
+        }
+        @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(-20px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+        @keyframes toastOut { from { opacity:1; } to { opacity:0; transform: translateX(-50%) translateY(-20px); } }
+
+        /* Floating hearts */
+        .hearts { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .float-heart {
+            position: absolute; font-size: 1.5em; opacity: 0;
+            animation: heartFloat 10s ease-in-out infinite;
+        }
+        @keyframes heartFloat {
+            0% { opacity: 0; transform: translateY(100vh) scale(0.5) rotate(0deg); }
+            15% { opacity: 0.7; }
+            85% { opacity: 0.7; }
+            100% { opacity: 0; transform: translateY(-10vh) scale(1.2) rotate(360deg); }
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div class="hearts" id="heartsEl"></div>
+
+<div class="container">
+    <h1>💞 闺蜜默契大挑战</h1>
+    <p class="subtitle">测测你们有多了解彼此 ✨</p>
+
+    <!-- Step 1: 输入信息 -->
+    <div class="card" id="stepInput">
+        <div class="step-indicator">
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+        </div>
+        <div class="input-group">
+            <label>👧 你的名字</label>
+            <input type="text" id="nameA" placeholder="输入你的昵称" maxlength="20">
+        </div>
+        <div class="input-group">
+            <label>👩‍🦰 TA 的名字</label>
+            <input type="text" id="nameB" placeholder="输入闺蜜/对象的名字" maxlength="20">
+        </div>
+        <div class="input-group">
+            <label>💕 你们的关系</label>
+            <select id="relation">
+                <option value="bestie">👯‍♀️ 好闺蜜</option>
+                <option value="crush">💗 暗恋对象</option>
+                <option value="lover">💑 情侣</option>
+                <option value="family">👨‍👩‍👧 家人</option>
+                <option value="classmate">🎒 同学/同事</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="startQuiz()" id="startBtn">
+            ✨ 开始默契测试
+        </button>
+    </div>
+
+    <!-- Step 2: 答题 -->
+    <div class="hidden" id="stepQuiz">
+        <div class="step-indicator">
+            <div class="step-dot done"></div>
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+        </div>
+        <div id="quizContainer"></div>
+        <button class="btn btn-primary" onclick="submitQuiz()" id="submitBtn" disabled>
+            💖 揭晓默契度
+        </button>
+        <p style="text-align:center;font-size:0.8em;color:#c084b2;margin-top:12px;" id="quizProgress"></p>
+    </div>
+
+    <!-- Step 3: 结果 -->
+    <div class="hidden" id="stepResult">
+        <div class="step-indicator">
+            <div class="step-dot done"></div>
+            <div class="step-dot done"></div>
+            <div class="step-dot active"></div>
+        </div>
+        <div class="result-section" id="resultContent"></div>
+        <div class="btn-row" style="margin-top:16px;">
+            <button class="btn btn-outline btn-sm" onclick="restartQuiz()">🔄 重新测试</button>
+            <button class="btn btn-outline btn-sm" onclick="shareResult()">📋 复制结果</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+    'use strict';
+
+    const QUESTIONS = [
+        { q: 'TA 最喜欢的颜色是什么？', options: ['粉红色 💗', '天空蓝 💙', '薄荷绿 💚', '薰衣草紫 💜', '暖橙色 🧡'], answer: -1 },
+        { q: 'TA 生气的时候会怎么做？', options: ['冷战不说话 😶', '直接表达出来 💢', '默默消化 😔', '吃零食解压 🍰', '找朋友吐槽 💬'], answer: -1 },
+        { q: 'TA 周末最想做的事情是？', options: ['宅家追剧 📺', '逛街买买买 🛍️', '户外郊游 🌿', '约饭约奶茶 🧋', '睡到自然醒 😴'], answer: -1 },
+        { q: 'TA 最害怕的东西是？', options: ['各种虫子 🐛', '恐怖电影 👻', '公开演讲 🎤', '一个人独处 🏠', '考试/面试 📝'], answer: -1 },
+        { q: 'TA 收到什么礼物最开心？', options: ['手写卡片/信 💌', 'DIY手作礼物 🎨', '她想要的特定物品 🎁', '惊喜红包 🧧', '浪漫约会体验 🌹'], answer: -1 },
+        { q: 'TA 最常用的表情包风格是？', options: ['可爱猫咪 🐱', '沙雕搞笑 🤪', '萌萌小动物 🐰', '高冷气质 👸', '土味情话 💕'], answer: -1 },
+        { q: 'TA 的理想旅行地是？', options: ['日本动漫巡礼 🇯🇵', '欧洲浪漫小镇 🏰', '热带海岛度假 🏖️', '国内美食之旅 🍜', '背包客环游世界 🌍'], answer: -1 },
+        { q: 'TA 最看重的朋友品质是？', options: ['真诚不撒谎 🤝', '幽默有趣 😂', '能在需要时出现 🆘', '三观一致 💭', '分享八卦愿意倾听 👂'], answer: -1 },
+        { q: '如果 TA 中了 500 万，第一件事做什么？', options: ['给家人一部分 💰', '辞职环游世界 ✈️', '买房买车 🏠', '存起来慢慢花 🏦', '请所有朋友吃饭 🍽️'], answer: -1 },
+        { q: 'TA 现在最需要的是一句什么话？', options: ['我相信你 ✨', '我永远在你身边 💞', '你今天真好看 💐', '别担心，有我呢 🫂', '你辛苦了 ☕'], answer: -1 },
+    ];
+
+    let state = { nameA: '', nameB: '', relation: 'bestie', answers: [], score: 0 };
+
+    function getEmoji(){
+        const list = ['💕','🌸','✨','💖','🦋','🎀','💝','🌷','💗','🧸',
+            '🫧','🌟','🍀','🎀','💫','🪷','🕊️','🌈'];
+        return list[Math.floor(Math.random() * list.length)];
+    }
+
+    function createHearts(){
+        const cont = document.getElementById('heartsEl');
+        for(let i = 0; i < 12; i++){
+            const h = document.createElement('span');
+            h.className = 'float-heart';
+            h.textContent = getEmoji();
+            h.style.left = (Math.random() * 96) + '%';
+            h.style.animationDelay = (Math.random() * 10) + 's';
+            h.style.animationDuration = (8 + Math.random() * 10) + 's';
+            h.style.fontSize = (1 + Math.random() * 2) + 'em';
+            cont.appendChild(h);
+        }
+    }
+
+    window.startQuiz = function(){
+        const nameA = document.getElementById('nameA').value.trim();
+        const nameB = document.getElementById('nameB').value.trim();
+        if(!nameA || !nameB){
+            showToast('请输入两个人的名字哦～');
+            return;
+        }
+        state.nameA = nameA;
+        state.nameB = nameB;
+        state.relation = document.getElementById('relation').value;
+        state.answers = [];
+        state.score = 0;
+
+        document.getElementById('stepInput').classList.add('hidden');
+        const quizStep = document.getElementById('stepQuiz');
+        quizStep.classList.remove('hidden');
+        renderQuiz();
+        quizStep.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    function renderQuiz(){
+        const container = document.getElementById('quizContainer');
+        let html = '<p style="text-align:center;color:#9a7e9b;margin-bottom:16px;font-weight:600;">假设你是 <b style="color:#f472b6;">' +
+            escapeHtml(state.nameA) + '</b>，请猜测 <b style="color:#a855f7;">' +
+            escapeHtml(state.nameB) + '</b> 的答案 👇</p>';
+
+        QUESTIONS.forEach(function(item, idx){
+            html += '<div class="quiz-card" id="quiz-'+idx+'">' +
+                '<div class="quiz-num">' + (idx+1) + '</div>' +
+                '<div class="quiz-question">' + item.q + '</div>' +
+                '<div class="quiz-options">';
+            const letters = ['A','B','C','D','E'];
+            item.options.forEach(function(opt, oi){
+                html += '<div class="quiz-option" onclick="selectAnswer('+idx+','+oi+')" id="opt-'+idx+'-'+oi+'">' +
+                    '<span class="opt-letter">'+letters[oi]+'</span>' + opt + '</div>';
+            });
+            html += '</div></div>';
+        });
+        container.innerHTML = html;
+        updateProgress();
+        container.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.selectAnswer = function(qIdx, oIdx){
+        state.answers[qIdx] = oIdx;
+        document.querySelectorAll('#quiz-'+qIdx+' .quiz-option').forEach(function(el){
+            el.classList.remove('selected');
+        });
+        document.getElementById('opt-'+qIdx+'-'+oIdx).classList.add('selected');
+        updateProgress();
+    };
+
+    function updateProgress(){
+        const answered = state.answers.filter(function(v){ return v !== undefined; }).length;
+        document.getElementById('quizProgress').textContent =
+            '已选 ' + answered + ' / ' + QUESTIONS.length + ' 题';
+        document.getElementById('submitBtn').disabled = (answered < QUESTIONS.length);
+    }
+
+    window.submitQuiz = function(){
+        // Calculate "compatibility score" based on answers
+        // Real scenario: compare with what TA actually answered
+        // Here we use a fun scoring algorithm based on answer patterns
+        let score = 0;
+        const weights = [1, 1.5, 0.8, 1.2, 1, 0.9, 1.1, 1.3, 0.7, 1.4]; // question weights
+
+        // Simulate "correct" answers based on relation and names for fun factor
+        const nameHash = (state.nameA + state.nameB).split('').reduce(function(s,c){return s+c.charCodeAt(0);},0);
+        const relationMod = { bestie: 3, crush: 2, lover: 4, family: 2, classmate: 1 }[state.relation] || 2;
+        const seed = (nameHash % 7) + relationMod;
+
+        for(let i = 0; i < QUESTIONS.length; i++){
+            const guess = state.answers[i];
+            if(guess === undefined) continue;
+            // Pseudo-"correct" answer with some randomness based on seed
+            const correct = (i * seed + 2) % 5;
+            const dist = Math.abs(guess - correct);
+            if(dist === 0) score += weights[i];
+            else if(dist === 1) score += weights[i] * 0.6;
+            else if(dist === 2) score += weights[i] * 0.3;
+            else score += weights[i] * 0.1;
+        }
+        const maxScore = weights.reduce(function(s,w){return s+w;},0);
+        state.score = Math.round(score / maxScore * 100);
+
+        renderResult();
+    };
+
+    function renderResult(){
+        document.getElementById('stepQuiz').classList.add('hidden');
+        document.getElementById('stepResult').classList.remove('hidden');
+
+        const r = Math.min(100, Math.max(1, state.score));
+        const circumference = 2 * Math.PI * 60;
+        const offset = circumference - (r / 100) * circumference;
+
+        let level, badgeClass, emoji, description;
+        if(r >= 95){ level='灵魂伴侣'; badgeClass='badge-soulmate'; emoji='💖'; description='你们简直是天造地设的一对！'; }
+        else if(r >= 80){ level='金牌闺蜜'; badgeClass='badge-bestie'; emoji='👯‍♀️'; description='默契度超高，比亲姐妹还了解彼此！'; }
+        else if(r >= 60){ level='亲密好友'; badgeClass='badge-close'; emoji='🤗'; description='很不错哦，你们真的很懂对方～'; }
+        else if(r >= 35){ level='普通朋友'; badgeClass='badge-acquaintance'; emoji='😊'; description='还可以继续多多了解，多约出来玩吧！'; }
+        else { level='需要更多相处'; badgeClass='badge-stranger'; emoji='🌱'; description='刚认识不久嘛，感情需要慢慢培养～'; }
+
+        document.getElementById('resultContent').innerHTML =
+            '<div class="score-ring"><svg viewBox="0 0 140 140">' +
+            '<defs><linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">' +
+            '<stop offset="0%" stop-color="#f472b6"/><stop offset="50%" stop-color="#e879f9"/>' +
+            '<stop offset="100%" stop-color="#a855f7"/></linearGradient></defs>' +
+            '<circle class="ring-bg" cx="70" cy="70" r="60"/>' +
+            '<circle class="ring-progress" cx="70" cy="70" r="60" ' +
+            'stroke-dasharray="'+circumference+'" stroke-dashoffset="'+circumference+'" id="ringCircle"/>' +
+            '</svg><div class="score-text"><div class="score-value">' + r + '%</div>' +
+            '<div class="score-label">默契指数</div></div></div>' +
+            '<div class="result-badge '+badgeClass+'">' + emoji + ' ' + level + '</div>' +
+            '<p style="font-size:1.05em;color:#4a2040;margin:8px 0;">' + description + '</p>' +
+            '<div class="result-tips">' +
+            '<h3>💡 给 <b style="color:#f472b6;">'+escapeHtml(state.nameA)+'</b> 和 <b style="color:#a855f7;">'+escapeHtml(state.nameB)+'</b> 的小建议：</h3>' +
+            getAdvice() + '</div>';
+
+        document.getElementById('stepResult').scrollIntoView({ behavior: 'smooth' });
+
+        // Animate the ring
+        setTimeout(function(){
+            const c = document.getElementById('ringCircle');
+            if(c) c.style.strokeDashoffset = offset;
+        }, 200);
+    }
+
+    function getAdvice(){
+        const advices = {
+            bestie: '<p>💕 好闺蜜是一辈子的！多分享小秘密，一起打卡奶茶店，友谊长存～</p>' +
+                '<p>🎀 下次见面的时候，给TA一个惊喜小礼物吧！</p>',
+            crush: '<p>💗 喜欢就去追呀！从每天分享一首歌开始吧～</p>' +
+                '<p>💭 不如把这个测试结果发给TA看看？说不定有惊喜！</p>',
+            lover: '<p>💑 爱情需要用心经营，多制造一些小浪漫～</p>' +
+                '<p>🌹 记下TA不经意提到的小愿望，偷偷去实现它！</p>',
+            family: '<p>👨‍👩‍👧 家人是最温暖的港湾，多陪陪TA聊聊天～</p>' +
+                '<p>🏠 周末一起做顿饭吧，家常味最有爱！</p>',
+            classmate: '<p>🎒 工作学习之余，约一场电影或下午茶吧～</p>' +
+                '<p>☕ 带杯奶茶给TA，友谊的小船从此起航！</p>',
+        };
+        return advices[state.relation] || advices.bestie;
+    }
+
+    window.restartQuiz = function(){
+        state.answers = [];
+        state.score = 0;
+        document.getElementById('stepResult').classList.add('hidden');
+        document.getElementById('stepInput').classList.remove('hidden');
+        document.getElementById('stepQuiz').classList.add('hidden');
+        document.getElementById('stepInput').scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.shareResult = function(){
+        const r = state.score;
+        const text = '💞 我和 ' + state.nameB + ' 的闺蜜默契度是 ' + r + '%！\n' +
+            '来测测你和 Ta 有多少默契吧～\n' +
+            window.location.href;
+        if(navigator.clipboard){
+            navigator.clipboard.writeText(text).then(function(){
+                showToast('📋 结果已复制，快去发给TA吧！');
+            });
+        }
+    };
+
+    function showToast(msg){
+        const old = document.querySelector('.toast');
+        if(old) old.remove();
+        const t = document.createElement('div');
+        t.className = 'toast'; t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(function(){ t.remove(); }, 2400);
+    }
+
+    function escapeHtml(txt){
+        const d = document.createElement('div');
+        d.textContent = txt;
+        return d.innerHTML;
+    }
+
+    createHearts();
+})();
+</script>
+</body>
+</html>

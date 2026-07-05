@@ -2,13 +2,11 @@ package com.devtools.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 统一响应结果
  */
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class Result<T> {
     private int code;

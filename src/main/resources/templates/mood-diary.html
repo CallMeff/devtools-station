@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${tool.name} + ' - DevTools Station'">心情日记 - DevTools Station</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #fff5fb; --card-bg: #ffffff; --text: #5d3a5c;
+            --text-secondary: #9a7e9b; --accent: #f472b6; --accent-light: #fce7f3;
+            --accent-dark: #db2777; --border: #f5d4e8;
+            --shadow: 0 8px 32px rgba(244,114,182,0.12);
+            --radius: 20px; --radius-sm: 14px;
+            --mood-happy: #FFD93D; --mood-love: #FF6B9D; --mood-calm: #6BCB77;
+            --mood-sad: #4D96FF; --mood-tired: #C9B1FF; --mood-excited: #FF8C42;
+            --mood-anxious: #FFB347; --mood-angry: #FF5757;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #fff5fb 0%, #fdf2f8 20%, #fce7f3 50%, #f5f3ff 75%, #fff5fb 100%);
+            background-size: 400% 400%; animation: bgFloat 15s ease infinite;
+            min-height: 100vh; color: var(--text); line-height: 1.6;
+            display: flex; flex-direction: column; align-items: center; padding: 20px;
+        }
+        @keyframes bgFloat {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .container { max-width: 520px; width: 100%; position: relative; z-index: 1; }
+
+        h1 {
+            text-align: center; font-size: 2em; margin-bottom: 4px;
+            background: linear-gradient(135deg, #ec4899, #f472b6, #a855f7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            background-size: 300% 300%; animation: titleShine 4s ease infinite;
+        }
+        @keyframes titleShine { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        .subtitle { text-align: center; color: #c084b2; font-size: 0.95em; margin-bottom: 20px; }
+
+        .card {
+            background: var(--card-bg); border-radius: var(--radius);
+            padding: 24px; margin-bottom: 16px;
+            box-shadow: var(--shadow); border: 2px solid var(--border);
+            position: relative;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #f472b6, #e879f9, #ec4899, #f472b6);
+            background-size: 300% 100%; animation: shimmer 3s ease infinite;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+        @keyframes shimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+        /* Month navigator */
+        .month-nav {
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; margin-bottom: 16px;
+        }
+        .month-nav button {
+            background: var(--accent-light); border: none;
+            width: 36px; height: 36px; border-radius: 50%;
+            cursor: pointer; font-size: 1.1em; color: var(--accent);
+            transition: all 0.2s;
+        }
+        .month-nav button:hover { background: var(--accent); color: #fff; }
+        .month-title {
+            font-size: 1.2em; font-weight: 800; min-width: 120px; text-align: center;
+            background: linear-gradient(135deg, #ec4899, #a855f7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* Calendar */
+        .calendar { margin-bottom: 8px; }
+        .weekdays {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            text-align: center; margin-bottom: 4px;
+        }
+        .weekdays span {
+            font-size: 0.75em; font-weight: 700; color: var(--text-secondary);
+            padding: 4px 0;
+        }
+        .weekdays span:first-child, .weekdays span:last-child {
+            color: var(--accent);
+        }
+        .days-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+        }
+        .day-cell {
+            aspect-ratio: 1; border-radius: 12px;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; cursor: pointer;
+            transition: all 0.2s ease; position: relative;
+            font-size: 0.85em; font-weight: 600; color: var(--text);
+            border: 2px solid transparent;
+        }
+        .day-cell:hover { border-color: var(--accent); background: var(--accent-light); }
+        .day-cell.empty { cursor: default; }
+        .day-cell.empty:hover { border-color: transparent; background: transparent; }
+        .day-cell.today {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px rgba(244,114,182,0.2);
+        }
+        .day-cell .day-num { font-size: 0.9em; }
+        .day-cell .mood-icon { font-size: 1.1em; line-height: 1; }
+
+        /* Mood selector */
+        .mood-selector {
+            display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+            margin-bottom: 16px;
+        }
+        .mood-btn {
+            width: 44px; height: 44px; border-radius: 50%; border: 3px solid transparent;
+            cursor: pointer; font-size: 1.3em; display: flex;
+            align-items: center; justify-content: center;
+            transition: all 0.2s ease; background: #fff;
+        }
+        .mood-btn:hover { transform: scale(1.15); }
+        .mood-btn.selected {
+            border-color: var(--accent); transform: scale(1.15);
+            box-shadow: 0 4px 16px rgba(244,114,182,0.3);
+        }
+
+        /* Entry form */
+        .entry-form { }
+        .entry-form textarea {
+            width: 100%; min-height: 120px; padding: 14px;
+            border: 2px solid var(--border); border-radius: var(--radius-sm);
+            font-size: 0.95em; color: var(--text); background: #fdf2f8;
+            resize: vertical; font-family: inherit; line-height: 1.7;
+            transition: border 0.3s;
+        }
+        .entry-form textarea:focus {
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(244,114,182,0.12);
+        }
+        .entry-form .date-display {
+            font-weight: 700; color: var(--accent);
+            margin-bottom: 8px; font-size: 0.95em;
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 12px 28px; border-radius: 25px; border: none;
+            font-size: 1em; font-weight: 700; cursor: pointer;
+            transition: all 0.3s ease; font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: #fff; box-shadow: 0 4px 16px rgba(244,114,182,0.35);
+            width: 100%; justify-content: center;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(244,114,182,0.45); }
+        .btn-outline {
+            background: #fff; color: var(--accent);
+            border: 2px solid var(--accent);
+        }
+        .btn-outline:hover { background: var(--accent-light); }
+        .btn-sm { padding: 8px 18px; font-size: 0.85em; border-radius: 20px; }
+        .btn-danger {
+            background: rgba(239,68,68,0.1); color: #ef4444;
+            border: 2px solid transparent; cursor: pointer;
+        }
+        .btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+        .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+
+        /* Streak */
+        .streak-bar {
+            display: flex; align-items: center; justify-content: center;
+            gap: 16px; margin-bottom: 16px;
+        }
+        .streak-item {
+            text-align: center;
+            background: var(--accent-light); border-radius: 16px;
+            padding: 8px 16px;
+        }
+        .streak-num {
+            font-size: 1.5em; font-weight: 800;
+            background: linear-gradient(135deg, #ec4899, #a855f7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .streak-lbl { font-size: 0.7em; color: var(--text-secondary); }
+
+        /* Toast */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #f472b6, #a855f7);
+            color: #fff; padding: 12px 24px; border-radius: 30px;
+            font-weight: 600; z-index: 200;
+            box-shadow: 0 8px 30px rgba(244,114,182,0.4);
+            animation: toastIn 0.4s ease, toastOut 0.4s ease 1.8s forwards;
+            white-space: nowrap; font-size: 0.9em;
+        }
+        @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(-20px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+        @keyframes toastOut { from { opacity:1; } to { opacity:0; transform: translateX(-50%) translateY(-20px); } }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📔 心情日记</h1>
+    <p class="subtitle">记录每一天的小心情 💕</p>
+
+    <!-- Streak -->
+    <div class="streak-bar">
+        <div class="streak-item">
+            <div class="streak-num" id="streakCount">0</div>
+            <div class="streak-lbl">🔥 连续记录</div>
+        </div>
+        <div class="streak-item">
+            <div class="streak-num" id="totalEntries">0</div>
+            <div class="streak-lbl">📝 总篇数</div>
+        </div>
+    </div>
+
+    <!-- Calendar card -->
+    <div class="card">
+        <!-- Month nav -->
+        <div class="month-nav">
+            <button onclick="prevMonth()">◀</button>
+            <span class="month-title" id="monthTitle">2026年7月</span>
+            <button onclick="nextMonth()">▶</button>
+        </div>
+
+        <!-- Calendar -->
+        <div class="calendar">
+            <div class="weekdays">
+                <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+            </div>
+            <div class="days-grid" id="daysGrid"></div>
+        </div>
+    </div>
+
+    <!-- Entry form card -->
+    <div class="card hidden" id="entryCard">
+        <div class="date-display" id="entryDate">2026年7月4日</div>
+        <p style="color:var(--text-secondary);font-size:0.85em;margin-bottom:8px;">选择今天的心情：</p>
+        <div class="mood-selector" id="moodSelector">
+            <div class="mood-btn" data-mood="happy" title="开心" onclick="selectMood('happy', this)">😊</div>
+            <div class="mood-btn" data-mood="love" title="甜蜜" onclick="selectMood('love', this)">🥰</div>
+            <div class="mood-btn" data-mood="excited" title="兴奋" onclick="selectMood('excited', this)">🤩</div>
+            <div class="mood-btn" data-mood="calm" title="平静" onclick="selectMood('calm', this)">😌</div>
+            <div class="mood-btn" data-mood="tired" title="疲惫" onclick="selectMood('tired', this)">😴</div>
+            <div class="mood-btn" data-mood="sad" title="难过" onclick="selectMood('sad', this)">😢</div>
+            <div class="mood-btn" data-mood="anxious" title="焦虑" onclick="selectMood('anxious', this)">😰</div>
+            <div class="mood-btn" data-mood="angry" title="生气" onclick="selectMood('angry', this)">😤</div>
+        </div>
+        <div class="entry-form">
+            <textarea id="entryText" placeholder="今天发生了什么有趣的事呢？写下你的小心情吧... 📝"></textarea>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-primary" onclick="saveEntry()">
+                💾 保存日记
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="deleteEntry()" id="deleteBtn">
+                🗑️ 删除这篇
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+    const STORAGE_KEY = 'mood-diary-entries';
+    const MOOD_EMOJI = {
+        happy: '😊', love: '🥰', excited: '🤩', calm: '😌',
+        tired: '😴', sad: '😢', anxious: '😰', angry: '😤'
+    };
+    const MOOD_LABEL = {
+        happy: '开心', love: '甜蜜', excited: '兴奋', calm: '平静',
+        tired: '疲惫', sad: '难过', anxious: '焦虑', angry: '生气'
+    };
+
+    let currentYear, currentMonth, selectedDate, selectedMood = 'happy';
+    let entries = {};
+
+    function getEntries() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+        catch(e) { return {}; }
+    }
+
+    function saveEntries(e) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(e));
+    }
+
+    function fmtDate(y, m, d) {
+        return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    }
+
+    function getToday() {
+        const now = new Date();
+        return { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() };
+    }
+
+    function renderCalendar() {
+        entries = getEntries();
+        const today = getToday();
+        document.getElementById('monthTitle').textContent = `${currentYear}年${currentMonth+1}月`;
+
+        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+        let html = '';
+        // Empty cells before first day
+        for (let i = 0; i < firstDay; i++) {
+            html += '<div class="day-cell empty"></div>';
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateKey = fmtDate(currentYear, currentMonth, d);
+            const entry = entries[dateKey];
+            const isToday = (currentYear === today.y && currentMonth === today.m && d === today.d);
+            const isSelected = selectedDate === dateKey;
+
+            let cellClass = 'day-cell';
+            if (isToday) cellClass += ' today';
+            if (isSelected) cellClass += ' selected';
+
+            let moodHtml = '';
+            if (entry && entry.mood) {
+                moodHtml = `<span class="mood-icon">${MOOD_EMOJI[entry.mood] || '📝'}</span>`;
+            }
+
+            html += `<div class="${cellClass}" onclick="openEntry('${dateKey}')" ${isSelected ? 'id="selectedCell"' : ''}>
+                <span class="day-num">${d}</span>
+                ${moodHtml}
+            </div>`;
+        }
+
+        document.getElementById('daysGrid').innerHTML = html;
+        updateStats();
+    }
+
+    function updateStats() {
+        const e = getEntries();
+        const total = Object.keys(e).length;
+        document.getElementById('totalEntries').textContent = total;
+
+        // Calculate streak (consecutive days from today backwards)
+        const today = getToday();
+        let streak = 0;
+        let checkDate = new Date(today.y, today.m, today.d);
+        while (true) {
+            const key = fmtDate(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
+            if (e[key]) {
+                streak++;
+                checkDate.setDate(checkDate.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+        document.getElementById('streakCount').textContent = streak;
+    }
+
+    function openEntry(dateKey) {
+        selectedDate = dateKey;
+        const [y, m, d] = dateKey.split('-').map(Number);
+
+        document.getElementById('entryDate').textContent = `${y}年${m}月${d}日`;
+        document.getElementById('entryCard').classList.remove('hidden');
+
+        const entry = entries[dateKey];
+        if (entry) {
+            document.getElementById('entryText').value = entry.text || '';
+            selectedMood = entry.mood || 'happy';
+            document.getElementById('deleteBtn').classList.remove('hidden');
+        } else {
+            document.getElementById('entryText').value = '';
+            selectedMood = 'happy';
+            document.getElementById('deleteBtn').classList.add('hidden');
+        }
+
+        updateMoodUI();
+        renderCalendar();
+        document.getElementById('entryCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function selectMood(mood, el) {
+        selectedMood = mood;
+        updateMoodUI();
+    }
+
+    function updateMoodUI() {
+        document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+        const active = document.querySelector(`.mood-btn[data-mood="${selectedMood}"]`);
+        if (active) active.classList.add('selected');
+    }
+
+    function saveEntry() {
+        if (!selectedDate) return;
+        const text = document.getElementById('entryText').value.trim();
+        if (!text) {
+            showToast('💕 写点什么吧，哪怕一句话也好～');
+            return;
+        }
+
+        const e = getEntries();
+        e[selectedDate] = {
+            mood: selectedMood,
+            text: text,
+            savedAt: new Date().toISOString()
+        };
+        saveEntries(e);
+        entries = e;
+
+        showToast('💖 日记已保存！');
+        document.getElementById('entryCard').classList.add('hidden');
+        selectedDate = null;
+        renderCalendar();
+    }
+
+    function deleteEntry() {
+        if (!selectedDate) return;
+        if (!confirm('确定要删除这篇日记吗？💔')) return;
+
+        const e = getEntries();
+        delete e[selectedDate];
+        saveEntries(e);
+        entries = e;
+
+        document.getElementById('entryCard').classList.add('hidden');
+        document.getElementById('entryText').value = '';
+        selectedDate = null;
+        showToast('日记已删除');
+        renderCalendar();
+    }
+
+    window.prevMonth = function() {
+        currentMonth--;
+        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+        selectedDate = null;
+        document.getElementById('entryCard').classList.add('hidden');
+        renderCalendar();
+    };
+
+    window.nextMonth = function() {
+        currentMonth++;
+        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+        selectedDate = null;
+        document.getElementById('entryCard').classList.add('hidden');
+        renderCalendar();
+    };
+
+    window.selectMood = selectMood;
+    window.openEntry = openEntry;
+    window.saveEntry = saveEntry;
+    window.deleteEntry = deleteEntry;
+
+    function showToast(msg) {
+        const old = document.querySelector('.toast');
+        if (old) old.remove();
+        const t = document.createElement('div');
+        t.className = 'toast'; t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2200);
+    }
+
+    // Init
+    const t = getToday();
+    currentYear = t.y;
+    currentMonth = t.m;
+    renderCalendar();
+})();
+</script>
+</body>
+</html>

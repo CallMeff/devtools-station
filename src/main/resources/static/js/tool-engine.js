@@ -1066,7 +1066,176 @@
             inputs: [
                 { name: 'input', i18n: 'tool_label.jwt_token', type: 'textarea', required: true, rows: 6, ph_i18n: 'tool_ph.jwt' }
             ],
+            options: [
+                { name: 'mode', i18n: 'tool_opt.mode', type: 'select', options: [
+                    { value: 'decode', label: '🔍 解析 JWT' },
+                    { value: 'sign', label: '✍️ 签发 JWT' }
+                ], default: 'decode' }
+            ],
+            // Sign mode fields (shown when mode=sign)
+            signFields: [
+                { name: 'payload', placeholder: '{"sub":"1234567890","name":"John Doe","iat":1516239022}', label: '📦 Payload (JSON)', type: 'textarea', rows: 4 },
+                { name: 'secret', placeholder: 'your-256-bit-secret', label: '🔑 Secret Key', type: 'text' }
+            ],
+            signAlgOptions: [
+                { value: 'HS256', label: 'HS256' },
+                { value: 'HS384', label: 'HS384' },
+                { value: 'HS512', label: 'HS512' }
+            ],
             exampleInput: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+            onRender: function(container, config) {
+                var self = this;
+                // Add sign mode UI elements
+                var modeSelect = container.querySelector('[name="mode"]');
+                var signSection;
+
+                function createSignUI() {
+                    var div = document.createElement('div');
+                    div.className = 'jwt-sign-section';
+                    div.style.cssText = 'margin-top:16px;padding:16px;background:var(--bg-tertiary,#2a2a3a);border-radius:10px;border:1px solid var(--border-color,#444);';
+
+                    var html = '<h4 style="color:#6ee7b7;margin:0 0 12px;font-size:14px;">✍️ JWT 签名（纯前端，密钥不上传）</h4>';
+
+                    // Payload
+                    html += '<label style="font-size:12px;color:var(--text-muted,#888);display:block;margin-bottom:4px;">📦 Payload (JSON)</label>';
+                    html += '<textarea name="jwt-sign-payload" rows="4" style="width:100%;padding:10px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);font-family:monospace;font-size:13px;resize:vertical;outline:none;margin-bottom:10px;" placeholder=\'{"sub":"1234567890","name":"John Doe","iat":1516239022}\'></textarea>';
+
+                    // Secret
+                    html += '<label style="font-size:12px;color:var(--text-muted,#888);display:block;margin-bottom:4px;">🔑 Secret Key</label>';
+                    html += '<div style="display:flex;gap:8px;margin-bottom:10px;">';
+                    html += '<input type="text" name="jwt-sign-secret" style="flex:1;padding:8px 12px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);font-family:monospace;font-size:13px;outline:none;" placeholder="your-256-bit-secret">';
+                    html += '<button type="button" class="jwt-gen-secret-btn" style="padding:8px 14px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#888);cursor:pointer;font-size:12px;white-space:nowrap;" title="生成随机密钥">🎲 随机</button>';
+                    html += '</div>';
+
+                    // Algorithm
+                    html += '<label style="font-size:12px;color:var(--text-muted,#888);display:block;margin-bottom:4px;">🔐 签名算法</label>';
+                    html += '<select name="jwt-sign-alg" style="padding:8px 12px;border:1px solid var(--border-color,#444);border-radius:8px;background:var(--bg-primary,#1a1a2e);color:var(--text-primary,#ddd);font-size:13px;outline:none;cursor:pointer;margin-bottom:12px;">';
+                    html += '<option value="HS256">HS256 (HMAC-SHA256)</option>';
+                    html += '<option value="HS384">HS384 (HMAC-SHA384)</option>';
+                    html += '<option value="HS512">HS512 (HMAC-SHA512)</option>';
+                    html += '</select><br>';
+
+                    // Sign button
+                    html += '<button type="button" id="jwtSignBtn" style="padding:8px 20px;border:none;border-radius:8px;background:var(--accent,#7c3aed);color:#fff;cursor:pointer;font-size:13px;font-weight:600;">✍️ 生成 JWT</button>';
+                    html += '<span id="jwtSignStatus" style="margin-left:10px;font-size:12px;color:var(--text-muted,#888);"></span>';
+
+                    // Signed JWT output
+                    html += '<textarea id="jwtSignOutput" readonly rows="3" style="width:100%;padding:10px;border:1px solid var(--accent,#7c3aed);border-radius:8px;background:var(--bg-primary,#1a1a2e);color:#4ade80;font-family:monospace;font-size:13px;resize:vertical;outline:none;margin-top:10px;" placeholder="生成的 JWT Token 将显示在此..."></textarea>';
+                    html += '<button type="button" id="jwtCopyBtn" style="margin-top:6px;padding:5px 14px;border:1px solid var(--border-color,#444);border-radius:6px;background:var(--bg-tertiary,#2a2a3a);color:var(--text-muted,#888);cursor:pointer;font-size:11px;">📋 复制 Token</button>';
+
+                    div.innerHTML = html;
+                    return div;
+                }
+
+                // Insert the sign section after the form content
+                signSection = createSignUI();
+                container.appendChild(signSection);
+
+                // Toggle sign section visibility
+                function toggleSignSection() {
+                    var isSign = modeSelect.value === 'sign';
+                    if (signSection) signSection.style.display = isSign ? 'block' : 'none';
+                    // Show/hide main input group and execute button for sign mode
+                    var inputGroup = container.querySelector('.input-group');
+                    if (inputGroup) inputGroup.style.display = isSign ? 'none' : '';
+                    var execBtn = document.getElementById('btnExecute');
+                    var clearBtn = document.querySelector('.btn-outline[onclick*="clearAll"]');
+                    if (execBtn) {
+                        if (isSign) {
+                            execBtn.textContent = '✍️ 签发 JWT';
+                            execBtn.style.background = '#059669';
+                            execBtn.style.borderColor = '#059669';
+                            execBtn.onclick = function(e){ e.preventDefault(); e.stopPropagation();
+                                var sb = container.querySelector('#jwtSignBtn'); if(sb) sb.click(); return false; };
+                        } else {
+                            execBtn.textContent = __('engine.execute') || '执行';
+                            execBtn.style.background = '';
+                            execBtn.style.borderColor = '';
+                            execBtn.onclick = null;
+                        }
+                    }
+                    if (clearBtn) clearBtn.style.display = isSign ? 'none' : '';
+                    // Toggle hint text
+                    var hint = container.querySelector('.input-hint');
+                    if (hint) hint.style.display = isSign ? 'none' : '';
+                }
+
+                if (modeSelect) {
+                    modeSelect.addEventListener('change', toggleSignSection);
+                    toggleSignSection();
+                }
+
+                // JWT Signing using Web Crypto API
+                async function jwtSign(payload, secret, algorithm) {
+                    var enc = new TextEncoder();
+                    var header = { alg: algorithm, typ: 'JWT' };
+                    var headerB64 = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+                    var payloadB64 = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+                    var unsignedToken = headerB64 + '.' + payloadB64;
+
+                    var keyData = enc.encode(secret);
+                    var algoMap = { HS256: 'SHA-256', HS384: 'SHA-384', HS512: 'SHA-512' };
+                    var hashAlgo = algoMap[algorithm] || 'SHA-256';
+
+                    var key = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: hashAlgo }, false, ['sign']);
+                    var sig = await crypto.subtle.sign('HMAC', key, enc.encode(unsignedToken));
+                    var sigB64 = btoa(String.fromCharCode.apply(null, new Uint8Array(sig))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+                    return unsignedToken + '.' + sigB64;
+                }
+
+                // Bind sign button
+                var signBtn = container.querySelector('#jwtSignBtn');
+                var signOutput = container.querySelector('#jwtSignOutput');
+                var signStatus = container.querySelector('#jwtSignStatus');
+                var genSecretBtn = container.querySelector('.jwt-gen-secret-btn');
+                var copyBtn = container.querySelector('#jwtCopyBtn');
+
+                if (signBtn && signOutput) {
+                    signBtn.addEventListener('click', async function() {
+                        var payloadStr = container.querySelector('[name="jwt-sign-payload"]').value.trim();
+                        var secret = container.querySelector('[name="jwt-sign-secret"]').value.trim();
+                        var alg = container.querySelector('[name="jwt-sign-alg"]').value;
+
+                        if (!secret) { signStatus.textContent = '❌ 请输入密钥'; return; }
+                        try {
+                            var payload = JSON.parse(payloadStr);
+                            signStatus.textContent = '⏳ 签名中...';
+                            signBtn.disabled = true;
+                            var token = await jwtSign(payload, secret, alg);
+                            signOutput.value = token;
+                            signStatus.textContent = '✅ 签发成功';
+                            signStatus.style.color = '#4ade80';
+                        } catch(err) {
+                            signStatus.textContent = '❌ ' + (err.message || '签名失败');
+                            signStatus.style.color = '#ef4444';
+                        }
+                        signBtn.disabled = false;
+                    });
+                }
+
+                if (genSecretBtn) {
+                    genSecretBtn.addEventListener('click', function() {
+                        var arr = new Uint8Array(32);
+                        crypto.getRandomValues(arr);
+                        var hex = Array.from(arr).map(function(b) { return b.toString(16).padStart(2,'0'); }).join('');
+                        container.querySelector('[name="jwt-sign-secret"]').value = hex;
+                    });
+                }
+
+                if (copyBtn && signOutput) {
+                    copyBtn.addEventListener('click', function() {
+                        if (!signOutput.value) return;
+                        if (navigator.clipboard) {
+                            navigator.clipboard.writeText(signOutput.value).then(function(){
+                                signStatus.textContent = '✅ 已复制到剪贴板';
+                                signStatus.style.color = '#4ade80';
+                            });
+                        } else {
+                            signOutput.select(); document.execCommand('copy');
+                        }
+                    });
+                }
+            },
             formatOutput: function(data) {
                 if (data.error) return '<div class="ts-error">❌ ' + escapeHtml(data.error) + '</div>';
                 if (data.payload_error) return '<div class="ts-error">⚠️ ' + escapeHtml(data.payload_error) + '</div>';
@@ -1633,6 +1802,11 @@
         // ── 输入历史记录（仅 text-transform / text-with-key 类型）──
         if (config.type === 'text-transform' || config.type === 'text-with-key') {
             addInputHistory();
+        }
+
+        // ── onRender 回调：用于自定义 UI 增强（如 JWT 签名面板）──
+        if (typeof config.onRender === 'function') {
+            config.onRender(inputSection, config);
         }
     }
 
