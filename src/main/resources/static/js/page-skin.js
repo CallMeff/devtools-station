@@ -78,7 +78,8 @@
     naturalWidth: 0,
     naturalHeight: 0,
     videoMuted: true,
-    videoLoop: true
+    videoLoop: true,
+    fitMode: 'cover'       // 'cover' 铺满截取 | 'fill' 拉伸 | 'repeat' 平铺 | 'free' 自由定位
   };
 
     var SETTINGS_KEY = 'devtools-page-settings';
@@ -186,15 +187,30 @@
     if (!overlayContainer) {
       overlayContainer = document.createElement('div');
       overlayContainer.id = 'page-skin-overlay';
-      overlayContainer.style.position = 'fixed';
-      overlayContainer.style.top = '0';
-      overlayContainer.style.left = '0';
-      overlayContainer.style.width = '100vw';
-      overlayContainer.style.height = '100vh';
-      overlayContainer.style.zIndex = '-1';
+      overlayContainer.style.position = 'absolute';
+      overlayContainer.style.inset = '0';
+      overlayContainer.style.zIndex = '0';
       overlayContainer.style.pointerEvents = 'none';
       overlayContainer.style.overflow = 'hidden';
-      document.body.insertBefore(overlayContainer, document.body.firstChild);
+      // 插入到 #desktop 内，放在 .desktop-bg 之后、.desktop-icons 之前
+      var desktop = document.getElementById('desktop');
+      if (desktop) {
+        var bgEl = desktop.querySelector('.desktop-bg');
+        if (bgEl && bgEl.nextSibling) {
+          desktop.insertBefore(overlayContainer, bgEl.nextSibling);
+        } else {
+          desktop.appendChild(overlayContainer);
+        }
+      } else {
+        // 兜底：如果没有桌面结构，退回到 body 第一个子元素
+        overlayContainer.style.position = 'fixed';
+        overlayContainer.style.top = '0';
+        overlayContainer.style.left = '0';
+        overlayContainer.style.width = '100vw';
+        overlayContainer.style.height = '100vh';
+        overlayContainer.style.zIndex = '-1';
+        document.body.insertBefore(overlayContainer, document.body.firstChild);
+      }
     }
   }
 
@@ -212,8 +228,13 @@
     }
     if (overlayContainer) {
       overlayContainer.style.display = 'none';
+      overlayContainer.style.backgroundImage = '';
+      overlayContainer.style.opacity = '';
     }
+    // 恢复桌面背景透明度
+    updateDesktopBgTransparency(false);
   }
+
 
   function applySkin() {
     if (!overlayContainer) createOverlay();
@@ -223,6 +244,30 @@
       clearOverlay();
       return;
     }
+
+    var fit = state.fitMode || 'cover';
+
+    // repeat 模式用 CSS background，其余模式用 img/video 元素
+    if (fit === 'repeat' && state.mediaType === 'image') {
+      // 清理旧的 img/video 元素
+      if (mediaEl) { mediaEl.remove(); mediaEl = null; }
+      // 使用 background-image 平铺
+      overlayContainer.style.backgroundImage = 'url(' + state.image + ')';
+      overlayContainer.style.backgroundRepeat = 'repeat';
+      overlayContainer.style.backgroundSize = 'auto';
+      overlayContainer.style.backgroundPosition = '0 0';
+      overlayContainer.style.opacity = state.opacity;
+      overlayContainer.style.display = 'block';
+      updateDesktopBgTransparency(true);
+      return;
+    }
+
+    // 清除 background-image（非 repeat 模式）
+    overlayContainer.style.backgroundImage = '';
+    overlayContainer.style.backgroundRepeat = '';
+    overlayContainer.style.backgroundSize = '';
+    overlayContainer.style.backgroundPosition = '';
+    overlayContainer.style.opacity = '';
 
     // 清理旧媒体元素
     if (mediaEl) {
@@ -243,6 +288,7 @@
         mediaEl = document.createElement('img');
         mediaEl.src = state.image;
       } else {
+        // 视频不支持 repeat 模式
         mediaEl = document.createElement('video');
         mediaEl.src = state.videoUrl;
         mediaEl.muted = state.videoMuted;
@@ -252,30 +298,42 @@
       }
       mediaEl.style.position = 'absolute';
       mediaEl.style.pointerEvents = 'none';
-      mediaEl.style.willChange = 'left, top, width, opacity';
       mediaEl.style.transition = 'opacity 0.4s ease';
       overlayContainer.appendChild(mediaEl);
     }
 
-    // 更新位置和大小
-    var w = state.width;
-    var aspect = state.aspectRatio || 1.5;
-    var hVh = w / aspect * (window.innerWidth / window.innerHeight);
-    // 限制高度不超过视口，避免竖向图片撑开
-    if (hVh > 100) {
-        hVh = 100;
+    // 根据填充模式设置尺寸
+    if (fit === 'cover' || fit === 'fill') {
+      // 铺满 / 拉伸：全屏覆盖
+      mediaEl.style.left = '0';
+      mediaEl.style.top = '0';
+      mediaEl.style.width = '100%';
+      mediaEl.style.height = '100%';
+      mediaEl.style.maxWidth = '';
+      mediaEl.style.maxHeight = '';
+      mediaEl.style.objectFit = fit;           // cover 截取 / fill 拉伸
+      mediaEl.style.willChange = 'opacity';
+    } else {
+      // free 自由定位：保持原有拖拽逻辑
+      var w = state.width;
+      var aspect = state.aspectRatio || 1.5;
+      var hVh = w / aspect * (window.innerWidth / window.innerHeight);
+      if (hVh > 100) hVh = 100;
+      mediaEl.style.left = state.left + '%';
+      mediaEl.style.top = state.top + '%';
+      mediaEl.style.width = w + 'vw';
+      mediaEl.style.height = hVh + 'vh';
+      mediaEl.style.maxWidth = '100vw';
+      mediaEl.style.maxHeight = '100vh';
+      mediaEl.style.objectFit = 'contain';
+      mediaEl.style.willChange = 'left, top, width, opacity';
     }
 
-    mediaEl.style.left = state.left + '%';
-    mediaEl.style.top = state.top + '%';
-    mediaEl.style.width = w + 'vw';
-    mediaEl.style.height = hVh + 'vh';
-    mediaEl.style.maxWidth = '100vw';
-    mediaEl.style.maxHeight = '100vh';
-    mediaEl.style.objectFit = 'contain';
     mediaEl.style.opacity = state.opacity;
-
     overlayContainer.style.display = 'block';
+
+    // 皮肤激活：让桌面背景网格半透明以显示皮肤
+    updateDesktopBgTransparency(true);
 
     // 视频
     if (state.mediaType === 'video') {
@@ -291,10 +349,34 @@
     }
   }
 
-  // ============ 控制按钮（已移除，改为右键菜单入口）============
+  /**
+   * 控制桌面背景网格的透明度。
+   * 当皮肤（图片/视频）激活时，隐藏桌面背景网格，让皮肤可见。
+   */
+  function updateDesktopBgTransparency(active) {
+    var bgEl = document.querySelector('.desktop-bg');
+    if (!bgEl) return;
+    if (active) {
+      // 皮肤激活：让背景网格完全透明
+      bgEl.style.opacity = '0';
+      bgEl.style.transition = 'opacity 0.5s ease';
+    } else {
+      // 皮肤移除：恢复背景网格
+      bgEl.style.opacity = '';
+      bgEl.style.transition = '';
+    }
+  }
 
-  function createControlButton() {
-    // 背景控制已迁移到桌面右键菜单，不再在导航栏创建按钮
+  // ============ 导航栏背景按钮 ============
+
+  function bindSkinButton() {
+    var btn = document.getElementById('btnOpenSkin');
+    if (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openPanel();
+      });
+    }
   }
 
   // ============ 面板遮罩 ============
@@ -371,6 +453,16 @@
       '    </div>' +
       '    <div class="skin-preview-hint">💡 拖拽移动 · 拖四角缩放</div>' +
       '  </div>' +
+      '  <!-- 填充模式 -->' +
+      '  <div class="skin-fit-section">' +
+      '    <div class="skin-fit-label">📐 填充模式</div>' +
+      '    <div class="skin-fit-btns" id="skinFitBtns">' +
+      '      <button class="skin-fit-btn' + (state.fitMode === 'cover' ? ' active' : '') + '" data-mode="cover">铺满</button>' +
+      '      <button class="skin-fit-btn' + (state.fitMode === 'fill' ? ' active' : '') + '" data-mode="fill">拉伸</button>' +
+      '      <button class="skin-fit-btn' + (state.fitMode === 'repeat' ? ' active' : '') + '" data-mode="repeat">平铺</button>' +
+      '      <button class="skin-fit-btn' + (state.fitMode === 'free' ? ' active' : '') + '" data-mode="free">自由</button>' +
+      '    </div>' +
+      '  </div>' +
       '  <!-- 透明度 -->' +
       '  <div class="skin-opacity-section">' +
       '    <div class="skin-opacity-label">' +
@@ -407,7 +499,7 @@
       '        </label>' +
       '      </div>' +
       '    </div>' +
-      '    <div class="skin-section-body' + (isBgOn ? ' open' : '') + '" id="skinBgBody">' +
+      '    <div class="skin-section-body open" id="skinBgBody">' +
       bgBodyContent +
       '    </div>' +
       '  </div>' +
@@ -538,12 +630,6 @@
 '      <button class="skin-section-link" id="skinManageTheme">管理</button>' +
 '    </div>' +
 '  </div>' +
-      '</div>' +
-      '<div class="skin-panel-footer">' +
-      '  <a href="#" onclick="return false;">设置</a>' +
-      '  <a href="#" onclick="return false;">帮助</a>' +
-      '  <a href="#" onclick="return false;">反馈</a>' +
-      '  <span class="skin-footer-copy">© DevTools Station</span>' +
       '</div>';
 
     document.body.appendChild(panelEl);
@@ -1036,6 +1122,23 @@
       });
     });
 
+    // 填充模式按钮
+    var fitBtns = document.getElementById('skinFitBtns');
+    if (fitBtns) {
+      fitBtns.addEventListener('click', function (e) {
+        var btn = e.target.closest('.skin-fit-btn');
+        if (!btn) return;
+        var mode = btn.getAttribute('data-mode');
+        state.fitMode = mode;
+        // 更新 active
+        fitBtns.querySelectorAll('.skin-fit-btn').forEach(function (el) {
+          el.classList.toggle('active', el.getAttribute('data-mode') === mode);
+        });
+        applySkin();
+        saveSkin();
+      });
+    }
+
     // 视频控件
     var muteBtn = document.getElementById('skinVidMuteBtn');
     if (muteBtn) muteBtn.addEventListener('click', toggleVideoMute);
@@ -1126,6 +1229,7 @@
         state.naturalHeight = img.naturalHeight;
         state.aspectRatio = img.naturalWidth / img.naturalHeight;
         state.visible = true;
+        state.fitMode = 'cover';  // 默认铺满
         // 默认居中 40% 宽
         state.width = 40;
         state.left = 30;
@@ -1184,6 +1288,7 @@
     state.mediaType = 'video';
     state.videoUrl = url;
     state.visible = true;
+    state.fitMode = 'cover';  // 默认铺满
     state.aspectRatio = 16 / 9; // 默认 16:9
     state.width = 40;
     state.left = 30;
@@ -1312,6 +1417,7 @@
     state.top = 35;
     state.aspectRatio = 1.5;
     state.visible = true;
+    state.fitMode = 'cover';
 
     applySkin();
     updateMiniPreview();
@@ -1349,14 +1455,16 @@
         aspectRatio: state.aspectRatio,
         videoMuted: state.videoMuted,
         videoLoop: state.videoLoop,
-        visible: state.visible
+        visible: state.visible,
+        fitMode: state.fitMode
       };
       if (state.mediaType === 'image') {
         data.image = state.image;
         data.videoUrl = null;
       } else {
         data.image = null;
-        data.videoUrl = state.videoUrl;
+        // blob URL 是临时的，不持久化（视频数据在 IndexedDB / 服务器）
+        data.videoUrl = (state.videoUrl && state.videoUrl.startsWith('blob:')) ? null : state.videoUrl;
       }
       localStorage.setItem(SKIN_KEY, JSON.stringify(data));
     } catch (e) {
@@ -1424,23 +1532,31 @@
         state.aspectRatio = d.aspectRatio || 1.5;
         state.videoMuted = d.videoMuted != null ? d.videoMuted : true;
         state.videoLoop = d.videoLoop != null ? d.videoLoop : true;
+        state.fitMode = d.fitMode || 'cover';
         state.image = d.image || null;
         state.videoUrl = d.videoUrl || null;
 
-        // 如果有视频 URL 但 IndexedDB 里可能有 blob
-        if (state.mediaType === 'video' && !state.videoUrl) {
-          idbGetVideo('video-blob').then(function (blob) {
-            if (blob) {
-              state.videoUrl = URL.createObjectURL(blob);
-              createOverlay();
-              applySkin();
-            }
-          });
-        }
-
-        if (state.mediaType === 'video' && state.videoUrl) {
-          createOverlay();
-          applySkin();
+        // 如果是视频：检测 URL 类型
+        if (state.mediaType === 'video') {
+          // blob URL 已失效，需要从 IndexedDB 恢复
+          if (state.videoUrl && state.videoUrl.startsWith('blob:')) {
+            state.videoUrl = null; // 标记为空，触发 IndexedDB 恢复
+          }
+          // 非 blob URL（服务器路径）直接使用
+          if (state.videoUrl) {
+            createOverlay();
+            applySkin();
+          } else {
+            // 尝试从 IndexedDB 恢复
+            idbGetVideo('video-blob').then(function (blob) {
+              if (blob) {
+                state.videoUrl = URL.createObjectURL(blob);
+                createOverlay();
+                applySkin();
+                showToast('视频已从本地缓存恢复');
+              }
+            }).catch(function() { /* 无缓存 */ });
+          }
         } else if (state.mediaType === 'image' && state.image) {
           createOverlay();
           applySkin();
@@ -1577,6 +1693,10 @@
   function setPastelScheme(scheme) {
     pastelScheme = scheme;
     localStorage.setItem(PASTEL_SCHEME_KEY, scheme);
+    // 选择色彩方案时自动切换到马卡龙主题
+    if (scheme && window.DevTheme && !document.body.classList.contains('theme-pastel')) {
+      window.DevTheme.set('pastel');
+    }
     applyPastelScheme();
   }
 
@@ -1664,6 +1784,7 @@
     bindGlobalSwipe();
     watchAuthChanges();
     watchPastelThemeChanges();
+    bindSkinButton();
   }
 
   if (document.readyState === 'loading') {

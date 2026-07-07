@@ -66,23 +66,29 @@ function bindWidgetBtn() {
  * 从服务器加载小组件配置（登录用户切换设备/清缓存后恢复）
  */
 function loadWidgetConfigFromServer() {
-    api('GET', '/api/settings').then(function(res) {
-        if (res.code === 200 && res.data && res.data.customConfig) {
-            try {
-                var config = JSON.parse(res.data.customConfig);
-                if (config.widgets) {
-                    localStorage.setItem('desktop_widgets', JSON.stringify(config.widgets));
-                }
-                if (config.widgetPositions) {
-                    localStorage.setItem('desktop_widget_positions', JSON.stringify(config.widgetPositions));
-                }
-                // 触发 WidgetManager 重新加载
-                if (window.WidgetManager && window.WidgetManager.reinit) {
-                    window.WidgetManager.reinit();
-                }
-            } catch(e) {}
-        }
-    }).catch(function() {});
+    // 使用独立的 fetch，不依赖 DesktopManager 内部的 api()
+    var headers = { 'Content-Type': 'application/json' };
+    var token = window.DevAuth && window.DevAuth.getToken ? window.DevAuth.getToken() : null;
+    if (token) headers['X-Auth-Token'] = token;
+    fetch('/api/settings', { method: 'GET', headers: headers })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.code === 200 && res.data && res.data.customConfig) {
+                try {
+                    var config = JSON.parse(res.data.customConfig);
+                    if (config.widgets) {
+                        localStorage.setItem('desktop_widgets', JSON.stringify(config.widgets));
+                    }
+                    if (config.widgetPositions) {
+                        localStorage.setItem('desktop_widget_positions', JSON.stringify(config.widgetPositions));
+                    }
+                    // 触发 WidgetManager 重新加载
+                    if (window.WidgetManager && window.WidgetManager.reinit) {
+                        window.WidgetManager.reinit();
+                    }
+                } catch(e) {}
+            }
+        }).catch(function() {});
 }
 
 /**
@@ -425,9 +431,10 @@ var DesktopManager = (function() {
                 renderDesktop();
             }
 
-            // 登录后同步小组件数据
-            loadWidgetConfigFromServer();
-        }).catch(function() {
+            // 登录后同步小组件数据（try/catch 防止异常传播到外层的 .catch 错误处理）
+            try { loadWidgetConfigFromServer(); } catch(e) { console.warn('[DesktopMgr] 同步小组件数据失败:', e); }
+        }).catch(function(err) {
+            console.error('[DesktopMgr] /api/favorites 请求失败:', err);
             desktopTools = [];
             desktopIds = new Set();
             renderDesktop();

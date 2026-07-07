@@ -31,7 +31,7 @@ public class SkinController {
     private final AuthService authService;
     private final UserSkinService skinService;
 
-    private static final Path VIDEO_DIR = Paths.get("uploads/videos");
+    private static final Path VIDEO_DIR = Paths.get(System.getProperty("user.dir"), "uploads", "videos");
 
     private User requireAuth(String token) {
         if (token == null || token.isEmpty()) {

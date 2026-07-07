@@ -43,6 +43,19 @@ public class DatabaseMigration {
             log.warn("数据库迁移: 修改 user_key 列异常（可能已修改）: {}", e.getMessage());
         }
 
+        // 修复 user_key="" 导致的跨用户唯一键冲突
+        // 将已有记录的 user_key 更新为对应的 user_id 字符串
+        try {
+            int updated = jdbcTemplate.update(
+                "UPDATE dt_favorite SET user_key = CONCAT('u_', user_id) WHERE (user_key = '' OR user_key IS NULL) AND user_id IS NOT NULL"
+            );
+            if (updated > 0) {
+                log.info("数据库迁移: 已修复 {} 条 user_key 冲突记录", updated);
+            }
+        } catch (Exception e) {
+            log.warn("数据库迁移: 修复 user_key 冲突记录异常: {}", e.getMessage());
+        }
+
         try {
             jdbcTemplate.execute("CREATE INDEX idx_favorite_user_id ON dt_favorite(user_id)");
         } catch (Exception e) { /* 索引已存在忽略 */ }

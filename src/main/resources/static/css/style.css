@@ -1877,22 +1877,18 @@ body.theme-anime .auth-left-cpwd {
    页面皮肤水印系统
    ============================================ */
 
-/* 皮肤覆盖层 —— 全页面背景水印 */
+/* 皮肤覆盖层 —— 桌面内背景水印（JS 动态设置 position/inset/z-index） */
 #page-skin-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -1;
     pointer-events: none;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     transition: opacity 0.4s ease;
-    will-change: opacity, background-image;
+    will-change: opacity;
+}
+#page-skin-overlay img,
+#page-skin-overlay video {
+    display: block;
 }
 
 /* navbar 按钮 */
@@ -2412,6 +2408,44 @@ body.theme-anime .auth-left-cpwd {
 }
 .skin-preview-change:hover {
     background: rgba(0,0,0,0.8);
+}
+
+/* 填充模式选择 */
+.skin-fit-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 0 8px 0;
+}
+.skin-fit-label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.skin-fit-btns {
+    display: flex;
+    gap: 6px;
+}
+.skin-fit-btn {
+    flex: 1;
+    padding: 6px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--card-bg);
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.skin-fit-btn:hover {
+    border-color: rgba(34,197,94,0.5);
+    color: #4ade80;
+    background: rgba(34,197,94,0.06);
+}
+.skin-fit-btn.active {
+    border-color: #22c55e;
+    color: #22c55e;
+    background: rgba(34,197,94,0.12);
+    font-weight: 600;
 }
 
 /* 透明度控制 */
